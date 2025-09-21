@@ -189,6 +189,15 @@
     transform: scale(0.9);
   }
 
+  /* Video Editor Timeline Animations */
+  .animate-waveform-pulse {
+    animation: waveform-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-playhead-glow {
+    animation: playhead-glow 2s ease-in-out infinite;
+  }
+
   /* Smooth Transitions */
   .transition-smooth {
     transition: var(--transition-smooth);
@@ -282,6 +291,26 @@
   }
   50% {
     opacity: 1;
+  }
+}
+
+@keyframes waveform-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleY(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.2);
+  }
+}
+
+@keyframes playhead-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(200 100% 50% / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px hsl(200 100% 50% / 0.8), 0 0 25px hsl(200 100% 50% / 0.4);
   }
 }
 

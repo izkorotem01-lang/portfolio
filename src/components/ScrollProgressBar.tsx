@@ -26,73 +26,102 @@ const ScrollProgressBar: React.FC = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-      {/* Background track with video editor styling */}
-      <div className="h-1 bg-black/30 backdrop-blur-sm border-t border-white/10">
-        {/* Progress bar with video editing tool styling */}
-        <div
-          className="h-full bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 transition-all duration-150 ease-out relative overflow-hidden"
-          style={{ width: `${scrollProgress}%` }}
-        >
-          {/* Glowing effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/60 via-orange-500/60 to-yellow-500/60 blur-sm" />
+      {/* Main timeline container - much thicker like video editing software */}
+      <div className="bg-gray-900/95 backdrop-blur-sm border-t border-gray-700/50">
+        {/* Time markers at the top */}
+        <div className="h-6 flex items-center justify-between px-4 text-xs text-gray-400 font-mono">
+          <div className="flex space-x-8">
+            <span>00:00:00:00</span>
+            <span>00:00:05:00</span>
+            <span>00:00:10:00</span>
+            <span>00:00:15:00</span>
+            <span>00:00:20:00</span>
+          </div>
+          <div className="text-orange-400 font-semibold">
+            {Math.round(scrollProgress * 0.6)}:00
+          </div>
+        </div>
+        
+        {/* Main timeline track - thick like audio/video tracks */}
+        <div className="h-12 bg-gray-800/80 border-t border-gray-700/30 relative">
+          {/* Progress bar - thick and prominent */}
+          <div
+            className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 transition-all duration-150 ease-out relative overflow-hidden"
+            style={{ width: `${scrollProgress}%` }}
+          >
+            {/* Waveform-like pattern inside the progress bar */}
+            <div className="absolute inset-0 flex items-center px-2">
+              {Array.from({ length: 40 }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-white/40 rounded-sm animate-waveform-pulse"
+                  style={{
+                    width: '2px',
+                    height: `${Math.random() * 20 + 10}px`,
+                    marginRight: '2px',
+                    animationDelay: `${i * 0.05}s`,
+                    animationDuration: `${1 + Math.random() * 2}s`
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Shimmer effect */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              style={{
+                animation: 'shimmer 3s ease-in-out infinite',
+                transform: 'translateX(-100%)'
+              }}
+            />
+            
+            {/* Timeline grid lines */}
+            <div className="absolute inset-0 flex">
+              {Array.from({ length: 20 }, (_, i) => (
+                <div
+                  key={i}
+                  className="h-full w-px bg-white/10"
+                  style={{ left: `${i * 5}%` }}
+                />
+              ))}
+            </div>
+          </div>
           
-          {/* Main progress line */}
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500" />
-          
-          {/* Animated shimmer effect */}
+          {/* Playhead - thick vertical line like in video editors */}
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-            style={{
-              animation: 'shimmer 2s ease-in-out infinite',
-              transform: 'translateX(-100%)'
-            }}
-          />
-          
-          {/* Timeline ticks for video editor feel */}
-          <div className="absolute inset-0 flex items-center">
-            {Array.from({ length: 20 }, (_, i) => (
-              <div
-                key={i}
-                className="h-full w-px bg-white/20 animate-timeline-tick"
-                style={{
-                  left: `${i * 5}%`,
-                  animationDelay: `${i * 0.1}s`
-                }}
-              />
-            ))}
-          </div>
-          
-          {/* Playhead indicator (like in video editors) */}
-          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg border-2 border-orange-500 animate-pulse-glow">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full" />
-            <div className="absolute inset-0 bg-white/30 rounded-full animate-ping" />
+            className="absolute top-0 bottom-0 w-0.5 bg-blue-400 shadow-lg animate-playhead-glow"
+            style={{ left: `${scrollProgress}%` }}
+          >
+            <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-400 rounded-sm transform rotate-45" />
+            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-400 rounded-sm transform rotate-45" />
+            {/* Glowing center line */}
+            <div className="absolute inset-0 bg-cyan-300/50 blur-sm" />
           </div>
         </div>
-      </div>
-      
-      {/* Additional UI elements for video editing aesthetic */}
-      <div className="absolute bottom-1 left-4 flex items-center space-x-2 text-xs text-white/70 font-mono">
-        <div className="flex items-center space-x-1">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-red-400 font-semibold">REC</span>
-        </div>
-        <div className="text-white/40">|</div>
-        <div className="font-mono text-orange-400">
-          {Math.round(scrollProgress)}%
-        </div>
-        <div className="text-white/40">|</div>
-        <div className="text-white/50">
-          SCROLL
-        </div>
-      </div>
-      
-      {/* Time indicator (simulating video timeline) */}
-      <div className="absolute bottom-1 right-4 text-xs text-white/70 font-mono">
-        <div className="flex items-center space-x-1">
-          <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse" />
-          <span className="text-orange-400">
-            00:{String(Math.round(scrollProgress * 0.6)).padStart(2, '0')}
-          </span>
+        
+        {/* Track labels and controls */}
+        <div className="h-8 bg-gray-900/90 border-t border-gray-700/30 flex items-center justify-between px-4">
+          <div className="flex items-center space-x-4 text-xs text-gray-400 font-mono">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-red-400 font-semibold">REC</span>
+            </div>
+            <div className="text-gray-500">|</div>
+            <div className="text-blue-400">
+              SCROLL TRACK
+            </div>
+            <div className="text-gray-500">|</div>
+            <div className="text-orange-400">
+              {Math.round(scrollProgress)}%
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2 text-xs text-gray-400">
+            <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse" />
+            <span className="text-orange-400">
+              {Math.round(scrollProgress * 0.6)}:00
+            </span>
+          </div>
         </div>
       </div>
     </div>
