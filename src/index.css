@@ -257,6 +257,34 @@
   }
 }
 
+/* Video Editor Progress Bar Animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(4 79% 59% / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(4 79% 59% / 0.8), 0 0 30px hsl(4 79% 59% / 0.4);
+  }
+}
+
+@keyframes timeline-tick {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* RTL Support */
 [dir="rtl"] .text-right {
   text-align: right;
