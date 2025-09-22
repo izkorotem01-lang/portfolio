@@ -41,8 +41,10 @@ const HeroSection = () => {
     <section id="hero" className="min-h-screen relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen pt-0
-           pb-20">
+          <div
+            className="grid lg:grid-cols-2 gap-12 items-center min-h-screen pt-0
+           pb-20"
+          >
             {/* Content Section - Left */}
             <div className="text-center lg:text-left">
               {/* Main Title */}
