@@ -57,6 +57,14 @@ const translations = {
     'contact.subtitle': 'Ready to take your content to the next level?',
     'contact.email': 'rotem.izko@gmail.com',
     'contact.whatsapp': 'WhatsApp Consultation',
+
+    // Reviews
+    'reviews.title': 'What Clients Say',
+    'reviews.subtitle': 'Real feedback from satisfied clients who transformed their content with my help',
+    'reviews.cta.title': 'Ready to Join Them?',
+    'reviews.cta.subtitle': 'Let\'s create something amazing together and grow your business',
+    'reviews.cta.contact': 'Start Your Project',
+    'reviews.cta.portfolio': 'View My Work',
     
     // Features
     'feature.editing': 'Video editing up to 3 minutes',
@@ -131,6 +139,14 @@ const translations = {
     'contact.subtitle': 'מוכנים לקחת את התוכן שלכם לשלב הבא?',
     'contact.email': 'rotem.izko@gmail.com',
     'contact.whatsapp': 'יעוץ בוואטסאפ',
+
+    // Reviews
+    'reviews.title': 'מה הלקוחות אומרים',
+    'reviews.subtitle': 'משוב אמיתי מלקוחות מרוצים שהפכו את התוכן שלהם בעזרתי',
+    'reviews.cta.title': 'מוכנים להצטרף אליהם?',
+    'reviews.cta.subtitle': 'בואו ניצור משהו מדהים יחד ונצמיח את העסק שלכם',
+    'reviews.cta.contact': 'התחל את הפרויקט שלך',
+    'reviews.cta.portfolio': 'צפה בעבודות שלי',
     
     // Features
     'feature.editing': 'עריכת סרטון באורך של עד 3 דקות',
