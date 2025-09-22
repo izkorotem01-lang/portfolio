@@ -14,14 +14,14 @@ const Index = () => {
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-background">
-        <Header />
+        {/* <Header /> */}
         <main>
           <HeroSection />
           <ReviewsSection />
           <AboutSection />
           <ServicesSection />
-          <PackagesSection />
           <PortfolioSection />
+          <PackagesSection />
           <ContactSection />
         </main>
         <Footer />
