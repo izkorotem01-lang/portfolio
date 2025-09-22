@@ -1,8 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Play, ChevronDown, Volume2, VolumeX } from "lucide-react";
-import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { Play, Volume2, VolumeX } from "lucide-react";
 import showreelVideo from "@/assets/Showreel_3.mp4";
 
 const HeroSection = () => {
@@ -39,27 +38,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="hero" className="min-h-screen relative overflow-hidden">
-      {/* Dynamic Smoky Background */}
-      <BackgroundGradientAnimation
-        gradientBackgroundStart="rgb(0, 0, 0)"
-        gradientBackgroundEnd="rgb(20, 20, 20)"
-        firstColor="240, 123, 0"
-        secondColor="217, 47, 15"
-        thirdColor="147, 0, 97"
-        fourthColor="32, 0, 155"
-        fifthColor="0, 0, 0"
-        pointerColor="217, 47, 15"
-        size="150%"
-        blendingValue="screen"
-        interactive={true}
-        containerClassName="absolute inset-0"
-        className="opacity-80"
-      />
-
-      {/* Content Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/20 to-background/40" />
-
+    <section id="hero" className="min-h-screen relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
@@ -149,11 +128,6 @@ const HeroSection = () => {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-30">
-            <ChevronDown className="w-8 h-8 text-primary animate-pulse drop-shadow-lg" />
           </div>
         </div>
       </div>

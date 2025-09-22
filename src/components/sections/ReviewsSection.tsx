@@ -113,11 +113,7 @@ const ReviewsSection = () => {
   ];
 
   return (
-    <section id="reviews" className="py-20 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-secondary opacity-30" />
-      <div className="absolute inset-0 bg-gradient-to-l from-primary/5 via-transparent to-primary-glow/5" />
-
+    <section id="reviews" className="py-20 relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Section Title */}
@@ -129,53 +125,53 @@ const ReviewsSection = () => {
               {t("reviews.subtitle")}
             </p>
           </div>
+        </div>
+      </div>
 
-          {/* Auto-scrolling Reviews Carousel */}
-          <div className="relative">
-            {/* Gradient overlays for smooth edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-
+      {/* Auto-scrolling Reviews Carousel - Outside main container */}
+      <div className="relative -mx-4">
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-8 overflow-x-hidden scrollbar-hide py-8"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {/* Duplicate reviews for seamless loop */}
+          {[...reviews, ...reviews].map((review, index) => (
             <div
-              ref={scrollContainerRef}
-              className="flex gap-8 overflow-x-hidden scrollbar-hide py-4"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              key={`${review.id}-${index}`}
+              className="flex-shrink-0 w-80 glass-card p-6 rounded-3xl relative hover:scale-110 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 ease-out cursor-pointer group bg-black/80 backdrop-blur-xl border border-white/20"
             >
-              {/* Duplicate reviews for seamless loop */}
-              {[...reviews, ...reviews].map((review, index) => (
-                <div
-                  key={`${review.id}-${index}`}
-                  className="flex-shrink-0 w-80 glass-card p-6 rounded-3xl relative hover:scale-110 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 ease-out cursor-pointer group"
-                >
-                  {/* Review Content */}
-                  <p className="text-foreground/90 mb-6 leading-relaxed text-sm group-hover:text-foreground transition-colors duration-300">
-                    "{review.content}"
-                  </p>
+              {/* Review Content */}
+              <p className="text-foreground/90 mb-6 leading-relaxed text-sm group-hover:text-foreground transition-colors duration-300">
+                "{review.content}"
+              </p>
 
-                  {/* Reviewer Info */}
-                  <div className="flex items-center gap-3 group-hover:scale-105 transition-transform duration-300">
-                    <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-2xl group-hover:bg-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
-                      {review.avatar}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300">
-                        {review.name}
-                      </h4>
-                      <p className="text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-300">
-                        {review.role}
-                      </p>
-                      <p className="text-xs text-primary group-hover:text-primary-glow transition-colors duration-300">
-                        {review.company}
-                      </p>
-                    </div>
-                  </div>
+              {/* Reviewer Info */}
+              <div className="flex items-center gap-3 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-2xl group-hover:bg-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
+                  {review.avatar}
                 </div>
-              ))}
+                <div>
+                  <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300">
+                    {review.name}
+                  </h4>
+                  <p className="text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-300">
+                    {review.role}
+                  </p>
+                  <p className="text-xs text-primary group-hover:text-primary-glow transition-colors duration-300">
+                    {review.company}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {/* Call to Action */}
-          <div className="text-center mt-16">
+      {/* Call to Action */}
+      <div className="container mx-auto px-4 relative z-10 mt-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
             <div className="glass-card p-8 rounded-3xl max-w-2xl mx-auto">
               <h3 className="text-2xl font-bold mb-4 text-foreground">
                 {t("reviews.cta.title")}
