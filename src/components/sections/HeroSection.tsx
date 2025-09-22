@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Play, ChevronDown } from "lucide-react";
+import { Play, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import showreelVideo from "@/assets/Showreel_3.mp4";
 
 const HeroSection = () => {
   const { t } = useLanguage();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   const scrollToPortfolio = () => {
     document
@@ -16,6 +18,24 @@ const HeroSection = () => {
 
   const scrollToContact = () => {
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      // Restart video from beginning
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+
+      // Toggle volume
+      if (isMuted) {
+        videoRef.current.muted = false;
+        videoRef.current.volume = 0.7; // Set volume to 70%
+        setIsMuted(false);
+      } else {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      }
+    }
   };
 
   return (
@@ -89,14 +109,36 @@ const HeroSection = () => {
               <div className="relative">
                 {/* Phone-style container for vertical video */}
                 <div className="glass-card p-4 rounded-3xl max-w-sm mx-auto backdrop-blur-xl bg-black/20 border border-white/10">
-                  <video
-                    src={showreelVideo}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-auto rounded-2xl shadow-2xl aspect-[9/16] object-cover"
-                  />
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={handleVideoClick}
+                  >
+                    <video
+                      ref={videoRef}
+                      src={showreelVideo}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-auto rounded-2xl shadow-2xl aspect-[9/16] object-cover transition-transform group-hover:scale-105"
+                    />
+
+                    {/* Volume indicator overlay */}
+                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 transition-opacity group-hover:opacity-100 opacity-0">
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4 text-white" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+
+                    {/* Click to play/restart overlay */}
+                    <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center transition-opacity group-hover:opacity-100 opacity-0">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                        <Play className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Floating elements around video */}
