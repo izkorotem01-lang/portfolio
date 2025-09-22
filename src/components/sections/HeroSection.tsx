@@ -41,7 +41,8 @@ const HeroSection = () => {
     <section id="hero" className="min-h-screen relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen pt-0
+           pb-20">
             {/* Content Section - Left */}
             <div className="text-center lg:text-left">
               {/* Main Title */}
@@ -86,8 +87,8 @@ const HeroSection = () => {
             {/* Video Section - Right */}
             <div className="flex justify-center lg:justify-end animate-fade-up">
               <div className="relative">
-                {/* Phone-style container for vertical video */}
-                <div className="glass-card p-4 rounded-3xl max-w-sm mx-auto backdrop-blur-xl bg-black/20 border border-white/10">
+                {/* Full-height container for vertical video */}
+                <div className="rounded-3xl mx-auto bg-black/20 border border-white/10 backdrop-blur-xl max-w-[420px] lg:max-w-[520px] w-full">
                   <div
                     className="relative group cursor-pointer"
                     onClick={handleVideoClick}
@@ -99,7 +100,7 @@ const HeroSection = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-auto rounded-2xl shadow-2xl aspect-[9/16] object-cover transition-transform group-hover:scale-105"
+                      className="w-full h-[80vh] max-h-[calc(100vh-200px)] rounded-2xl shadow-2xl aspect-[9/16] object-cover transition-transform group-hover:scale-105"
                     />
 
                     {/* Volume indicator overlay */}
