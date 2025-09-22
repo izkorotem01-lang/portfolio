@@ -1,6 +1,6 @@
-import React from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Video, Sparkles, Share2, Camera } from 'lucide-react';
+import React from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Video, Sparkles, Share2, Camera } from "lucide-react";
 
 const ServicesSection = () => {
   const { t } = useLanguage();
@@ -8,28 +8,28 @@ const ServicesSection = () => {
   const services = [
     {
       icon: Video,
-      title: t('services.video'),
-      description: 'Professional video editing with cutting-edge techniques',
-      color: 'from-red-500 to-orange-500'
+      title: t("services.video"),
+      description: "Professional video editing with cutting-edge techniques",
+      color: "from-red-500 to-orange-500",
     },
     {
       icon: Sparkles,
-      title: t('services.motion'),
-      description: 'Eye-catching motion graphics and animations',
-      color: 'from-purple-500 to-pink-500'
+      title: t("services.motion"),
+      description: "Eye-catching motion graphics and animations",
+      color: "from-purple-500 to-pink-500",
     },
     {
       icon: Share2,
-      title: t('services.social'),
-      description: 'Optimized content for all social platforms',
-      color: 'from-blue-500 to-cyan-500'
+      title: t("services.social"),
+      description: "Optimized content for all social platforms",
+      color: "from-blue-500 to-cyan-500",
     },
     {
       icon: Camera,
-      title: t('services.photo'),
-      description: 'Professional photo editing and retouching',
-      color: 'from-green-500 to-teal-500'
-    }
+      title: t("services.photo"),
+      description: "Professional photo editing and retouching",
+      color: "from-green-500 to-teal-500",
+    },
   ];
 
   return (
@@ -39,7 +39,7 @@ const ServicesSection = () => {
           {/* Section Title */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-              {t('services.title')}
+              {t("services.title")}
             </h2>
           </div>
 
@@ -48,13 +48,18 @@ const ServicesSection = () => {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="service-card group animate-fade-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="group animate-fade-up backdrop-blur-2xl border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300 ease-out cursor-pointer"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  backgroundColor: "rgba(13, 19, 31, 0.8)",
+                }}
               >
                 <div className="text-center">
                   {/* Icon */}
                   <div className="relative mb-6">
-                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${service.color} p-4 glow-hover`}>
+                    <div
+                      className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${service.color} p-4 glow-hover`}
+                    >
                       <service.icon className="w-full h-full text-white" />
                     </div>
                   </div>

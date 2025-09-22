@@ -58,7 +58,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Rotem transformed our social media presence completely. His creative vision and technical expertise are unmatched. Our engagement rates increased by 300%!",
-      avatar: "👩‍💼",
     },
     {
       id: 2,
@@ -68,7 +67,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Working with Rotem was a game-changer. He understood my vision perfectly and delivered beyond expectations. The quality and attention to detail are exceptional.",
-      avatar: "👨‍🎨",
     },
     {
       id: 3,
@@ -78,7 +76,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Professional, creative, and reliable. Rotem helped us create stunning promotional videos that significantly boosted our customer base. Highly recommended!",
-      avatar: "👩‍🍳",
     },
     {
       id: 4,
@@ -88,7 +85,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Rotem takes podcast editing to the next level. Clean audio, perfect transitions, and engaging visuals. Our listener retention improved dramatically.",
-      avatar: "🎙️",
     },
     {
       id: 5,
@@ -98,7 +94,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Amazing work! Rotem has an incredible eye for detail and knows exactly what works on social media. My content has never looked better.",
-      avatar: "📸",
     },
     {
       id: 6,
@@ -108,7 +103,6 @@ const ReviewsSection = () => {
       rating: 5,
       content:
         "Rotem helped us create our company introduction video. The result was professional, engaging, and perfectly captured our brand essence.",
-      avatar: "🚀",
     },
   ];
 
@@ -139,7 +133,8 @@ const ReviewsSection = () => {
           {[...reviews, ...reviews].map((review, index) => (
             <div
               key={`${review.id}-${index}`}
-              className="flex-shrink-0 w-80 glass-card p-6 rounded-3xl relative hover:scale-110 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 ease-out cursor-pointer group bg-black/80 backdrop-blur-xl border border-white/20"
+              className="flex-shrink-0 w-80 glass-card p-6 rounded-3xl relative hover:scale-110 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 ease-out cursor-pointer group backdrop-blur-2xl border border-white/20"
+              style={{ backgroundColor: "rgba(13, 19, 31, 0.8)" }}
             >
               {/* Review Content */}
               <p className="text-foreground/90 mb-6 leading-relaxed text-sm group-hover:text-foreground transition-colors duration-300">
@@ -147,21 +142,16 @@ const ReviewsSection = () => {
               </p>
 
               {/* Reviewer Info */}
-              <div className="flex items-center gap-3 group-hover:scale-105 transition-transform duration-300">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-2xl group-hover:bg-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300">
-                  {review.avatar}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300">
-                    {review.name}
-                  </h4>
-                  <p className="text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-300">
-                    {review.role}
-                  </p>
-                  <p className="text-xs text-primary group-hover:text-primary-glow transition-colors duration-300">
-                    {review.company}
-                  </p>
-                </div>
+              <div className="group-hover:scale-105 transition-transform duration-300">
+                <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300">
+                  {review.name}
+                </h4>
+                <p className="text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-300">
+                  {review.role}
+                </p>
+                <p className="text-xs text-primary group-hover:text-primary-glow transition-colors duration-300">
+                  {review.company}
+                </p>
               </div>
             </div>
           ))}
@@ -169,7 +159,7 @@ const ReviewsSection = () => {
       </div>
 
       {/* Call to Action */}
-      <div className="container mx-auto px-4 relative z-10 mt-16">
+      {/* <div className="container mx-auto px-4 relative z-10 mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <div className="glass-card p-8 rounded-3xl max-w-2xl mx-auto">
@@ -208,7 +198,7 @@ const ReviewsSection = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 };
