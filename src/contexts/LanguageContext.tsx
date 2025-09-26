@@ -211,7 +211,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
       locationData.countryCode
     ) {
       const detectedLanguage: Language =
-        locationData.countryCode === "IL" ? "he" : "en";
+        locationData.countryCode === "IL" ? "en" : "en"; // "he" : "en";
       setLanguage(detectedLanguage);
       setIsAutoDetected(true);
 

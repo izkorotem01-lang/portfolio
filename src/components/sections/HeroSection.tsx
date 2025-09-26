@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
-import showreelVideo from "@/assets/Showreel_3.mp4";
+import showreelVideo from "@/assets/Showreel.mp4";
 
 const HeroSection = () => {
   const { t } = useLanguage();
