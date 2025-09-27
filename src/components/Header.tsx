@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Languages, Menu, X } from 'lucide-react';
+import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Languages, Menu, X } from "lucide-react";
 
 const Header = () => {
   const { language, setLanguage, t, dir } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'he' : 'en');
+    setLanguage(language === "en" ? "he" : "en");
   };
 
   const navItems = [
-    { key: 'nav.about', href: '#about' },
-    { key: 'nav.services', href: '#services' },
-    { key: 'nav.packages', href: '#packages' },
-    { key: 'nav.portfolio', href: '#portfolio' },
-    { key: 'nav.contact', href: '#contact' },
+    { key: "nav.about", href: "#about" },
+    { key: "nav.services", href: "#services" },
+    { key: "nav.packages", href: "#packages" },
+    { key: "nav.portfolio", href: "#portfolio" },
+    { key: "nav.contact", href: "#contact" },
   ];
 
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
-    element?.scrollIntoView({ behavior: 'smooth' });
+    element?.scrollIntoView({ behavior: "smooth" });
     setIsMenuOpen(false);
   };
 
@@ -31,7 +31,7 @@ const Header = () => {
         <nav className="flex items-center justify-between">
           {/* Logo */}
           <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {t('hero.name')}
+            {t("hero.name")}
           </div>
 
           {/* Desktop Navigation */}
@@ -56,7 +56,7 @@ const Header = () => {
               className="btn-glass"
             >
               <Languages className="w-4 h-4 mr-2" />
-              {language === 'en' ? 'עב' : 'EN'}
+              {language === "en" ? "עב" : "EN"}
             </Button>
 
             {/* Mobile Menu Button */}
@@ -66,7 +66,11 @@ const Header = () => {
               className="md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </Button>
           </div>
         </nav>

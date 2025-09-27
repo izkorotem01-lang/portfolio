@@ -1,9 +1,13 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Heart, Mail, Phone } from "lucide-react";
+import { Heart, Mail, Phone, Globe } from "lucide-react";
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "he" : "en");
+  };
 
   return (
     <footer className="py-12 relative bg-black">
@@ -59,14 +63,26 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Services */}
+            {/* Services & Language */}
             <div>
               <h4 className="font-bold mb-4 text-foreground">Services</h4>
-              <div className="space-y-2 text-foreground/70">
+              <div className="space-y-2 text-foreground/70 mb-6">
                 <p>{t("services.video")}</p>
                 <p>{t("services.motion")}</p>
                 <p>{t("services.social")}</p>
                 <p>{t("services.photo")}</p>
+              </div>
+
+              {/* Language Switcher */}
+              <div>
+                <h4 className="font-bold mb-3 text-foreground">Language</h4>
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center space-x-2 text-foreground/70 hover:text-primary transition-smooth"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>{language === "en" ? "עברית" : "English"}</span>
+                </button>
               </div>
             </div>
           </div>
