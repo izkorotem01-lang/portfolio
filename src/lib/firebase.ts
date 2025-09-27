@@ -3,12 +3,12 @@ import { getStorage } from "firebase/storage";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id",
+  apiKey: "AIzaSyA5LlMgoQ3gjyK6Ce11a7_orStYa5rClcI",
+  authDomain: "rotem-portfolio-b7480.firebaseapp.com",
+  projectId: "rotem-portfolio-b7480",
+  storageBucket: "rotem-portfolio-b7480.firebasestorage.app",
+  messagingSenderId: "145759423765",
+  appId: "1:145759423765:web:9b1a5b17fa62482f502d1c",
 };
 
 // Initialize Firebase

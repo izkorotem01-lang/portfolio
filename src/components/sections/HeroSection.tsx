@@ -8,6 +8,7 @@ import { firebaseVideoService } from "@/lib/firebaseService";
 const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [videoUrls, setVideoUrls] = useState({
     showreel: "",
@@ -31,12 +32,12 @@ const HeroSection = () => {
       try {
         setIsLoading(true);
 
-        // For now, use placeholder URLs - replace with actual Firebase paths
+        // Use actual Firebase paths with correct filenames
         const showreelUrl = await firebaseVideoService.getVideoUrl(
-          "videos/showreel.mp4"
+          "videos/Showreel.mp4"
         );
         const showreelYTUrl = await firebaseVideoService.getVideoUrl(
-          "videos/showreel-yt.mp4"
+          "videos/Showreel_YT.mp4"
         );
 
         setVideoUrls({
@@ -59,24 +60,28 @@ const HeroSection = () => {
   }, []);
 
   const handleVideoClick = () => {
-    if (videoRef.current) {
+    // Get the active video element (YT version for large screens, normal version for small screens)
+    const activeVideo =
+      window.innerWidth >= 768 ? videoRef.current : mobileVideoRef.current;
+
+    if (activeVideo) {
       // Restart video from beginning
-      videoRef.current.currentTime = 0;
-      videoRef.current.play();
+      activeVideo.currentTime = 0;
+      activeVideo.play();
 
       // Toggle volume
       if (isMuted) {
-        videoRef.current.muted = false;
-        videoRef.current.volume = 0.7;
+        activeVideo.muted = false;
+        activeVideo.volume = 0.7;
         setIsMuted(false);
       } else {
-        videoRef.current.muted = true;
+        activeVideo.muted = true;
         setIsMuted(true);
       }
 
       // Scroll to video - center between top of screen and progress bar
       setTimeout(() => {
-        const videoElement = videoRef.current;
+        const videoElement = activeVideo;
         if (!videoElement) return;
 
         const videoRect = videoElement.getBoundingClientRect();
@@ -173,6 +178,7 @@ const HeroSection = () => {
                     {/* Small screens: Normal version (9:16) */}
                     {!isLoading && videoUrls.showreel && (
                       <video
+                        ref={mobileVideoRef}
                         src={videoUrls.showreel}
                         autoPlay
                         muted
