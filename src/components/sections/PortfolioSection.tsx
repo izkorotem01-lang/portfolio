@@ -80,12 +80,12 @@ const PortfolioSection = () => {
             </div>
 
             {/* Category Filter */}
-            <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-12">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`px-6 py-3 rounded-full font-medium transition-smooth ${
+                  className={`px-3 py-2 sm:px-6 sm:py-3 rounded-full font-medium transition-smooth text-sm sm:text-base ${
                     activeCategory === category.id
                       ? "bg-gradient-primary text-white glow"
                       : "btn-glass hover:scale-105"

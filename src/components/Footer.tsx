@@ -23,13 +23,13 @@ const Footer = () => {
               <p className="text-foreground/70 mb-4">{t("hero.subtitle")}</p>
               <div className="flex space-x-4">
                 <a
-                  href="mailto:rotem.izko@gmail.com"
+                  href="mailto:izkorotem01@gmail.com"
                   className="text-foreground/70 hover:text-primary transition-smooth"
                 >
                   <Mail className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://wa.me/1234567890"
+                  href="https://wa.me/972549702996"
                   className="text-foreground/70 hover:text-primary transition-smooth"
                 >
                   <Phone className="w-5 h-5" />
@@ -63,14 +63,34 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Services & Language */}
+            {/* Social Media & Language */}
             <div>
-              <h4 className="font-bold mb-4 text-foreground">Services</h4>
-              <div className="space-y-2 text-foreground/70 mb-6">
-                <p>{t("services.video")}</p>
-                <p>{t("services.motion")}</p>
-                <p>{t("services.social")}</p>
-                <p>{t("services.photo")}</p>
+              <h4 className="font-bold mb-4 text-foreground">Follow Me</h4>
+              <div className="space-y-2 mb-6">
+                <a
+                  href="https://www.instagram.com/rotemizko_/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-foreground/70 hover:text-primary transition-smooth"
+                >
+                  Instagram
+                </a>
+                <a
+                  href="https://www.youtube.com/@RoTeMIZKo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-foreground/70 hover:text-primary transition-smooth"
+                >
+                  YouTube
+                </a>
+                <a
+                  href="https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-foreground/70 hover:text-primary transition-smooth"
+                >
+                  TikTok
+                </a>
               </div>
 
               {/* Language Switcher */}

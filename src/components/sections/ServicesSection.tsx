@@ -10,6 +10,7 @@ import {
   Zap,
   Target,
   TrendingUp,
+  Mic,
 } from "lucide-react";
 
 const ServicesSection = () => {
@@ -48,21 +49,9 @@ const ServicesSection = () => {
     },
     {
       icon: Image,
-      title: t("services.aiImages"),
-      description: "Generate stunning images and graphics with AI",
+      title: t("services.aiContent"),
+      description: "Generate stunning images, videos and graphics with AI",
       color: "from-indigo-500 to-purple-500",
-    },
-    {
-      icon: Video,
-      title: t("services.aiVideos"),
-      description: "Create engaging videos using AI technology",
-      color: "from-cyan-500 to-blue-500",
-    },
-    {
-      icon: Sparkles,
-      title: t("services.aiGraphics"),
-      description: "AI-powered social media graphics and designs",
-      color: "from-pink-500 to-rose-500",
     },
     {
       icon: Zap,
@@ -71,16 +60,16 @@ const ServicesSection = () => {
       color: "from-yellow-500 to-orange-500",
     },
     {
-      icon: Camera,
-      title: t("services.photoEditing"),
-      description: "Professional photo editing and enhancement",
-      color: "from-emerald-500 to-green-500",
-    },
-    {
       icon: Target,
       title: t("services.aiAdvertising"),
       description: "AI-powered advertising creation and campaigns",
       color: "from-red-500 to-pink-500",
+    },
+    {
+      icon: Mic,
+      title: t("services.voiceover"),
+      description: "Professional voiceover and narration services",
+      color: "from-emerald-500 to-green-500",
     },
     {
       icon: TrendingUp,

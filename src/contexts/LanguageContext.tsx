@@ -39,15 +39,10 @@ const translations = {
     "services.social": "Social Media Content",
     "services.photo": "Photo Editing",
     "services.aiSongs": "AI Song Creation",
-    "services.aiImages": "AI Image Generation",
-    "services.aiVideos": "AI Video Creation",
-    "services.aiGraphics": "AI Social Graphics",
+    "services.aiContent": "AI Content Creation",
     "services.logos": "Logo Design",
-    "services.photoEditing": "Photo Editing",
     "services.aiAdvertising": "AI Advertising Creation",
-    "services.aiPromotion": "AI Self-Promotion",
-    "services.paidPromotion": "Paid Promotion",
-    "services.socialPromotion": "Social Media Promotion",
+    "services.voiceover": "Voiceover & Narration",
     "services.digitalPresence": "Digital Presence Building",
 
     // Packages
@@ -71,7 +66,8 @@ const translations = {
     // Contact
     "contact.title": "Let's Work Together",
     "contact.subtitle": "Ready to take your content to the next level?",
-    "contact.email": "rotem.izko@gmail.com",
+    "contact.email": "izkorotem01@gmail.com",
+    "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "WhatsApp Consultation",
 
     // Reviews
@@ -137,15 +133,10 @@ const translations = {
     "services.social": "תוכן לרשתות חברתיות",
     "services.photo": "עריכת תמונות",
     "services.aiSongs": "יצירת שירים ב-AI",
-    "services.aiImages": "יצירת תמונות ב-AI",
-    "services.aiVideos": "יצירת סרטונים ב-AI",
-    "services.aiGraphics": "גרפיקות לסושיאל ב-AI",
+    "services.aiContent": "יצירת תוכן ב-AI",
     "services.logos": "עיצוב לוגואים",
-    "services.photoEditing": "עריכת תמונות",
     "services.aiAdvertising": "יצירת פרסום ב-AI",
-    "services.aiPromotion": "שימוש ב-AI לקידום עצמי",
-    "services.paidPromotion": "קידום ממומן",
-    "services.socialPromotion": "קידום בסושיאל",
+    "services.voiceover": "קריינות והקלטה",
     "services.digitalPresence": "בניית נוכחות דיגיטלית",
 
     // Packages
@@ -169,7 +160,8 @@ const translations = {
     // Contact
     "contact.title": "בואו נעבוד יחד",
     "contact.subtitle": "מוכנים לקחת את התוכן שלכם לשלב הבא?",
-    "contact.email": "rotem.izko@gmail.com",
+    "contact.email": "izkorotem01@gmail.com",
+    "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "יעוץ בוואטסאפ",
 
     // Reviews

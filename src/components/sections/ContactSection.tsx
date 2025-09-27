@@ -46,14 +46,14 @@ const ContactSection = () => {
       icon: Mail,
       title: "Email",
       value: t("contact.email"),
-      action: () => window.open("mailto:rotem.izko@gmail.com"),
+      action: () => window.open("mailto:izkorotem01@gmail.com"),
       color: "from-blue-500 to-blue-600",
     },
     {
       icon: MessageCircle,
       title: t("contact.whatsapp"),
       value: "Quick Response",
-      action: () => window.open("https://wa.me/1234567890"),
+      action: () => window.open("https://wa.me/972549702996"),
       color: "from-green-500 to-green-600",
     },
   ];
