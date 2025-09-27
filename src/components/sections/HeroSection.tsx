@@ -1,14 +1,19 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
-import showreelVideo from "@/assets/Showreel.mp4";
-import showreelVideoYT from "@/assets/Showreel_YT.mp4";
+import { videoUrls } from "@/lib/firebase";
+import { firebaseVideoService } from "@/lib/firebaseService";
 
 const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [videoUrls, setVideoUrls] = useState({
+    showreel: "",
+    showreelYT: "",
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   const scrollToPortfolio = () => {
     document
@@ -19,6 +24,39 @@ const HeroSection = () => {
   const scrollToContact = () => {
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Load video URLs from Firebase Storage
+  useEffect(() => {
+    const loadVideoUrls = async () => {
+      try {
+        setIsLoading(true);
+
+        // For now, use placeholder URLs - replace with actual Firebase paths
+        const showreelUrl = await firebaseVideoService.getVideoUrl(
+          "videos/showreel.mp4"
+        );
+        const showreelYTUrl = await firebaseVideoService.getVideoUrl(
+          "videos/showreel-yt.mp4"
+        );
+
+        setVideoUrls({
+          showreel: showreelUrl,
+          showreelYT: showreelYTUrl,
+        });
+      } catch (error) {
+        console.error("Error loading video URLs:", error);
+        // Fallback to local videos if Firebase fails
+        setVideoUrls({
+          showreel: "/src/assets/Showreel.mp4",
+          showreelYT: "/src/assets/Showreel_YT.mp4",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadVideoUrls();
+  }, []);
 
   const handleVideoClick = () => {
     if (videoRef.current) {
@@ -121,24 +159,37 @@ const HeroSection = () => {
                     onClick={handleVideoClick}
                   >
                     {/* Large screens: YT version (16:9) */}
-                    <video
-                      ref={videoRef}
-                      src={showreelVideoYT}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
-                    />
+                    {!isLoading && videoUrls.showreelYT && (
+                      <video
+                        ref={videoRef}
+                        src={videoUrls.showreelYT}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
+                      />
+                    )}
                     {/* Small screens: Normal version (9:16) */}
-                    <video
-                      src={showreelVideo}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
-                    />
+                    {!isLoading && videoUrls.showreel && (
+                      <video
+                        src={videoUrls.showreel}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
+                      />
+                    )}
+                    {/* Loading placeholder */}
+                    {isLoading && (
+                      <div className="w-full h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block bg-gradient-to-br from-primary/20 to-primary-glow/20 rounded-2xl flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                          <p className="text-foreground/60">Loading video...</p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Volume indicator overlay */}
                     <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 transition-opacity group-hover:opacity-100 opacity-0">

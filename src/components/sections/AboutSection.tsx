@@ -7,9 +7,21 @@ const AboutSection = () => {
   const { t, language } = useLanguage();
 
   const stats = [
-    { icon: Video, number: "500+", label: "Videos Edited" },
-    { icon: User, number: "100+", label: "Happy Clients" },
-    { icon: Award, number: "3+", label: "Years Experience" },
+    {
+      icon: Video,
+      number: "100+",
+      label: language === "he" ? "סרטונים" : "Videos Edited",
+    },
+    {
+      icon: User,
+      number: "20+",
+      label: language === "he" ? "לקוחות מרוצים" : "Happy Clients",
+    },
+    {
+      icon: Award,
+      number: "2+",
+      label: language === "he" ? "שנות ניסיון" : "Years Experience",
+    },
     { icon: Zap, number: "24/7", label: "Support" },
   ];
 
