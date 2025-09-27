@@ -3,14 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Mail,
-  MessageCircle,
-  Instagram,
-  Youtube,
-  Linkedin,
-  Send,
-} from "lucide-react";
+import { Mail, MessageCircle, Instagram, Youtube, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
@@ -62,20 +55,24 @@ const ContactSection = () => {
     {
       icon: Instagram,
       platform: "Instagram",
-      url: "https://instagram.com/rotemizko",
+      url: "https://www.instagram.com/rotemizko_/",
       color: "from-pink-500 to-purple-600",
     },
     {
       icon: Youtube,
       platform: "YouTube",
-      url: "https://youtube.com/rotemizko",
+      url: "https://www.youtube.com/@RoTeMIZKo",
       color: "from-red-500 to-red-600",
     },
     {
-      icon: Linkedin,
-      platform: "LinkedIn",
-      url: "https://linkedin.com/in/rotemizko",
-      color: "from-blue-600 to-blue-700",
+      icon: () => (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.392-2.085-1.392-3.338h-3.067v14.829c0 1.673-1.357 3.029-3.029 3.029s-3.029-1.357-3.029-3.029 1.357-3.029 3.029-3.029c.314 0 .617.048.9.138V9.851c-.282-.04-.57-.061-.862-.061C5.46 9.79 2 13.25 2 17.581S5.46 25.371 9.791 25.371s7.791-3.46 7.791-7.791V9.094a9.965 9.965 0 005.233 1.442V7.469c-.884 0-1.723-.203-2.494-.537z" />
+        </svg>
+      ),
+      platform: "TikTok",
+      url: "https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1",
+      color: "from-black to-gray-800",
     },
   ];
 

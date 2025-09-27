@@ -1,5 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
+import { getRemoteConfig } from "firebase/remote-config";
+import { getFirestore } from "firebase/firestore";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -16,6 +18,15 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Storage
 export const storage = getStorage(app);
+
+// Initialize Firebase Firestore
+export const db = getFirestore(app);
+
+// Initialize Firebase Remote Config
+export const remoteConfig = getRemoteConfig(app);
+remoteConfig.settings = {
+  minimumFetchIntervalMillis: 3600000, // 1 hour
+};
 
 // Video URLs - these will be replaced with actual Firebase Storage URLs
 export const videoUrls = {
