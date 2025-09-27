@@ -1,7 +1,14 @@
 import React, { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Play, Volume2, VolumeX } from "lucide-react";
+import {
+  Play,
+  Volume2,
+  VolumeX,
+  Instagram,
+  Youtube,
+  Linkedin,
+} from "lucide-react";
 import showreelVideo from "@/assets/Showreel.mp4";
 import showreelVideoYT from "@/assets/Showreel_YT.mp4";
 
@@ -94,11 +101,39 @@ const HeroSection = () => {
 
               {/* Subtitle */}
               <p
-                className="text-xl md:text-2xl text-foreground/95 mb-8 leading-relaxed animate-fade-up drop-shadow-md"
+                className="text-xl md:text-2xl text-foreground/95 mb-6 leading-relaxed animate-fade-up drop-shadow-md"
                 style={{ animationDelay: "0.4s" }}
               >
                 {t("hero.subtitle")}
               </p>
+
+              {/* Social Links */}
+              <div
+                className="flex justify-center space-x-6 mb-8 animate-fade-up"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <a
+                  href="#"
+                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-6 h-6" />
+                </a>
+                <a
+                  href="#"
+                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="w-6 h-6" />
+                </a>
+                <a
+                  href="#"
+                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="w-6 h-6" />
+                </a>
+              </div>
 
               {/* CTA Buttons */}
               <div
