@@ -1,20 +1,16 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
-import { videoUrls } from "@/lib/firebase";
-import { firebaseVideoService } from "@/lib/firebaseService";
+import showreelVideo from "@/assets/Showreel.mp4";
+import showreelVideoYT from "@/assets/Showreel_YT.mp4";
 
 const HeroSection = () => {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [videoUrls, setVideoUrls] = useState({
-    showreel: "",
-    showreelYT: "",
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const [showOverlays, setShowOverlays] = useState(true);
 
   const scrollToPortfolio = () => {
     document
@@ -26,40 +22,10 @@ const HeroSection = () => {
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Load video URLs from Firebase Storage
-  useEffect(() => {
-    const loadVideoUrls = async () => {
-      try {
-        setIsLoading(true);
-
-        // Use actual Firebase paths with correct filenames
-        const showreelUrl = await firebaseVideoService.getVideoUrl(
-          "videos/Showreel.mp4"
-        );
-        const showreelYTUrl = await firebaseVideoService.getVideoUrl(
-          "videos/Showreel_YT.mp4"
-        );
-
-        setVideoUrls({
-          showreel: showreelUrl,
-          showreelYT: showreelYTUrl,
-        });
-      } catch (error) {
-        console.error("Error loading video URLs:", error);
-        // Fallback to local videos if Firebase fails
-        setVideoUrls({
-          showreel: "/src/assets/Showreel.mp4",
-          showreelYT: "/src/assets/Showreel_YT.mp4",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadVideoUrls();
-  }, []);
-
   const handleVideoClick = () => {
+    // Hide overlays after first tap (especially for mobile)
+    setShowOverlays(false);
+
     // Get the active video element (YT version for large screens, normal version for small screens)
     const activeVideo =
       window.innerWidth >= 768 ? videoRef.current : mobileVideoRef.current;
@@ -164,41 +130,34 @@ const HeroSection = () => {
                     onClick={handleVideoClick}
                   >
                     {/* Large screens: YT version (16:9) */}
-                    {!isLoading && videoUrls.showreelYT && (
-                      <video
-                        ref={videoRef}
-                        src={videoUrls.showreelYT}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
-                      />
-                    )}
+                    <video
+                      ref={videoRef}
+                      src={showreelVideoYT}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
+                    />
                     {/* Small screens: Normal version (9:16) */}
-                    {!isLoading && videoUrls.showreel && (
-                      <video
-                        ref={mobileVideoRef}
-                        src={videoUrls.showreel}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
-                      />
-                    )}
-                    {/* Loading placeholder */}
-                    {isLoading && (
-                      <div className="w-full h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block bg-gradient-to-br from-primary/20 to-primary-glow/20 rounded-2xl flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-foreground/60">Loading video...</p>
-                        </div>
-                      </div>
-                    )}
+                    <video
+                      ref={mobileVideoRef}
+                      src={showreelVideo}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
+                    />
 
                     {/* Volume indicator overlay */}
-                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 transition-opacity group-hover:opacity-100 opacity-0">
+                    <div
+                      className={`absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 transition-opacity ${
+                        showOverlays
+                          ? "group-hover:opacity-100 opacity-0 md:opacity-0"
+                          : "opacity-0"
+                      }`}
+                    >
                       {isMuted ? (
                         <VolumeX className="w-4 h-4 text-white" />
                       ) : (
@@ -207,7 +166,13 @@ const HeroSection = () => {
                     </div>
 
                     {/* Click to play/restart overlay */}
-                    <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center transition-opacity group-hover:opacity-100 opacity-0">
+                    <div
+                      className={`absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center transition-opacity ${
+                        showOverlays
+                          ? "group-hover:opacity-100 opacity-0 md:opacity-0"
+                          : "opacity-0"
+                      }`}
+                    >
                       <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
                         <Play className="w-8 h-8 text-white" />
                       </div>
