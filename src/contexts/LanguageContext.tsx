@@ -29,6 +29,8 @@ const translations = {
     "about.title": "Who Am I & What I Offer",
     "about.content":
       "I'm a 23-year-old professional video editor specializing in creating immersive content for social media platforms including YouTube, Instagram, TikTok and more. I edit short/long form videos, podcasts, and upgrade each project to the highest level using leading software like Premiere Pro and After Effects. I don't just come to edit a video. I come to help your business grow.",
+    "about.digitalPresence":
+      "I build digital presence for everyone - whether you're a small business owner, large corporation, content creator, YouTuber, freelancer, or anyone who needs a strong digital presence on social networks. I'm your go-to solution for all digital presence needs.",
 
     // Services
     "services.title": "What I Do",
@@ -36,6 +38,17 @@ const translations = {
     "services.motion": "Motion Graphics",
     "services.social": "Social Media Content",
     "services.photo": "Photo Editing",
+    "services.aiSongs": "AI Song Creation",
+    "services.aiImages": "AI Image Generation",
+    "services.aiVideos": "AI Video Creation",
+    "services.aiGraphics": "AI Social Graphics",
+    "services.logos": "Logo Design",
+    "services.photoEditing": "Photo Editing",
+    "services.aiAdvertising": "AI Advertising Creation",
+    "services.aiPromotion": "AI Self-Promotion",
+    "services.paidPromotion": "Paid Promotion",
+    "services.socialPromotion": "Social Media Promotion",
+    "services.digitalPresence": "Digital Presence Building",
 
     // Packages
     "packages.title": "Choose Your Package",
@@ -114,6 +127,8 @@ const translations = {
     "about.title": "מי אני ומה אני מציע",
     "about.content":
       "אני רותם איצקוביץ, עורך וידאו מקצועי בן 23. מתמחה ביצירת תוכן סוחף לרשתות החברתיות – יוטיוב, אינסטגרם, טיקטוק ועוד. אני עורך סרטונים קצרים וארוכים, פודקאסטים, ומשדרג כל פרויקט לרמה הגבוהה ביותר עם תוכנות מובילות כמו Premiere Pro ו-After Effects. אני לא מגיע רק כדי לערוך סרטון. אני מגיע כדי לעזור לעסק שלך לגדול.",
+    "about.digitalPresence":
+      "אני בונה נוכחות דיגיטלית לכולם - בין אם אתה בעל עסק קטן, תאגיד גדול, יוצר תוכן, יוטיובר, פרילנסר, או כל מי שצריך נוכחות דיגיטלית חזקה ברשתות החברתיות. אני הכתובת שלך לכל צרכי הנוכחות הדיגיטלית.",
 
     // Services
     "services.title": "מה אני עושה",
@@ -121,6 +136,17 @@ const translations = {
     "services.motion": "גרפיקה בתנועה",
     "services.social": "תוכן לרשתות חברתיות",
     "services.photo": "עריכת תמונות",
+    "services.aiSongs": "יצירת שירים ב-AI",
+    "services.aiImages": "יצירת תמונות ב-AI",
+    "services.aiVideos": "יצירת סרטונים ב-AI",
+    "services.aiGraphics": "גרפיקות לסושיאל ב-AI",
+    "services.logos": "עיצוב לוגואים",
+    "services.photoEditing": "עריכת תמונות",
+    "services.aiAdvertising": "יצירת פרסום ב-AI",
+    "services.aiPromotion": "שימוש ב-AI לקידום עצמי",
+    "services.paidPromotion": "קידום ממומן",
+    "services.socialPromotion": "קידום בסושיאל",
+    "services.digitalPresence": "בניית נוכחות דיגיטלית",
 
     // Packages
     "packages.title": "בחר את החבילה שלך",

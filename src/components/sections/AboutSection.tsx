@@ -3,7 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { User, Award, Video, Zap } from "lucide-react";
 
 const AboutSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const stats = [
     { icon: Video, number: "500+", label: "Videos Edited" },
@@ -28,9 +28,19 @@ const AboutSection = () => {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Content */}
               <div>
-                <p className="text-lg leading-relaxed text-foreground/90 mb-8">
+                <p className="text-lg leading-relaxed text-foreground/90 mb-6">
                   {t("about.content")}
                 </p>
+
+                {/* Digital Presence Highlight */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 border border-primary/20 rounded-2xl p-6 mb-8">
+                  <h3 className="text-2xl font-bold text-primary mb-4">
+                    {language === "he" ? "המטרה שלי" : "My Mission"}
+                  </h3>
+                  <p className="text-lg text-foreground/90 leading-relaxed">
+                    {t("about.digitalPresence")}
+                  </p>
+                </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

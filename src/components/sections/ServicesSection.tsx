@@ -1,6 +1,16 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Video, Sparkles, Share2, Camera } from "lucide-react";
+import {
+  Video,
+  Sparkles,
+  Share2,
+  Camera,
+  Music,
+  Image,
+  Zap,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 
 const ServicesSection = () => {
   const { t } = useLanguage();
@@ -30,6 +40,54 @@ const ServicesSection = () => {
       description: "Professional photo editing and retouching",
       color: "from-green-500 to-teal-500",
     },
+    {
+      icon: Music,
+      title: t("services.aiSongs"),
+      description: "Create original songs and music using AI technology",
+      color: "from-orange-500 to-red-500",
+    },
+    {
+      icon: Image,
+      title: t("services.aiImages"),
+      description: "Generate stunning images and graphics with AI",
+      color: "from-indigo-500 to-purple-500",
+    },
+    {
+      icon: Video,
+      title: t("services.aiVideos"),
+      description: "Create engaging videos using AI technology",
+      color: "from-cyan-500 to-blue-500",
+    },
+    {
+      icon: Sparkles,
+      title: t("services.aiGraphics"),
+      description: "AI-powered social media graphics and designs",
+      color: "from-pink-500 to-rose-500",
+    },
+    {
+      icon: Zap,
+      title: t("services.logos"),
+      description: "Professional logo design and brand identity",
+      color: "from-yellow-500 to-orange-500",
+    },
+    {
+      icon: Camera,
+      title: t("services.photoEditing"),
+      description: "Professional photo editing and enhancement",
+      color: "from-emerald-500 to-green-500",
+    },
+    {
+      icon: Target,
+      title: t("services.aiAdvertising"),
+      description: "AI-powered advertising creation and campaigns",
+      color: "from-red-500 to-pink-500",
+    },
+    {
+      icon: TrendingUp,
+      title: t("services.digitalPresence"),
+      description: "Build your complete digital presence across all platforms",
+      color: "from-violet-500 to-purple-500",
+    },
   ];
 
   return (
@@ -44,7 +102,7 @@ const ServicesSection = () => {
           </div>
 
           {/* Services Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {services.map((service, index) => (
               <div
                 key={index}

@@ -36,7 +36,7 @@ const ReviewsSection = () => {
             <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
               {language === "he"
                 ? "מה הלקוחות שלנו אומרים על העבודה שלנו"
-                : "What our clients say about our work"}
+                : "What my clients say about my work"}
             </p>
           </div>
 
