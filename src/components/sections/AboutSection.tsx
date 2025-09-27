@@ -1,6 +1,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { User, Award, Video, Zap } from "lucide-react";
+import rotemImage from "@/assets/rotem.JPG";
 
 const AboutSection = () => {
   const { t, language } = useLanguage();
@@ -64,17 +65,15 @@ const AboutSection = () => {
                 </div>
               </div>
 
-              {/* Image/Video Placeholder */}
+              {/* Rotem Image */}
               <div className="relative">
-                <div className="glass-card aspect-video rounded-3xl overflow-hidden">
-                  <div className="w-full h-full bg-gradient-primary/20 flex items-center justify-center">
-                    <div className="text-center">
-                      <Video className="w-16 h-16 mx-auto mb-4 text-primary" />
-                      <p className="text-foreground/80">Video Showcase</p>
-                      <p className="text-sm text-foreground/60 mt-2">
-                        Rotem's Best Work
-                      </p>
-                    </div>
+                <div className="glass-card p-6 rounded-3xl backdrop-blur-xl bg-black/50 border border-white/20">
+                  <div className="rounded-2xl overflow-hidden">
+                    <img
+                      src={rotemImage}
+                      alt="Rotem Izko - Professional Video Editor"
+                      className="w-full h-auto object-cover rounded-2xl shadow-2xl"
+                    />
                   </div>
                 </div>
 

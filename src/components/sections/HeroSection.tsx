@@ -36,11 +36,32 @@ const HeroSection = () => {
         setIsMuted(true);
       }
 
-      // Scroll to video
-      videoRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      // Scroll to video - center between top of screen and progress bar
+      setTimeout(() => {
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        const videoRect = videoElement.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const progressBarHeight = 80; // Approximate height of progress bar
+        const availableHeight = windowHeight - progressBarHeight;
+
+        // Calculate where the video should be positioned (center of available space)
+        const targetTop = (availableHeight - videoRect.height) / 2;
+
+        // Get current scroll position and video's current position
+        const currentScrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        const videoCurrentTop = videoRect.top + currentScrollTop;
+
+        // Calculate the scroll position needed to center the video
+        const targetScrollTop = videoCurrentTop - targetTop;
+
+        window.scrollTo({
+          top: Math.max(0, targetScrollTop),
+          behavior: "smooth",
+        });
+      }, 100); // Small delay to ensure video is ready
     }
   };
 
