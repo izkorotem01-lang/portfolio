@@ -92,9 +92,9 @@ const ContactSection = () => {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-12">
-              {/* Contact Information */}
-              <div className="space-y-8">
+            {/* Contact Information - Centered */}
+            <div className="flex justify-center">
+              <div className="max-w-2xl w-full space-y-8">
                 {/* Contact Methods */}
                 <div className="space-y-6">
                   {contactMethods.map((method, index) => (
@@ -121,11 +121,11 @@ const ContactSection = () => {
                 </div>
 
                 {/* Social Links */}
-                <div>
+                <div className="text-center">
                   <h3 className="text-xl font-bold mb-4 text-foreground">
                     Follow My Work
                   </h3>
-                  <div className="flex space-x-4">
+                  <div className="flex justify-center space-x-4">
                     {socialLinks.map((social, index) => (
                       <button
                         key={index}
@@ -137,55 +137,6 @@ const ContactSection = () => {
                     ))}
                   </div>
                 </div>
-              </div>
-
-              {/* Contact Form */}
-              <div className="glass-card p-8 rounded-3xl">
-                <h3 className="text-2xl font-bold mb-6 text-foreground">
-                  Send a Message
-                </h3>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <Input
-                      name="name"
-                      placeholder="Your Name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-background/50 border-border/50 focus:border-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      name="email"
-                      type="email"
-                      placeholder="Your Email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-background/50 border-border/50 focus:border-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <Textarea
-                      name="message"
-                      placeholder="Tell me about your project..."
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      required
-                      rows={5}
-                      className="bg-background/50 border-border/50 focus:border-primary resize-none"
-                    />
-                  </div>
-
-                  <Button type="submit" className="btn-hero w-full group">
-                    <Send className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" />
-                    Send Message
-                  </Button>
-                </form>
               </div>
             </div>
           </div>

@@ -51,7 +51,7 @@ const translations = {
     "packages.basic.price": "₪250-₪400",
     "packages.premium.title": "PREMIUM - Complete Production in Your Hands",
     "packages.premium.price": "₪400-₪550",
-    "packages.custom.title": "CUSTOM - Complete Monthly Business Solution",
+    "packages.custom.title": "CUSTOM - Complete Solution",
     "packages.custom.price": "Custom Pricing",
 
     // Portfolio

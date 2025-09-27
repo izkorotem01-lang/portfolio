@@ -44,8 +44,8 @@ const Footer = () => {
                 {[
                   { label: t("nav.about"), href: "#about" },
                   { label: t("nav.services"), href: "#services" },
-                  { label: t("nav.packages"), href: "#packages" },
                   { label: t("nav.portfolio"), href: "#portfolio" },
+                  { label: t("nav.packages"), href: "#packages" },
                   { label: t("nav.contact"), href: "#contact" },
                 ].map((link) => (
                   <button

@@ -73,7 +73,7 @@ const PackagesSection = () => {
               {packages.map((pkg, index) => (
                 <div
                   key={pkg.id}
-                  className={`package-card relative animate-fade-up ${
+                  className={`package-card relative animate-fade-up flex flex-col h-full ${
                     pkg.popular ? "scale-105 glow" : ""
                   }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -102,8 +102,8 @@ const PackagesSection = () => {
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <div className="space-y-3 mb-8">
+                  {/* Features - This will grow to fill available space */}
+                  <div className="flex-1 space-y-3 mb-8">
                     {pkg.features.map((feature, featureIndex) => (
                       <div
                         key={featureIndex}
@@ -127,7 +127,7 @@ const PackagesSection = () => {
                     ))}
                   </div>
 
-                  {/* CTA Button */}
+                  {/* CTA Button - This will stick to the bottom */}
                   <Button
                     className={`w-full ${
                       pkg.popular ? "btn-hero" : "btn-glass"

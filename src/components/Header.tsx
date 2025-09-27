@@ -30,8 +30,15 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <nav className="flex items-center justify-between">
           {/* Logo */}
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {t("hero.name")}
+          <div className="flex items-center space-x-3">
+            <img
+              src="/icon.png"
+              alt="Rotem Izko Logo"
+              className="w-10 h-10 rounded-lg"
+            />
+            <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              {t("hero.name")}
+            </div>
           </div>
 
           {/* Desktop Navigation */}

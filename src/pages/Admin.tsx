@@ -47,8 +47,10 @@ const Admin = () => {
   const [editingVideo, setEditingVideo] = useState<PortfolioVideo | null>(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showVideoForm, setShowVideoForm] = useState(false);
+  const [showBatchUploadForm, setShowBatchUploadForm] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [batchUploading, setBatchUploading] = useState(false);
 
   useEffect(() => {
     const fetchRemoteConfig = async () => {
@@ -231,6 +233,47 @@ const Admin = () => {
     }
   };
 
+  // Batch upload functions
+  const handleBatchVideoUpload = async (
+    files: File[],
+    categoryId: string,
+    order: number
+  ) => {
+    setBatchUploading(true);
+    try {
+      const uploadPromises = files.map(async (file, index) => {
+        const fileName = `videos/${Date.now()}-${index}-${file.name}`;
+        const videoUrl = await uploadFile(file, fileName);
+
+        // Create video entry with empty titles/subtitles as requested
+        const videoData: Omit<
+          PortfolioVideo,
+          "id" | "createdAt" | "updatedAt"
+        > = {
+          categoryId,
+          title: "", // Empty as requested
+          titleHe: "", // Empty as requested
+          subtitle: "", // Empty as requested
+          subtitleHe: "", // Empty as requested
+          videoUrl,
+          thumbnailUrl: "", // No thumbnail for batch uploads
+          order: order + index, // Increment order for each video
+        };
+
+        return createVideo(videoData);
+      });
+
+      await Promise.all(uploadPromises);
+      await loadPortfolioData();
+      setShowBatchUploadForm(false);
+    } catch (error) {
+      console.error("Error in batch upload:", error);
+      setError("Failed to upload videos");
+    } finally {
+      setBatchUploading(false);
+    }
+  };
+
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 p-6">
@@ -294,10 +337,18 @@ const Admin = () => {
               </div>
 
               {/* Category Form */}
-              {showCategoryForm && (
+              {(showCategoryForm || editingCategory) && (
                 <CategoryForm
-                  onSubmit={handleCreateCategory}
-                  onCancel={() => setShowCategoryForm(false)}
+                  onSubmit={
+                    editingCategory
+                      ? (data) => handleUpdateCategory(editingCategory.id, data)
+                      : handleCreateCategory
+                  }
+                  onCancel={() => {
+                    setShowCategoryForm(false);
+                    setEditingCategory(null);
+                  }}
+                  initialData={editingCategory}
                 />
               )}
 
@@ -346,14 +397,33 @@ const Admin = () => {
             <div className="bg-gray-800 rounded-lg p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">Videos</h2>
-                <Button
-                  onClick={() => setShowVideoForm(true)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Video
-                </Button>
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={() => setShowBatchUploadForm(true)}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Batch Upload
+                  </Button>
+                  <Button
+                    onClick={() => setShowVideoForm(true)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Video
+                  </Button>
+                </div>
               </div>
+
+              {/* Batch Upload Form */}
+              {showBatchUploadForm && (
+                <BatchUploadForm
+                  categories={categories}
+                  onSubmit={handleBatchVideoUpload}
+                  onCancel={() => setShowBatchUploadForm(false)}
+                  uploading={batchUploading}
+                />
+              )}
 
               {/* Video Form */}
               {showVideoForm && (
@@ -491,6 +561,23 @@ const CategoryForm = ({
     nameHe: initialData?.nameHe || "",
     order: initialData?.order || 0,
   });
+
+  // Update form data when initialData changes (for editing)
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        nameHe: initialData.nameHe || "",
+        order: initialData.order || 0,
+      });
+    } else {
+      setFormData({
+        name: "",
+        nameHe: "",
+        order: 0,
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -848,6 +935,177 @@ const VideoForm = ({
               : initialData
               ? "Update"
               : "Create"}
+          </Button>
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="outline"
+            className="border-gray-500 text-gray-300"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// Batch Upload Form Component
+const BatchUploadForm = ({
+  categories,
+  onSubmit,
+  onCancel,
+  uploading,
+}: {
+  categories: PortfolioCategory[];
+  onSubmit: (files: File[], categoryId: string, order: number) => void;
+  onCancel: () => void;
+  uploading: boolean;
+}) => {
+  const [formData, setFormData] = useState({
+    categoryId: "",
+    order: 0,
+  });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedFiles.length === 0) {
+      alert("Please select at least one video file");
+      return;
+    }
+    onSubmit(selectedFiles, formData.categoryId, formData.order);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="bg-gray-700 rounded-lg p-6 mb-6">
+      <h3 className="text-xl font-bold text-white mb-4">Batch Upload Videos</h3>
+      <p className="text-gray-300 mb-4">
+        Upload multiple videos at once. Titles and subtitles will be left empty
+        as requested.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Category
+            </label>
+            <select
+              value={formData.categoryId}
+              onChange={(e) =>
+                setFormData({ ...formData, categoryId: e.target.value })
+              }
+              className="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2"
+              required
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Starting Order
+            </label>
+            <Input
+              type="number"
+              value={formData.order}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  order: parseInt(e.target.value) || 0,
+                })
+              }
+              placeholder="Starting order number"
+              className="bg-gray-600 border-gray-500 text-white"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Select Video Files
+          </label>
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="video/*"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              id="batch-video-upload"
+            />
+            <label
+              htmlFor="batch-video-upload"
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md cursor-pointer transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Select Multiple Videos</span>
+            </label>
+
+            {selectedFiles.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-300 mb-2">
+                  Selected {selectedFiles.length} file(s):
+                </p>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gray-600 rounded-md px-3 py-2"
+                    >
+                      <span className="text-white text-sm truncate flex-1">
+                        {file.name}
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        size="sm"
+                        variant="outline"
+                        className="text-red-400 border-red-400 hover:bg-red-900 ml-2"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-md p-3">
+          <p className="text-yellow-200 text-sm">
+            <strong>Note:</strong> All videos will be uploaded with empty titles
+            and subtitles. You can edit them individually after upload if
+            needed.
+          </p>
+        </div>
+
+        <div className="flex space-x-4">
+          <Button
+            type="submit"
+            disabled={uploading || selectedFiles.length === 0}
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploading
+              ? "Uploading..."
+              : `Upload ${selectedFiles.length} Videos`}
           </Button>
           <Button
             type="button"

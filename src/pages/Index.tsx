@@ -9,6 +9,7 @@ import PortfolioSection from "@/components/sections/PortfolioSection";
 import ReviewsSection from "@/components/sections/ReviewsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import Footer from "@/components/Footer";
+import ScrollProgressIndicator from "@/components/ScrollProgressIndicator";
 
 const Index = () => {
   return (
@@ -25,6 +26,9 @@ const Index = () => {
           <ContactSection />
         </main>
         <Footer />
+
+        {/* Scroll Progress Indicator - Only on desktop */}
+        <ScrollProgressIndicator />
       </div>
     </LanguageProvider>
   );
