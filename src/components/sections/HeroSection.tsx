@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import showreelVideo from "@/assets/Showreel.mp4";
+import showreelVideoYT from "@/assets/Showreel_YT.mp4";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -28,12 +29,18 @@ const HeroSection = () => {
       // Toggle volume
       if (isMuted) {
         videoRef.current.muted = false;
-        videoRef.current.volume = 0.7; // Set volume to 70%
+        videoRef.current.volume = 0.7;
         setIsMuted(false);
       } else {
         videoRef.current.muted = true;
         setIsMuted(true);
       }
+
+      // Scroll to video
+      videoRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   };
 
@@ -41,12 +48,9 @@ const HeroSection = () => {
     <section id="hero" className="min-h-screen relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-20">
         <div className="max-w-7xl mx-auto">
-          <div
-            className="grid lg:grid-cols-2 gap-12 items-center min-h-screen pt-0
-           pb-20"
-          >
-            {/* Content Section - Left */}
-            <div className="text-center lg:text-left">
+          <div className="flex flex-col items-center min-h-screen pt-16 md:pt-20 lg:pt-24 pb-20">
+            {/* Content Section - Top */}
+            <div className="text-center mb-8 md:mb-12">
               {/* Main Title */}
               <h1
                 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 bg-gradient-primary bg-clip-text text-transparent animate-fade-up"
@@ -68,7 +72,7 @@ const HeroSection = () => {
 
               {/* CTA Buttons */}
               <div
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-fade-up"
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-up"
                 style={{ animationDelay: "0.6s" }}
               >
                 <Button onClick={scrollToPortfolio} className="btn-hero group">
@@ -86,23 +90,33 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Video Section - Right */}
-            <div className="flex justify-center lg:justify-end animate-fade-up">
+            {/* Video Section - Bottom */}
+            <div className="flex justify-center w-full max-w-7xl animate-fade-up">
               <div className="relative">
-                {/* Full-height container for vertical video */}
-                <div className="rounded-3xl mx-auto bg-black/20 border border-white/10 backdrop-blur-xl max-w-[420px] lg:max-w-[520px] w-full">
+                {/* Video container */}
+                <div className="rounded-3xl mx-auto bg-black/20 border border-white/10 backdrop-blur-xl w-full">
                   <div
                     className="relative group cursor-pointer"
                     onClick={handleVideoClick}
                   >
+                    {/* Large screens: YT version (16:9) */}
                     <video
                       ref={videoRef}
+                      src={showreelVideoYT}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
+                    />
+                    {/* Small screens: Normal version (9:16) */}
+                    <video
                       src={showreelVideo}
                       autoPlay
                       muted
                       loop
                       playsInline
-                      className="w-full h-[80vh] max-h-[calc(100vh-200px)] rounded-2xl shadow-2xl aspect-[9/16] object-cover transition-transform group-hover:scale-105"
+                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
                     />
 
                     {/* Volume indicator overlay */}

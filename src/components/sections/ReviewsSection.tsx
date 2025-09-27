@@ -1,204 +1,87 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Star, Quote } from "lucide-react";
 
 const ReviewsSection = () => {
-  const { t } = useLanguage();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { language } = useLanguage();
 
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    let animationId: number;
-    let scrollPosition = 0;
-    const scrollSpeed = 0.3; // pixels per frame - slower for smoother movement
-    let isPaused = false;
-
-    const scroll = () => {
-      if (!isPaused) {
-        scrollPosition += scrollSpeed;
-        scrollContainer.scrollLeft = scrollPosition;
-
-        // Reset position when we've scrolled past all content
-        if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-          scrollPosition = 0;
-        }
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-
-    // Start scrolling
-    animationId = requestAnimationFrame(scroll);
-
-    // Pause on hover
-    const handleMouseEnter = () => {
-      isPaused = true;
-    };
-
-    const handleMouseLeave = () => {
-      isPaused = false;
-    };
-
-    scrollContainer.addEventListener("mouseenter", handleMouseEnter);
-    scrollContainer.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      scrollContainer.removeEventListener("mouseenter", handleMouseEnter);
-      scrollContainer.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
-
-  const reviews = [
-    {
-      id: 1,
-      name: "Sarah Cohen",
-      role: "Marketing Manager",
-      company: "TechStart Ltd.",
+  // Single review content based on language
+  const reviewContent = {
+    hebrew: {
+      name: "מישל זוויגי",
+      company: "שפו דיגיטל",
       rating: 5,
-      content:
-        "Rotem transformed our social media presence completely. His creative vision and technical expertise are unmatched. Our engagement rates increased by 300%!",
+      text: "כפרילנסר מוכשר בתחומי העיצוב הגרפי, עריכת הווידאו ויצירת הקריאייטיבים עבור חברתנו, שפו דיגיטל. במסגרת עבודתו, רותם הוא גורם קריטי להצלחת הקמפיינים שלנו. הוא אחראי על מגוון רחב של תוצרים, ביניהם: קריאייטיבים חזקים לפרסומות, עם יכולת יוצאת דופן לייצר מודעות בולטות ואפקטיביות. פרסומות בבינה מלאכותית (AI) ברמה גבוהה מאוד, המשלבות טכנולוגיה מתקדמת עם חשיבה עיצובית. עריכות וידאו מקצועיות ואיכותיות. גרפיקות ופוסטים מגוונים, כולל תוכן ייעודי לחגים ואירועים שונים. שביעות הרצון שלנו מרותם היא מלאה. הוא מקצוען אמיתי שמפגין כישורים יוצאי דופן לצד תכונות אופי חיוניות: מקצועיות ואיכות בלתי מתפשרת, עמידה קפדנית בזמנים, ויכולת עבודה תחת לחץ. אנו ממליצים על רותם לכל חברה או גורם הזקוק לשירותי קריאייטיב, גרפיקה ועריכת וידאו ברמה הגבוהה ביותר.",
     },
-    {
-      id: 2,
-      name: "David Miller",
-      role: "Content Creator",
-      company: "YouTube Channel",
+    english: {
+      name: "Michel Zvigi",
+      company: "Shapo Digital",
       rating: 5,
-      content:
-        "Working with Rotem was a game-changer. He understood my vision perfectly and delivered beyond expectations. The quality and attention to detail are exceptional.",
+      text: "As a talented freelancer in the fields of graphic design, video editing, and creative production for our company, Shapo Digital. In the course of his work, Rotem is a critical factor in the success of our campaigns. He is responsible for a wide variety of deliverables, including: Strong creative advertisements, with exceptional ability to produce prominent and effective ads. High-level artificial intelligence (AI) advertisements, combining advanced technology with design thinking. Professional and quality video editing. Diverse graphics and posts, including content dedicated to holidays and various events. Our satisfaction with Rotem is complete. He is a true professional who demonstrates exceptional skills alongside essential character traits: Professionalism and uncompromising quality, strict adherence to deadlines, and ability to work under pressure. We recommend Rotem to any company or entity in need of creative, graphics, and video editing services at the highest level.",
     },
-    {
-      id: 3,
-      name: "Maya Levi",
-      role: "Business Owner",
-      company: "Local Restaurant",
-      rating: 5,
-      content:
-        "Professional, creative, and reliable. Rotem helped us create stunning promotional videos that significantly boosted our customer base. Highly recommended!",
-    },
-    {
-      id: 4,
-      name: "Alex Thompson",
-      role: "Podcast Host",
-      company: "Tech Talks Podcast",
-      rating: 5,
-      content:
-        "Rotem takes podcast editing to the next level. Clean audio, perfect transitions, and engaging visuals. Our listener retention improved dramatically.",
-    },
-    {
-      id: 5,
-      name: "Rachel Green",
-      role: "Influencer",
-      company: "Instagram @lifestyle_rachel",
-      rating: 5,
-      content:
-        "Amazing work! Rotem has an incredible eye for detail and knows exactly what works on social media. My content has never looked better.",
-    },
-    {
-      id: 6,
-      name: "Michael Chen",
-      role: "Startup Founder",
-      company: "InnovateTech",
-      rating: 5,
-      content:
-        "Rotem helped us create our company introduction video. The result was professional, engaging, and perfectly captured our brand essence.",
-    },
-  ];
+  };
+
+  const review =
+    language === "he" ? reviewContent.hebrew : reviewContent.english;
 
   return (
-    <section id="reviews" className="py-20 relative overflow-hidden z-10">
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-7xl mx-auto">
+    <section id="reviews" className="py-20 relative">
+      <div className="container mx-auto px-4">
+        <div className="max-w-6xl mx-auto">
           {/* Section Title */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-              {t("reviews.title")}
+              {language === "he" ? "המלצות" : "Reviews"}
             </h2>
-            <p className="text-xl text-foreground/80 max-w-3xl mx-auto">
-              {t("reviews.subtitle")}
+            <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
+              {language === "he"
+                ? "מה הלקוחות שלנו אומרים על העבודה שלנו"
+                : "What our clients say about our work"}
             </p>
           </div>
-        </div>
-      </div>
 
-      {/* Auto-scrolling Reviews Carousel - Outside main container */}
-      <div className="relative -mx-4">
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-8 overflow-x-hidden scrollbar-hide py-8"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {/* Duplicate reviews for seamless loop */}
-          {[...reviews, ...reviews].map((review, index) => (
-            <div
-              key={`${review.id}-${index}`}
-              className="flex-shrink-0 w-80 glass-card p-6 rounded-3xl relative hover:scale-110 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 ease-out cursor-pointer group backdrop-blur-2xl border border-white/20"
-              style={{ backgroundColor: "rgba(13, 19, 31, 0.8)" }}
-            >
-              {/* Review Content */}
-              <p className="text-foreground/90 mb-6 leading-relaxed text-sm group-hover:text-foreground transition-colors duration-300">
-                "{review.content}"
-              </p>
+          {/* Single Review */}
+          <div className="relative">
+            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30">
+              <div className="text-center">
+                {/* Quote Icon */}
+                <div className="mb-6">
+                  <Quote className="w-12 h-12 text-primary mx-auto" />
+                </div>
 
-              {/* Reviewer Info */}
-              <div className="group-hover:scale-105 transition-transform duration-300">
-                <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300">
-                  {review.name}
-                </h4>
-                <p className="text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-300">
-                  {review.role}
-                </p>
-                <p className="text-xs text-primary group-hover:text-primary-glow transition-colors duration-300">
-                  {review.company}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                {/* Review Content */}
+                <div className="mb-8">
+                  <p
+                    className={`text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 ${
+                      language === "he" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    "{review.text}"
+                  </p>
 
-      {/* Call to Action */}
-      {/* <div className="container mx-auto px-4 relative z-10 mt-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <div className="glass-card p-8 rounded-3xl max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold mb-4 text-foreground">
-                {t("reviews.cta.title")}
-              </h3>
-              <p className="text-foreground/80 mb-6">
-                {t("reviews.cta.subtitle")}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="#contact"
-                  className="btn-hero inline-flex items-center justify-center px-8 py-3 rounded-2xl font-semibold transition-smooth"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .querySelector("#contact")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  {t("reviews.cta.contact")}
-                </a>
-                <a
-                  href="#portfolio"
-                  className="btn-glass inline-flex items-center justify-center px-8 py-3 rounded-2xl font-semibold transition-smooth"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .querySelector("#portfolio")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  {t("reviews.cta.portfolio")}
-                </a>
+                  {/* Rating */}
+                  <div className="flex justify-center mb-4">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-6 h-6 text-yellow-400 fill-current"
+                      />
+                    ))}
+                  </div>
+
+                  {/* Reviewer Info */}
+                  <div>
+                    <h4 className="text-xl font-bold text-foreground mb-1">
+                      {review.name}
+                    </h4>
+                    <p className="text-foreground/70">{review.company}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div> */}
+      </div>
     </section>
   );
 };
