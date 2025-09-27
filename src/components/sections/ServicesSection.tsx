@@ -91,34 +91,29 @@ const ServicesSection = () => {
           </div>
 
           {/* Services Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
             {services.map((service, index) => (
               <div
                 key={index}
-                className="group animate-fade-up backdrop-blur-2xl border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300 ease-out cursor-pointer"
+                className="group animate-fade-up backdrop-blur-2xl border border-white/20 rounded-2xl p-3 sm:p-4 hover:scale-105 transition-all duration-300 ease-out cursor-pointer flex flex-col items-center justify-center min-h-[100px] sm:min-h-[120px] w-[140px] sm:w-[200px]"
                 style={{
                   animationDelay: `${index * 0.1}s`,
                   backgroundColor: "rgba(13, 19, 31, 0.8)",
                 }}
               >
-                <div className="text-center">
-                  {/* Icon */}
-                  <div className="relative mb-6">
-                    <div
-                      className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${service.color} p-4 glow-hover`}
-                    >
-                      <service.icon className="w-full h-full text-white" />
-                    </div>
+                {/* Icon */}
+                <div className="mb-2 sm:mb-3">
+                  <div
+                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r ${service.color} p-2 sm:p-3 glow-hover flex items-center justify-center`}
+                  >
+                    <service.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-smooth">
-                    {service.title}
-                  </h3>
-                  <p className="text-foreground/70 text-sm leading-relaxed">
-                    {service.description}
-                  </p>
                 </div>
+
+                {/* Title */}
+                <h3 className="text-sm sm:text-lg font-bold text-foreground group-hover:text-primary transition-smooth text-center w-full leading-tight">
+                  {service.title}
+                </h3>
 
                 {/* Hover Effect */}
                 <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-2xl transition-smooth" />
