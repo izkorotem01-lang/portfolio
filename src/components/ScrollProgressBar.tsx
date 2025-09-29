@@ -7,6 +7,9 @@ const ScrollProgressBar: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1920
   );
+  const [sectionSizes, setSectionSizes] = useState<
+    { id: string; percentage: number; startPos: number }[]
+  >([]);
 
   // Define the sections with useMemo to prevent re-creation on every render
   const sections = useMemo(
@@ -54,6 +57,59 @@ const ScrollProgressBar: React.FC = () => {
     setIsDragging(true);
     handleTimelineClick(e);
   };
+
+  // Calculate section sizes based on actual DOM heights
+  useEffect(() => {
+    const calculateSectionSizes = () => {
+      const sectionHeights: { id: string; height: number }[] = [];
+
+      sections.forEach((section) => {
+        const element = document.getElementById(section.id);
+        if (element) {
+          sectionHeights.push({
+            id: section.id,
+            height: element.offsetHeight,
+          });
+        }
+      });
+
+      // Calculate percentages and start positions with padding
+      const totalHeight = sectionHeights.reduce((sum, s) => sum + s.height, 0);
+      const gapPercentage = 0.5; // 0.5% gap between sections
+      const totalGaps = (sections.length - 1) * gapPercentage;
+      const availableWidth = 100 - totalGaps;
+
+      let currentPos = 0;
+      const sizes = sectionHeights.map((section, index) => {
+        const percentage = (section.height / totalHeight) * availableWidth;
+        const startPos = currentPos;
+        currentPos += percentage + gapPercentage;
+        return {
+          id: section.id,
+          percentage,
+          startPos,
+        };
+      });
+
+      setSectionSizes(sizes);
+    };
+
+    // Calculate on mount and when window resizes
+    calculateSectionSizes();
+    window.addEventListener("resize", calculateSectionSizes);
+    window.addEventListener("load", calculateSectionSizes);
+
+    // Also recalculate after delays to ensure all content is loaded (images, videos, etc.)
+    const timeout1 = setTimeout(calculateSectionSizes, 500);
+    const timeout2 = setTimeout(calculateSectionSizes, 1500);
+
+    return () => {
+      window.removeEventListener("resize", calculateSectionSizes);
+      window.removeEventListener("load", calculateSectionSizes);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+    };
+  }, [sections]);
 
   useEffect(() => {
     const updateScrollProgress = () => {
@@ -198,65 +254,44 @@ const ScrollProgressBar: React.FC = () => {
       <div className="bg-gray-900/98 backdrop-blur-sm border-t border-gray-600/50 shadow-2xl">
         {/* Top Bars - Site Sections */}
         <div className="h-6 bg-gray-800/90 relative px-2 py-1">
-          {/* Hero Section */}
-          <div
-            className="absolute left-[1%] w-[18%] h-4 bg-gradient-to-r from-orange-600 to-red-600 rounded border border-orange-500 flex items-center justify-center shadow-sm shadow-orange-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-orange-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("hero")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              Introduction
-            </span>
-          </div>
+          {sectionSizes.length > 0 &&
+            sections.map((section, index) => {
+              const sizeData = sectionSizes.find((s) => s.id === section.id);
+              if (!sizeData) return null;
 
-          {/* Reviews Section */}
-          <div
-            className="absolute left-[20%] w-[18%] h-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded border border-purple-500 flex items-center justify-center shadow-sm shadow-purple-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("reviews")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              Reviews
-            </span>
-          </div>
+              // Define gradient colors for each section
+              const gradientColors: Record<string, string> = {
+                hero: "from-orange-600 to-red-600 border-orange-500 shadow-orange-500/30 hover:shadow-orange-500/40",
+                reviews:
+                  "from-purple-600 to-indigo-600 border-purple-500 shadow-purple-500/30 hover:shadow-purple-500/40",
+                about:
+                  "from-blue-600 to-cyan-600 border-blue-500 shadow-blue-500/30 hover:shadow-blue-500/40",
+                portfolio:
+                  "from-orange-500 to-red-500 border-orange-400 shadow-orange-500/30 hover:shadow-orange-500/40",
+                packages:
+                  "from-indigo-600 to-purple-600 border-indigo-500 shadow-indigo-500/30 hover:shadow-indigo-500/40",
+                contact:
+                  "from-teal-600 to-green-600 border-teal-500 shadow-teal-500/30 hover:shadow-teal-500/40",
+              };
 
-          {/* About Section (Combined with Services) */}
-          <div
-            className="absolute left-[39%] w-[18%] h-4 bg-gradient-to-r from-blue-600 to-cyan-600 rounded border border-blue-500 flex items-center justify-center shadow-sm shadow-blue-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-blue-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("about")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              About
-            </span>
-          </div>
-
-          {/* Portfolio Section */}
-          <div
-            className="absolute left-[58%] w-[18%] h-4 bg-gradient-to-r from-orange-500 to-red-500 rounded border border-orange-400 flex items-center justify-center shadow-sm shadow-orange-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-orange-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("portfolio")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              Portfolio
-            </span>
-          </div>
-
-          {/* Packages Section */}
-          <div
-            className="absolute left-[77%] w-[11%] h-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded border border-indigo-500 flex items-center justify-center shadow-sm shadow-indigo-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("packages")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              Packages
-            </span>
-          </div>
-
-          {/* Contact Section */}
-          <div
-            className="absolute left-[89%] w-[10%] h-4 bg-gradient-to-r from-teal-600 to-green-600 rounded border border-teal-500 flex items-center justify-center shadow-sm shadow-teal-500/30 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-teal-500/40 transition-all duration-200"
-            onClick={() => scrollToSection("contact")}
-          >
-            <span className="text-xs text-white font-semibold tracking-wide">
-              Contact
-            </span>
-          </div>
+              return (
+                <div
+                  key={section.id}
+                  className={`absolute h-4 bg-gradient-to-r rounded border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
+                    gradientColors[section.id]
+                  }`}
+                  style={{
+                    left: `${sizeData.startPos}%`,
+                    width: `${sizeData.percentage}%`,
+                  }}
+                  onClick={() => scrollToSection(section.id)}
+                >
+                  <span className="text-xs text-white font-semibold tracking-wide truncate px-1">
+                    {section.name}
+                  </span>
+                </div>
+              );
+            })}
         </div>
 
         {/* Timeline Grid Lines */}
