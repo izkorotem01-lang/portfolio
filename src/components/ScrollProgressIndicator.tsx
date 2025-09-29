@@ -352,69 +352,55 @@ const ScrollProgressIndicator = () => {
         >
           <style>
             {`
+               @property --contact-angle {
+                 syntax: "<angle>";
+                 initial-value: 0deg;
+                 inherits: false;
+               }
+               
                #contact > div > div > .glass-card {
                  position: relative !important;
                  background: rgba(0, 0, 0, 0.7) !important;
                  border: none !important;
                  border-radius: 24px !important;
-                 box-shadow: 0 0 ${Math.min(
-                   contactProgress / 2,
-                   40
-                 )}px rgba(168, 85, 247, 0.${Math.min(
-              contactProgress / 3,
-              30
-            )}),
-                            0 0 ${Math.min(
-                              contactProgress,
-                              60
-                            )}px rgba(236, 72, 153, 0.${Math.min(
-              contactProgress / 4,
-              20
-            )}) !important;
+                 box-shadow: 0 0 40px rgba(168, 85, 247, 0.4),
+                            0 0 60px rgba(236, 72, 153, 0.3) !important;
                }
                
+               #contact > div > div > .glass-card::after,
                #contact > div > div > .glass-card::before {
                  content: '';
                  position: absolute;
-                 inset: 0px;
-                 pointer-events: none;
-                 border-radius: 24px;
-                 background: url("data:image/svg+xml,${encodeURIComponent(`
-                   <svg width="100%" height="100%" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                     <defs>
-                       <linearGradient id="contact-border-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                         <stop offset="0%" style="stop-color:#a855f7"/>
-                         <stop offset="50%" style="stop-color:#ec4899"/>
-                         <stop offset="100%" style="stop-color:#22d3ee"/>
-                       </linearGradient>
-                     </defs>
-                     <rect x="0.5" y="0.5" width="399" height="199" rx="7" ry="7" 
-                           fill="transparent" 
-                           stroke="rgba(255, 255, 255, 0.3)" 
-                           stroke-width="1"
-                           filter="drop-shadow(0 0 2px rgba(255, 255, 255, 0.1))"/>
-                     <rect x="0.5" y="0.5" width="399" height="199" rx="7" ry="7" 
-                           fill="transparent" 
-                           stroke="url(#contact-border-gradient)" 
-                           stroke-width="1"
-                           stroke-dasharray="${(399 + 199) * 2}"
-                           stroke-dashoffset="${
-                             (399 + 199) *
-                             2 *
-                             (1 -
-                               (hasAnimatedContact
-                                 ? Math.max(
-                                     contactBorderProgress,
-                                     finalContactBorderProgress
-                                   )
-                                 : contactBorderProgress) /
-                                 100)
-                           }"
-                           filter="drop-shadow(0 0 8px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 16px rgba(236, 72, 153, 0.6))"
-                           style="transition: stroke-dashoffset 0.1s ease-out;"/>
-                   </svg>
-                 `)}")} center/100% 100% no-repeat;
+                 inset: -3px;
+                 background: conic-gradient(
+                   from var(--contact-angle), 
+                   #a855f7, 
+                   #ec4899, 
+                   #22d3ee, 
+                   #a855f7
+                 );
+                 border-radius: 27px;
                  z-index: -1;
+                 mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                 -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                 mask-composite: xor;
+                 -webkit-mask-composite: xor;
+                 padding: 3px;
+                 animation: ${
+                   hasAnimatedContact
+                     ? "contactSpin 3s linear infinite"
+                     : "none"
+                 };
+               }
+               
+               #contact > div > div > .glass-card::before {
+                 filter: blur(1.5rem);
+                 opacity: 0.5;
+               }
+               
+               @keyframes contactSpin {
+                 from { --contact-angle: 0deg; }
+                 to { --contact-angle: 360deg; }
                }
                
                #contact .glass-card:not(#contact > div > div > .glass-card) {

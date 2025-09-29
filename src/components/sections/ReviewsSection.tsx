@@ -112,50 +112,54 @@ const ReviewsSection = () => {
 
           {/* Reviews Carousel */}
           <div className="relative">
-            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30 min-h-[400px] md:min-h-[450px]">
-              <div className="text-center relative h-full flex flex-col justify-center">
+            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30 h-[500px] md:h-[550px]">
+              <div className="text-center relative h-full flex flex-col">
                 {/* Quote Icon */}
-                <div className="mb-6">
+                <div className="mb-6 flex-shrink-0">
                   <Quote className="w-12 h-12 text-primary mx-auto" />
                 </div>
 
-                {/* Review Content */}
+                {/* Review Content - Fixed height with scroll */}
                 <div
-                  className={`mb-8 transition-opacity duration-300 ${
+                  className={`flex-1 transition-opacity duration-300 ${
                     isTransitioning ? "opacity-0" : "opacity-100"
-                  }`}
+                  } flex flex-col justify-center min-h-0`}
                 >
-                  <p
-                    className={`text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 ${
-                      language === "he" ? "text-right" : "text-left"
-                    }`}
-                  >
-                    "{currentReview.text}"
-                  </p>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <div className="max-h-64 md:max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                      <p
+                        className={`text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 ${
+                          language === "he" ? "text-right" : "text-left"
+                        }`}
+                      >
+                        "{currentReview.text}"
+                      </p>
+                    </div>
 
-                  {/* Rating */}
-                  <div className="flex justify-center mb-4">
-                    {[...Array(currentReview.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-6 h-6 text-yellow-400 fill-current"
-                      />
-                    ))}
-                  </div>
+                    {/* Rating */}
+                    <div className="flex justify-center mb-4">
+                      {[...Array(currentReview.rating)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="w-6 h-6 text-yellow-400 fill-current"
+                        />
+                      ))}
+                    </div>
 
-                  {/* Reviewer Info */}
-                  <div>
-                    <h4 className="text-xl font-bold text-foreground mb-1">
-                      {currentReview.name}
-                    </h4>
-                    <p className="text-foreground/70">
-                      {currentReview.company}
-                    </p>
+                    {/* Reviewer Info */}
+                    <div>
+                      <h4 className="text-xl font-bold text-foreground mb-1">
+                        {currentReview.name}
+                      </h4>
+                      <p className="text-foreground/70">
+                        {currentReview.company}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Navigation Controls */}
-                <div className="flex items-center justify-center gap-4 mt-8">
+                <div className="flex items-center justify-center gap-4 mt-8 flex-shrink-0">
                   <button
                     onClick={prevReview}
                     className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
