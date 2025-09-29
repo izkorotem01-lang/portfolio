@@ -2,9 +2,11 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { User, Award, Video, Zap } from "lucide-react";
 import rotemImage from "@/assets/rotem.webp";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 const AboutSection = () => {
   const { t, language } = useLanguage();
+  const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
   const stats = [
     {
@@ -26,13 +28,21 @@ const AboutSection = () => {
   ];
 
   return (
-    <section id="about" className="py-20 relative overflow-hidden z-10">
+    <section
+      ref={sectionRef}
+      id="about"
+      className="py-20 relative overflow-hidden z-10"
+    >
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container - Mobile Optimized */}
           <div className="bg-background/80 backdrop-blur-sm md:backdrop-blur-xl p-6 md:p-12 rounded-2xl md:rounded-3xl border border-border/30 md:border-white/30">
             {/* Section Title */}
-            <div className="text-center mb-16">
+            <div
+              className={`text-center mb-16 ${
+                isVisible ? "animate-fade-in-up" : ""
+              }`}
+            >
               <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
                 {t("about.title")}
               </h2>
@@ -40,7 +50,11 @@ const AboutSection = () => {
 
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Content */}
-              <div>
+              <div
+                className={`${
+                  isVisible ? "animate-fade-in-left animate-delay-200" : ""
+                }`}
+              >
                 <p className="text-lg leading-relaxed text-foreground/90 mb-6">
                   {t("about.content")}
                 </p>
@@ -58,7 +72,13 @@ const AboutSection = () => {
                 {/* Stats Grid - Hidden on mobile for performance */}
                 <div className="hidden md:grid grid-cols-4 gap-6">
                   {stats.map((stat, index) => (
-                    <div key={index} className="text-center">
+                    <div
+                      key={index}
+                      className={`text-center ${
+                        isVisible ? "animate-scale-in-up" : ""
+                      }`}
+                      style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                    >
                       <div className="glass-card p-4 rounded-2xl mb-3 hover:scale-105 transition-smooth">
                         <stat.icon className="w-8 h-8 mx-auto text-primary" />
                       </div>
@@ -108,7 +128,11 @@ const AboutSection = () => {
               </div>
 
               {/* Rotem Image - Mobile Optimized */}
-              <div className="relative">
+              <div
+                className={`relative ${
+                  isVisible ? "animate-fade-in-right animate-delay-400" : ""
+                }`}
+              >
                 <div className="bg-background/40 md:bg-background/60 p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/10 md:border-white/20">
                   <div className="rounded-lg md:rounded-2xl overflow-hidden">
                     <img
@@ -120,10 +144,17 @@ const AboutSection = () => {
                 </div>
 
                 {/* Floating Elements - Hidden on mobile for performance */}
-                <div className="hidden md:block absolute -top-4 -right-4 w-20 h-20 bg-primary/20 rounded-full animate-float" />
                 <div
-                  className="hidden md:block absolute -bottom-4 -left-4 w-16 h-16 bg-primary-glow/30 rounded-full animate-float"
-                  style={{ animationDelay: "2s" }}
+                  className={`hidden md:block absolute -top-4 -right-4 w-20 h-20 bg-primary/20 rounded-full animate-float ${
+                    isVisible ? "animate-scale-in-up" : ""
+                  }`}
+                  style={{ animationDelay: "0.8s" }}
+                />
+                <div
+                  className={`hidden md:block absolute -bottom-4 -left-4 w-16 h-16 bg-primary-glow/30 rounded-full animate-float ${
+                    isVisible ? "animate-scale-in-up" : ""
+                  }`}
+                  style={{ animationDelay: "1.0s" }}
                 />
               </div>
             </div>

@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Mic,
 } from "lucide-react";
+import { useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 
 const ServicesSection = () => {
   const { t } = useLanguage();
@@ -79,12 +80,22 @@ const ServicesSection = () => {
     },
   ];
 
+  const {
+    ref: sectionRef,
+    visibleItems,
+    isVisible,
+  } = useStaggeredAnimation(services.length, 100, { threshold: 0.1 });
+
   return (
-    <section id="services" className="py-20 relative">
+    <section ref={sectionRef} id="services" className="py-20 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Title */}
-          <div className="text-center mb-16">
+          <div
+            className={`text-center mb-16 ${
+              isVisible ? "animate-fade-in-up" : ""
+            }`}
+          >
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
               {t("services.title")}
             </h2>
@@ -95,9 +106,12 @@ const ServicesSection = () => {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="md:group bg-background/60 md:backdrop-blur-2xl border border-border/30 md:border-white/20 rounded-lg md:rounded-2xl p-2 md:p-4 md:hover:scale-105 cursor-pointer flex flex-col items-center justify-center min-h-[70px] md:min-h-[120px] w-[110px] md:w-[200px]"
+                className={`md:group bg-background/60 md:backdrop-blur-2xl border border-border/30 md:border-white/20 rounded-lg md:rounded-2xl p-2 md:p-4 md:hover:scale-105 cursor-pointer flex flex-col items-center justify-center min-h-[70px] md:min-h-[120px] w-[110px] md:w-[200px] ${
+                  visibleItems.includes(index) ? "animate-slide-up-stagger" : ""
+                }`}
                 style={{
                   backgroundColor: "rgba(13, 19, 31, 0.6)",
+                  animationDelay: `${index * 0.1}s`,
                 }}
               >
                 {/* Icon */}
