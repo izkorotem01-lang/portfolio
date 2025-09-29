@@ -161,13 +161,17 @@ const ReviewsSection = () => {
                 {/* Navigation Controls */}
                 <div className="flex items-center justify-center gap-4 mt-8 flex-shrink-0">
                   <button
-                    onClick={prevReview}
+                    onClick={language === "he" ? nextReview : prevReview}
                     className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                     aria-label={
-                      language === "he" ? "ביקורת קודמת" : "Previous review"
+                      language === "he" ? "ביקורת הבאה" : "Previous review"
                     }
                   >
-                    <ChevronLeft className="w-5 h-5 text-foreground" />
+                    {language === "he" ? (
+                      <ChevronRight className="w-5 h-5 text-foreground" />
+                    ) : (
+                      <ChevronLeft className="w-5 h-5 text-foreground" />
+                    )}
                   </button>
 
                   {/* Review Indicators */}
@@ -189,13 +193,17 @@ const ReviewsSection = () => {
                   </div>
 
                   <button
-                    onClick={nextReview}
+                    onClick={language === "he" ? prevReview : nextReview}
                     className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                     aria-label={
-                      language === "he" ? "ביקורת הבאה" : "Next review"
+                      language === "he" ? "ביקורת קודמת" : "Next review"
                     }
                   >
-                    <ChevronRight className="w-5 h-5 text-foreground" />
+                    {language === "he" ? (
+                      <ChevronLeft className="w-5 h-5 text-foreground" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-foreground" />
+                    )}
                   </button>
                 </div>
               </div>

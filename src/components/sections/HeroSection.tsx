@@ -13,7 +13,7 @@ import showreelVideo from "@/assets/Showreel.mp4";
 import showreelVideoYT from "@/assets/Showreel_YT.mp4";
 
 const HeroSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -109,7 +109,9 @@ const HeroSection = () => {
 
               {/* Social Links */}
               <div
-                className="flex justify-center space-x-6 mb-8 animate-fade-up"
+                className={`flex justify-center mb-8 animate-fade-up ${
+                  language === "he" ? "space-x-reverse space-x-6" : "space-x-6"
+                }`}
                 style={{ animationDelay: "0.5s" }}
               >
                 <a

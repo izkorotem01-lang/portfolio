@@ -7,7 +7,7 @@ import { Mail, MessageCircle, Instagram, Youtube, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -103,7 +103,13 @@ const ContactSection = () => {
                       onClick={method.action}
                       className="glass-card p-6 rounded-2xl hover:scale-105 transition-smooth cursor-pointer group"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div
+                        className={`flex items-center ${
+                          language === "he"
+                            ? "space-x-reverse space-x-4"
+                            : "space-x-4"
+                        }`}
+                      >
                         <div
                           className={`w-12 h-12 rounded-xl bg-gradient-to-r ${method.color} flex items-center justify-center group-hover:glow`}
                         >
@@ -125,7 +131,13 @@ const ContactSection = () => {
                   <h3 className="text-xl font-bold mb-4 text-foreground">
                     Follow My Work
                   </h3>
-                  <div className="flex justify-center space-x-4">
+                  <div
+                    className={`flex justify-center ${
+                      language === "he"
+                        ? "space-x-reverse space-x-4"
+                        : "space-x-4"
+                    }`}
+                  >
                     {socialLinks.map((social, index) => (
                       <button
                         key={index}

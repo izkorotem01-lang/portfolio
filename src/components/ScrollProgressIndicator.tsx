@@ -122,18 +122,30 @@ const ScrollProgressIndicator = () => {
 
   return (
     <>
-      <div className="fixed left-6 top-1/2 transform -translate-y-1/2 z-10 hidden lg:block">
+      <div
+        className={`fixed top-1/2 transform -translate-y-1/2 z-10 hidden lg:block ${
+          language === "he" ? "right-6" : "left-6"
+        }`}
+      >
         <div className="relative">
           {/* Animated Background Blur */}
           <div className="absolute inset-0 -m-6 rounded-2xl backdrop-blur-sm bg-black/2"></div>
 
           {/* Main Connecting Line - Background */}
-          <div className="absolute left-4 top-0 w-px h-full">
+          <div
+            className={`absolute top-0 w-px h-full ${
+              language === "he" ? "right-4" : "left-4"
+            }`}
+          >
             <div className="w-full h-full bg-gradient-to-b from-transparent via-white/3 to-transparent"></div>
           </div>
 
           {/* Progressive Connecting Line */}
-          <div className="absolute left-4 top-0 w-px h-full">
+          <div
+            className={`absolute top-0 w-px h-full ${
+              language === "he" ? "right-4" : "left-4"
+            }`}
+          >
             <div
               className="w-full bg-gradient-to-b from-purple-400/30 via-pink-500/30 to-cyan-400/30 transition-all duration-1000 ease-out"
               style={{ height: `${scrollProgress * 100}%` }}
@@ -287,7 +299,11 @@ const ScrollProgressIndicator = () => {
 
                     {/* Individual Connecting Line to Next Step */}
                     {index < steps.length - 1 && (
-                      <div className="absolute left-4 top-full w-px h-10 transform -translate-x-1/2">
+                      <div
+                        className={`absolute top-full w-px h-10 transform -translate-x-1/2 ${
+                          language === "he" ? "right-4" : "left-4"
+                        }`}
+                      >
                         {/* Background line */}
                         <div className="w-full h-full bg-white/5"></div>
                         {/* Progress line */}
@@ -330,7 +346,11 @@ const ScrollProgressIndicator = () => {
 
       {/* Extension Line to Contact Section */}
       {isInContactSection && (
-        <div className="fixed left-6 z-10 hidden lg:block pointer-events-none">
+        <div
+          className={`fixed z-10 hidden lg:block pointer-events-none ${
+            language === "he" ? "right-6" : "left-6"
+          }`}
+        >
           <div
             className="w-px bg-gradient-to-b from-purple-400/50 via-pink-500/50 to-cyan-400/50 transition-all duration-1000"
             style={{
