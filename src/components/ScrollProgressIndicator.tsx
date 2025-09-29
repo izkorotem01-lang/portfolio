@@ -10,6 +10,8 @@ const ScrollProgressIndicator = () => {
   const [contactProgress, setContactProgress] = useState(0);
   const [contactBorderProgress, setContactBorderProgress] = useState(0);
   const [hasAnimatedContact, setHasAnimatedContact] = useState(false);
+  const [finalContactBorderProgress, setFinalContactBorderProgress] =
+    useState(0);
 
   const steps = [
     {
@@ -82,6 +84,10 @@ const ScrollProgressIndicator = () => {
 
               if (progress < 1) {
                 requestAnimationFrame(animateBorder);
+              } else {
+                // Animation completed, set final state permanently
+                setContactBorderProgress(100);
+                setFinalContactBorderProgress(100);
               }
             };
             requestAnimationFrame(animateBorder);
@@ -92,7 +98,7 @@ const ScrollProgressIndicator = () => {
           setActiveStep(Math.min(stepIndex, steps.length - 1));
           setScrollProgress(progress);
           setContactProgress(0);
-          setContactBorderProgress(0);
+          // Don't reset border progress - keep it filled once animated
         }
       } else {
         // Fallback to normal behavior
@@ -336,12 +342,12 @@ const ScrollProgressIndicator = () => {
       )}
 
       {/* Contact Section Border Highlight */}
-      {isInContactSection && (
+      {hasAnimatedContact && (
         <div
           id="contact-border-highlight"
           className="fixed inset-0 pointer-events-none z-5"
           style={{
-            opacity: Math.min(contactProgress / 50, 1),
+            opacity: 1,
           }}
         >
           <style>
@@ -393,13 +399,30 @@ const ScrollProgressIndicator = () => {
                            stroke-width="1"
                            stroke-dasharray="${(399 + 199) * 2}"
                            stroke-dashoffset="${
-                             (399 + 199) * 2 * (1 - contactBorderProgress / 100)
+                             (399 + 199) *
+                             2 *
+                             (1 -
+                               (hasAnimatedContact
+                                 ? Math.max(
+                                     contactBorderProgress,
+                                     finalContactBorderProgress
+                                   )
+                                 : contactBorderProgress) /
+                                 100)
                            }"
                            filter="drop-shadow(0 0 8px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 16px rgba(236, 72, 153, 0.6))"
                            style="transition: stroke-dashoffset 0.1s ease-out;"/>
                    </svg>
                  `)}")} center/100% 100% no-repeat;
                  z-index: -1;
+               }
+               
+               #contact .glass-card:not(#contact > div > div > .glass-card) {
+                 box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(236, 72, 153, 0.2) !important;
+               }
+               
+               #contact .glass-card:not(#contact > div > div > .glass-card):hover {
+                 box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(236, 72, 153, 0.3) !important;
                }
              `}
           </style>
