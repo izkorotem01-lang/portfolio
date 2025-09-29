@@ -112,8 +112,8 @@ const ReviewsSection = () => {
 
           {/* Reviews Carousel */}
           <div className="relative">
-            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30">
-              <div className="text-center">
+            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30 min-h-[400px] md:min-h-[450px]">
+              <div className="text-center relative h-full flex flex-col justify-center">
                 {/* Quote Icon */}
                 <div className="mb-6">
                   <Quote className="w-12 h-12 text-primary mx-auto" />

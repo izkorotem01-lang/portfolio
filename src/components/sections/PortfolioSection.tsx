@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVideoControl } from "@/contexts/VideoControlContext";
 import { Play, ExternalLink, Volume2, VolumeX } from "lucide-react";
 import {
   getCategories,
@@ -7,14 +8,23 @@ import {
   PortfolioCategory,
   PortfolioVideo,
 } from "@/lib/portfolioService";
+import VideoControls from "@/components/VideoControls";
+import OptimizedVideo from "@/components/OptimizedVideo";
 
 const PortfolioSection = () => {
   const { t, language } = useLanguage();
+  const {
+    setGlobalVideos,
+    setCategoryVideos,
+    playingVideoId,
+    registerVideoRef,
+    unregisterVideoRef,
+  } = useVideoControl();
+
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<PortfolioCategory[]>([]);
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPortfolioData = async () => {
@@ -25,6 +35,17 @@ const PortfolioSection = () => {
         ]);
         setCategories(categoriesData);
         setVideos(videosData);
+
+        // Set global videos for all work control
+        setGlobalVideos(videosData);
+
+        // Set category videos for each category
+        categoriesData.forEach((category) => {
+          const categoryVideos = videosData.filter(
+            (video) => video.categoryId === category.id
+          );
+          setCategoryVideos(category.id, categoryVideos);
+        });
       } catch (error) {
         console.error("Error loading portfolio data:", error);
       } finally {
@@ -33,7 +54,7 @@ const PortfolioSection = () => {
     };
 
     loadPortfolioData();
-  }, []);
+  }, [setGlobalVideos, setCategoryVideos]);
 
   // Create display categories with "All Work" option
   const displayCategories = [
@@ -64,7 +85,7 @@ const PortfolioSection = () => {
             </div>
 
             {/* Category Filter */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-12">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
               {displayCategories.map((category) => (
                 <button
                   key={category.id}
@@ -78,6 +99,17 @@ const PortfolioSection = () => {
                   {category.label}
                 </button>
               ))}
+            </div>
+
+            {/* Video Controls */}
+            <div className="mb-8">
+              <VideoControls
+                categoryId={
+                  activeCategory === "all" ? undefined : activeCategory
+                }
+                showGlobalControls={activeCategory === "all"}
+                className="bg-background/30 backdrop-blur-sm rounded-xl p-4 border border-border/30"
+              />
             </div>
 
             {/* Portfolio Grid */}
@@ -94,13 +126,14 @@ const PortfolioSection = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredVideos.map((video, index) => (
-                  <VideoItem
+                  <OptimizedVideoItem
                     key={video.id}
                     video={video}
                     index={index}
                     language={language}
                     playingVideoId={playingVideoId}
-                    setPlayingVideoId={setPlayingVideoId}
+                    registerVideoRef={registerVideoRef}
+                    unregisterVideoRef={unregisterVideoRef}
                   />
                 ))}
               </div>
@@ -112,23 +145,34 @@ const PortfolioSection = () => {
   );
 };
 
-// Video Item Component
-const VideoItem = ({
+// Optimized Video Item Component
+const OptimizedVideoItem = ({
   video,
   index,
   language,
   playingVideoId,
-  setPlayingVideoId,
+  registerVideoRef,
+  unregisterVideoRef,
 }: {
   video: PortfolioVideo;
   index: number;
   language: string;
   playingVideoId: string | null;
-  setPlayingVideoId: (id: string | null) => void;
+  registerVideoRef: (
+    videoId: string,
+    ref: React.RefObject<HTMLVideoElement>
+  ) => void;
+  unregisterVideoRef: (videoId: string) => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const isCurrentlyPlaying = playingVideoId === video.id;
+
+  // Register video ref when component mounts
+  useEffect(() => {
+    registerVideoRef(video.id, videoRef);
+    return () => unregisterVideoRef(video.id);
+  }, [video.id, registerVideoRef, unregisterVideoRef]);
 
   // Auto-mute this video when another video starts playing
   useEffect(() => {
@@ -138,42 +182,28 @@ const VideoItem = ({
     }
   }, [playingVideoId, video.id]);
 
-  // Debug: Log when playing video changes
+  // Handle video play/pause based on playingVideoId
   useEffect(() => {
-    console.log(
-      `Video ${video.id} - isCurrentlyPlaying:`,
-      isCurrentlyPlaying,
-      "playingVideoId:",
-      playingVideoId
-    );
-  }, [isCurrentlyPlaying, playingVideoId, video.id]);
+    if (videoRef.current) {
+      if (isCurrentlyPlaying) {
+        videoRef.current.muted = false;
+        videoRef.current.play().catch(console.error);
+        setIsMuted(false);
+      } else {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      }
+    }
+  }, [isCurrentlyPlaying]);
 
   const handleVideoClick = () => {
-    console.log("Video clicked!", {
-      isMuted,
-      videoRef: videoRef.current,
-      isCurrentlyPlaying,
-    });
-
-    if (videoRef.current && isMuted) {
-      // Unmute this video and mute all others
-      console.log("Unmuting video and muting others...");
-      setPlayingVideoId(video.id);
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = false;
-      videoRef.current.play();
-      setIsMuted(false);
-      console.log("Video unmuted and restarted");
-    } else if (videoRef.current) {
-      // Mute this video
-      console.log("Muting video...");
-      setPlayingVideoId(null);
-      videoRef.current.muted = true;
-      videoRef.current.currentTime = 0;
-      videoRef.current.play();
-      setIsMuted(true);
-      console.log("Video muted and restarted");
-    }
+    // Video control is now handled by the VideoControlContext
+    console.log(
+      "Video clicked:",
+      video.id,
+      "Currently playing:",
+      isCurrentlyPlaying
+    );
   };
 
   return (
@@ -185,7 +215,7 @@ const VideoItem = ({
         animationDelay: `${index * 0.1}s`,
       }}
     >
-      {/* Video/Thumbnail */}
+      {/* Optimized Video Container */}
       <div
         className={`relative bg-gradient-secondary/20 overflow-hidden aspect-video w-full h-[80vh] transition-all duration-500 ease-in-out ${
           isCurrentlyPlaying
@@ -193,67 +223,14 @@ const VideoItem = ({
             : "shadow-lg group-hover:scale-110"
         }`}
       >
-        {video.thumbnailUrl ? (
-          <>
-            {/* Thumbnail with play overlay */}
-            <img
-              src={video.thumbnailUrl}
-              alt={language === "he" ? video.titleHe : video.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
-            />
-            {/* Play Overlay for thumbnails */}
-            <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-smooth flex items-center justify-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center glow">
-                <Play className="w-8 h-8 text-white ml-1" />
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Video without thumbnail - autoplay muted */}
-            <div className="w-full h-full relative">
-              <video
-                ref={videoRef}
-                onLoadedData={() => {
-                  console.log("Video loaded:", video.id, videoRef.current);
-                  if (videoRef.current) {
-                    videoRef.current.muted = true;
-                    videoRef.current.play();
-                  }
-                }}
-                onError={(e) => {
-                  console.error("Video error:", e, video.videoUrl);
-                }}
-                className="w-full h-full object-cover"
-                loop
-                playsInline
-                autoPlay
-                muted
-              >
-                <source src={video.videoUrl} type="video/mp4" />
-              </video>
-
-              {/* Click area */}
-              <div
-                className="absolute inset-0 cursor-pointer bg-transparent"
-                onClick={handleVideoClick}
-                style={{ zIndex: 10 }}
-              >
-                {/* Volume indicator */}
-                <div
-                  className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2"
-                  style={{ transform: "scale(1)" }}
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-4 h-4 text-white" />
-                  ) : (
-                    <Volume2 className="w-4 h-4 text-white" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <OptimizedVideo
+          videoUrl={video.videoUrl}
+          thumbnailUrl={video.thumbnailUrl}
+          title={language === "he" ? video.titleHe : video.title}
+          isPlaying={isCurrentlyPlaying}
+          onVideoClick={handleVideoClick}
+          className="w-full h-full"
+        />
       </div>
     </div>
   );

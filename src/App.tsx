@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import GlobalBackground from "./components/GlobalBackground";
+import { VideoControlProvider } from "@/contexts/VideoControlContext";
 
 const queryClient = new QueryClient();
 
@@ -34,9 +35,11 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <VideoControlProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </VideoControlProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

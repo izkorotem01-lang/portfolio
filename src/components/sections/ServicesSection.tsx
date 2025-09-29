@@ -90,33 +90,32 @@ const ServicesSection = () => {
             </h2>
           </div>
 
-          {/* Services Grid */}
+          {/* Services Grid - Ultra Mobile Optimized */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
             {services.map((service, index) => (
               <div
                 key={index}
-                className="group animate-fade-up backdrop-blur-2xl border border-white/20 rounded-2xl p-3 sm:p-4 hover:scale-105 transition-all duration-300 ease-out cursor-pointer flex flex-col items-center justify-center min-h-[100px] sm:min-h-[120px] w-[140px] sm:w-[200px]"
+                className="md:group bg-background/60 md:backdrop-blur-2xl border border-border/30 md:border-white/20 rounded-lg md:rounded-2xl p-2 md:p-4 md:hover:scale-105 cursor-pointer flex flex-col items-center justify-center min-h-[70px] md:min-h-[120px] w-[110px] md:w-[200px]"
                 style={{
-                  animationDelay: `${index * 0.1}s`,
-                  backgroundColor: "rgba(13, 19, 31, 0.8)",
+                  backgroundColor: "rgba(13, 19, 31, 0.6)",
                 }}
               >
                 {/* Icon */}
-                <div className="mb-2 sm:mb-3">
+                <div className="mb-1 md:mb-3">
                   <div
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r ${service.color} p-2 sm:p-3 glow-hover flex items-center justify-center`}
+                    className={`w-7 h-7 md:w-12 md:h-12 rounded-md md:rounded-xl bg-gradient-to-r ${service.color} p-1.5 md:p-3 flex items-center justify-center`}
                   >
-                    <service.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <service.icon className="w-3.5 h-3.5 md:w-6 md:h-6 text-white" />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-sm sm:text-lg font-bold text-foreground group-hover:text-primary transition-smooth text-center w-full leading-tight">
+                <h3 className="text-xs md:text-lg font-bold text-foreground md:group-hover:text-primary text-center w-full leading-tight">
                   {service.title}
                 </h3>
 
-                {/* Hover Effect */}
-                <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-2xl transition-smooth" />
+                {/* Hover Effect - Desktop only */}
+                <div className="hidden md:block absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-2xl transition-smooth" />
               </div>
             ))}
           </div>
