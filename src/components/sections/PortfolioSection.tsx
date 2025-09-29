@@ -1,51 +1,59 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useVideoControl } from "@/contexts/VideoControlContext";
-import { Play, ExternalLink, Volume2, VolumeX } from "lucide-react";
 import {
   getCategories,
   getVideos,
   PortfolioCategory,
   PortfolioVideo,
 } from "@/lib/portfolioService";
-import VideoControls from "@/components/VideoControls";
-import OptimizedVideo from "@/components/OptimizedVideo";
 
 const PortfolioSection = () => {
   const { t, language } = useLanguage();
-  const {
-    setGlobalVideos,
-    setCategoryVideos,
-    playingVideoId,
-    registerVideoRef,
-    unregisterVideoRef,
-  } = useVideoControl();
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<PortfolioCategory[]>([]);
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
+
+  // Function to handle video click - simple toggle mute
+  const handleVideoClick = (videoId: string) => {
+    const video = videoRefs.current[videoId];
+    if (video) {
+      if (playingVideoId === videoId) {
+        // If clicking the same video, toggle mute
+        video.muted = !video.muted;
+        if (video.muted) {
+          setPlayingVideoId(null);
+        }
+      } else {
+        // If clicking a different video, mute all others and unmute this one
+        Object.values(videoRefs.current).forEach((v) => {
+          if (v) v.muted = true;
+        });
+
+        video.muted = false;
+        video.play().catch(console.error);
+        setPlayingVideoId(videoId);
+      }
+    }
+  };
+
+  // Function to register video ref
+  const registerVideoRef = (videoId: string, ref: HTMLVideoElement | null) => {
+    videoRefs.current[videoId] = ref;
+  };
 
   useEffect(() => {
     const loadPortfolioData = async () => {
       try {
         const [categoriesData, videosData] = await Promise.all([
           getCategories(),
-          getVideos(),
+          getVideos(false), // Always get all videos, no mobile optimization
         ]);
         setCategories(categoriesData);
         setVideos(videosData);
-
-        // Set global videos for all work control
-        setGlobalVideos(videosData);
-
-        // Set category videos for each category
-        categoriesData.forEach((category) => {
-          const categoryVideos = videosData.filter(
-            (video) => video.categoryId === category.id
-          );
-          setCategoryVideos(category.id, categoryVideos);
-        });
       } catch (error) {
         console.error("Error loading portfolio data:", error);
       } finally {
@@ -54,7 +62,7 @@ const PortfolioSection = () => {
     };
 
     loadPortfolioData();
-  }, [setGlobalVideos, setCategoryVideos]);
+  }, []);
 
   // Create display categories with "All Work" option
   const displayCategories = [
@@ -101,17 +109,6 @@ const PortfolioSection = () => {
               ))}
             </div>
 
-            {/* Video Controls */}
-            <div className="mb-8">
-              <VideoControls
-                categoryId={
-                  activeCategory === "all" ? undefined : activeCategory
-                }
-                showGlobalControls={activeCategory === "all"}
-                className="bg-background/30 backdrop-blur-sm rounded-xl p-4 border border-border/30"
-              />
-            </div>
-
             {/* Portfolio Grid */}
             {isLoading ? (
               <div className="flex justify-center items-center py-20">
@@ -124,19 +121,21 @@ const PortfolioSection = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredVideos.map((video, index) => (
-                  <OptimizedVideoItem
-                    key={video.id}
-                    video={video}
-                    index={index}
-                    language={language}
-                    playingVideoId={playingVideoId}
-                    registerVideoRef={registerVideoRef}
-                    unregisterVideoRef={unregisterVideoRef}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {filteredVideos.map((video, index) => (
+                    <SimpleVideoItem
+                      key={video.id}
+                      video={video}
+                      index={index}
+                      language={language}
+                      isPlaying={playingVideoId === video.id}
+                      onVideoClick={() => handleVideoClick(video.id)}
+                      onVideoRef={(ref) => registerVideoRef(video.id, ref)}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -145,92 +144,38 @@ const PortfolioSection = () => {
   );
 };
 
-// Optimized Video Item Component
-const OptimizedVideoItem = ({
+// Simple Video Item Component
+const SimpleVideoItem = ({
   video,
   index,
   language,
-  playingVideoId,
-  registerVideoRef,
-  unregisterVideoRef,
+  isPlaying,
+  onVideoClick,
+  onVideoRef,
 }: {
   video: PortfolioVideo;
   index: number;
   language: string;
-  playingVideoId: string | null;
-  registerVideoRef: (
-    videoId: string,
-    ref: React.RefObject<HTMLVideoElement>
-  ) => void;
-  unregisterVideoRef: (videoId: string) => void;
+  isPlaying: boolean;
+  onVideoClick: () => void;
+  onVideoRef: (ref: HTMLVideoElement | null) => void;
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const isCurrentlyPlaying = playingVideoId === video.id;
-
-  // Register video ref when component mounts
-  useEffect(() => {
-    registerVideoRef(video.id, videoRef);
-    return () => unregisterVideoRef(video.id);
-  }, [video.id, registerVideoRef, unregisterVideoRef]);
-
-  // Auto-mute this video when another video starts playing
-  useEffect(() => {
-    if (playingVideoId && playingVideoId !== video.id && videoRef.current) {
-      videoRef.current.muted = true;
-      setIsMuted(true);
-    }
-  }, [playingVideoId, video.id]);
-
-  // Handle video play/pause based on playingVideoId
-  useEffect(() => {
-    if (videoRef.current) {
-      if (isCurrentlyPlaying) {
-        videoRef.current.muted = false;
-        videoRef.current.play().catch(console.error);
-        setIsMuted(false);
-      } else {
-        videoRef.current.muted = true;
-        setIsMuted(true);
-      }
-    }
-  }, [isCurrentlyPlaying]);
-
-  const handleVideoClick = () => {
-    // Video control is now handled by the VideoControlContext
-    console.log(
-      "Video clicked:",
-      video.id,
-      "Currently playing:",
-      isCurrentlyPlaying
-    );
-  };
-
   return (
-    <div
-      className={`portfolio-item group animate-fade-up relative transition-all duration-500 ease-in-out ${
-        isCurrentlyPlaying ? "scale-105" : "scale-100"
-      }`}
-      style={{
-        animationDelay: `${index * 0.1}s`,
-      }}
-    >
-      {/* Optimized Video Container */}
-      <div
-        className={`relative bg-gradient-secondary/20 overflow-hidden aspect-video w-full h-[80vh] transition-all duration-500 ease-in-out ${
-          isCurrentlyPlaying
-            ? "shadow-2xl shadow-primary/30 group-hover:scale-110"
-            : "shadow-lg group-hover:scale-110"
-        }`}
-      >
-        <OptimizedVideo
-          videoUrl={video.videoUrl}
-          thumbnailUrl={video.thumbnailUrl}
-          title={language === "he" ? video.titleHe : video.title}
-          isPlaying={isCurrentlyPlaying}
-          onVideoClick={handleVideoClick}
-          className="w-full h-full"
-        />
+    <div className="portfolio-item group relative">
+      {/* Simple Video Container */}
+      <div className="relative bg-gradient-secondary/20 overflow-hidden aspect-video w-full h-[35vh] sm:h-[60vh] shadow-lg">
+        <video
+          ref={onVideoRef}
+          src={video.videoUrl}
+          className="w-full h-full object-cover cursor-pointer"
+          loop
+          muted
+          autoPlay
+          playsInline
+          onClick={onVideoClick}
+        >
+          Your browser does not support the video tag.
+        </video>
       </div>
     </div>
   );

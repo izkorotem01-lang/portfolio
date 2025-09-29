@@ -30,6 +30,7 @@ export interface PortfolioVideo {
   videoUrl: string;
   thumbnailUrl?: string;
   order: number;
+  allWorkOrder?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -88,16 +89,32 @@ export const createVideo = async (
   return docRef.id;
 };
 
-export const getVideos = async (): Promise<PortfolioVideo[]> => {
-  const q = query(collection(db, "videos"), orderBy("order", "asc"));
+export const getVideos = async (
+  isMobile: boolean = false
+): Promise<PortfolioVideo[]> => {
+  // Get videos and sort by allWorkOrder first, then by order as fallback
+  const q = query(collection(db, "videos"));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(
+
+  const videos = querySnapshot.docs.map(
     (doc) =>
       ({
         id: doc.id,
         ...doc.data(),
       } as PortfolioVideo)
   );
+
+  // Sort by allWorkOrder if it exists, otherwise by order
+  const sortedVideos = videos.sort((a, b) => {
+    // Use allWorkOrder if both videos have it
+    if (a.allWorkOrder !== undefined && b.allWorkOrder !== undefined) {
+      return a.allWorkOrder - b.allWorkOrder;
+    }
+    // Use order field for consistent sorting
+    return a.order - b.order;
+  });
+
+  return sortedVideos;
 };
 
 export const getVideosByCategory = async (

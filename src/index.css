@@ -6,6 +6,7 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap");
+@import "./mobile-video-optimizations.css";
 
 @layer base {
   :root {
@@ -163,13 +164,13 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Mobile-optimized glass card - reduced blur for performance */
+  /* Mobile-optimized glass card - no blur for maximum performance */
   @media (max-width: 768px) {
     .glass-card {
-      background: hsla(var(--glass-bg) / 0.2);
-      backdrop-filter: blur(8px);
+      background: hsla(var(--glass-bg) / 0.3);
+      backdrop-filter: none !important;
       border: 1px solid hsla(var(--glass-border) / 0.1);
-      box-shadow: 0 4px 16px hsla(var(--glass-shadow) / 0.2);
+      box-shadow: 0 2px 8px hsla(var(--glass-shadow) / 0.1);
     }
   }
 

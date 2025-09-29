@@ -1,0 +1,114 @@
+/* Mobile Video Optimizations */
+
+/* Hardware acceleration for video elements on mobile */
+@media (max-width: 768px) {
+  video {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
+    contain: layout style paint;
+  }
+
+  /* Disable all transitions and animations on mobile for maximum performance */
+  .portfolio-item {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Optimize video containers */
+  .video-container {
+    contain: layout style paint;
+    content-visibility: auto;
+  }
+
+  /* Reduce shadow complexity on mobile */
+  .portfolio-item {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Disable all hover effects on mobile */
+  .portfolio-item:hover {
+    transform: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Optimize loading states - simpler animation */
+  .video-loading {
+    background: #f0f0f0;
+    animation: none;
+  }
+
+  /* Disable all backdrop filters on mobile */
+  .backdrop-blur-sm,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    backdrop-filter: none !important;
+  }
+
+  /* Disable all glow effects on mobile */
+  .glow,
+  .glow-hover:hover {
+    box-shadow: none !important;
+  }
+
+  /* Disable all scale transforms on mobile */
+  .group-hover\:scale-110:hover,
+  .hover\:scale-105:hover,
+  .hover\:scale-110:hover {
+    transform: none !important;
+  }
+}
+
+/* Reduce video quality indicators */
+.video-quality-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* Mobile-specific video controls */
+@media (max-width: 768px) {
+  .video-controls {
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .video-controls button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px;
+  }
+
+  .video-thumbnail-nav {
+    gap: 4px;
+  }
+
+  .video-thumbnail-nav button {
+    width: 40px;
+    height: 24px;
+  }
+}
+
+/* Performance optimizations */
+.video-optimized {
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+/* Reduce repaints on mobile */
+@media (max-width: 768px) {
+  .portfolio-item:hover {
+    transform: none;
+  }
+
+  .portfolio-item:active {
+    transform: scale(0.98);
+  }
+}
