@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Check, X, Star, Crown, Zap } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PackagesSection = () => {
   const { t } = useLanguage();
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const isMobile = useIsMobile();
 
   const packages = [
     {
@@ -55,8 +59,37 @@ const PackagesSection = () => {
     },
   ];
 
+  // Intersection Observer to trigger animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      {
+        threshold: 0.3, // Trigger when 30% of the section is visible
+        rootMargin: "0px 0px -100px 0px", // Start animation slightly before fully in view
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <section id="packages" className="py-20 relative overflow-hidden z-10">
+    <section
+      ref={sectionRef}
+      id="packages"
+      className="py-20 relative overflow-hidden z-10"
+    >
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container */}
@@ -70,83 +103,132 @@ const PackagesSection = () => {
 
             {/* Packages Grid */}
             <div className="grid lg:grid-cols-3 gap-8">
-              {packages.map((pkg, index) => (
-                <div
-                  key={pkg.id}
-                  className={`package-card relative animate-fade-up flex flex-col h-full ${
-                    pkg.popular ? "scale-105 glow" : ""
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Popular Badge */}
-                  {pkg.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-gradient-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-semibold">
-                        Most Popular
-                      </div>
-                    </div>
-                  )}
+              {packages.map((pkg, index) => {
+                // Calculate transforms based on visibility and device type
+                let transform = "";
+                let opacity = "";
+                let zIndex = "";
 
-                  {/* Header */}
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-2xl flex items-center justify-center">
-                      <pkg.icon className="w-8 h-8 text-white" />
-                    </div>
-
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">
-                      {t(`packages.${pkg.id}.title`)}
-                    </h3>
-
-                    <div className="text-3xl font-black text-primary mb-4">
-                      {t(`packages.${pkg.id}.price`)}
-                    </div>
-                  </div>
-
-                  {/* Features - This will grow to fill available space */}
-                  <div className="flex-1 space-y-3 mb-8">
-                    {pkg.features.map((feature, featureIndex) => (
-                      <div
-                        key={featureIndex}
-                        className="flex items-start space-x-3"
-                      >
-                        {feature.included ? (
-                          <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                        )}
-                        <span
-                          className={`text-sm ${
-                            feature.included
-                              ? "text-foreground"
-                              : "text-foreground/50"
-                          }`}
-                        >
-                          {t(feature.key)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CTA Button - This will stick to the bottom */}
-                  <Button
-                    className={`w-full ${
-                      pkg.popular ? "btn-hero" : "btn-glass"
-                    }`}
-                    onClick={() =>
-                      document
-                        .querySelector("#contact")
-                        ?.scrollIntoView({ behavior: "smooth" })
+                if (isMobile) {
+                  // Mobile: no animation, show cards immediately
+                  transform = "translateY(0)";
+                  opacity = "1";
+                  zIndex = "10";
+                } else {
+                  // Desktop animation: complex fan-out effect
+                  if (isVisible) {
+                    // Final positions when visible
+                    if (index === 0) {
+                      // Left card - move left
+                      transform = "translateX(-30px) scale(1)";
+                      opacity = "1";
+                      zIndex = "10";
+                    } else if (index === 1) {
+                      // Center card - stay in center but scale up
+                      transform = "translateX(0) scale(1.05)";
+                      opacity = "1";
+                      zIndex = "20"; // Higher z-index to stay on top
+                    } else if (index === 2) {
+                      // Right card - move right
+                      transform = "translateX(30px) scale(1)";
+                      opacity = "1";
+                      zIndex = "10";
                     }
-                  >
-                    Get Started
-                  </Button>
+                  } else {
+                    // Initial state - all cards start from center behind each other
+                    transform = "translateX(0) scale(0.8)";
+                    opacity = index === 1 ? "1" : "0"; // Only center card visible initially
+                    zIndex = index === 1 ? "20" : "5"; // Center card on top initially
+                  }
+                }
 
-                  {/* Background Glow */}
-                  {pkg.popular && (
-                    <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-3xl -z-10" />
-                  )}
-                </div>
-              ))}
+                return (
+                  <div
+                    key={pkg.id}
+                    className={`package-card relative flex flex-col h-full transition-all duration-1000 ease-out ${
+                      pkg.popular ? "glow" : ""
+                    }`}
+                    style={{
+                      transform: transform,
+                      opacity: opacity,
+                      zIndex: zIndex,
+                      transitionDelay: isMobile
+                        ? "0ms" // No delay on mobile
+                        : index === 1
+                        ? "0ms"
+                        : `${300 + (index === 0 ? 0 : 200)}ms`, // Center first, then others for desktop
+                    }}
+                  >
+                    {/* Popular Badge */}
+                    {pkg.popular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-gradient-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-semibold">
+                          Most Popular
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-2xl flex items-center justify-center">
+                        <pkg.icon className="w-8 h-8 text-white" />
+                      </div>
+
+                      <h3 className="text-2xl font-bold mb-2 text-foreground">
+                        {t(`packages.${pkg.id}.title`)}
+                      </h3>
+
+                      <div className="text-3xl font-black text-primary mb-4">
+                        {t(`packages.${pkg.id}.price`)}
+                      </div>
+                    </div>
+
+                    {/* Features - This will grow to fill available space */}
+                    <div className="flex-1 space-y-3 mb-8">
+                      {pkg.features.map((feature, featureIndex) => (
+                        <div
+                          key={featureIndex}
+                          className="flex items-start space-x-3"
+                        >
+                          {feature.included ? (
+                            <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          ) : (
+                            <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                          )}
+                          <span
+                            className={`text-sm ${
+                              feature.included
+                                ? "text-foreground"
+                                : "text-foreground/50"
+                            }`}
+                          >
+                            {t(feature.key)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA Button - This will stick to the bottom */}
+                    <Button
+                      className={`w-full ${
+                        pkg.popular ? "btn-hero" : "btn-glass"
+                      }`}
+                      onClick={() =>
+                        document
+                          .querySelector("#contact")
+                          ?.scrollIntoView({ behavior: "smooth" })
+                      }
+                    >
+                      Get Started
+                    </Button>
+
+                    {/* Background Glow */}
+                    {pkg.popular && (
+                      <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-3xl -z-10" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

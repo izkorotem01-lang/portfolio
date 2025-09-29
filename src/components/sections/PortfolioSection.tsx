@@ -17,15 +17,20 @@ const PortfolioSection = () => {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
-  // Function to handle video click - simple toggle mute
+  // Function to handle video click - restart video and toggle mute
   const handleVideoClick = (videoId: string) => {
     const video = videoRefs.current[videoId];
     if (video) {
+      // Always restart the video from the beginning
+      video.currentTime = 0;
+
       if (playingVideoId === videoId) {
         // If clicking the same video, toggle mute
         video.muted = !video.muted;
         if (video.muted) {
           setPlayingVideoId(null);
+        } else {
+          video.play().catch(console.error);
         }
       } else {
         // If clicking a different video, mute all others and unmute this one
