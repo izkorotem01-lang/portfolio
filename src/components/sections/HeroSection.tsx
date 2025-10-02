@@ -21,6 +21,7 @@ const HeroSection = () => {
   const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const [useFallbackVideo, setUseFallbackVideo] = useState(false);
+  const [customDomainRetry, setCustomDomainRetry] = useState(0);
 
   const scrollToPortfolio = () => {
     document
@@ -36,8 +37,23 @@ const HeroSection = () => {
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      // Force video to start loading
-      video.load();
+      // Check if we're on the custom domain and adjust loading strategy
+      const isCustomDomain = window.location.hostname === 'rotemizko.com';
+      console.log('Custom domain detected:', isCustomDomain);
+      
+      if (isCustomDomain) {
+        // For custom domain, try a different approach
+        video.crossOrigin = 'anonymous';
+        video.referrerPolicy = 'no-referrer';
+        
+        // Add a small delay for custom domain
+        setTimeout(() => {
+          video.load();
+        }, 100);
+      } else {
+        // For Cloudflare Pages subdomain, load immediately
+        video.load();
+      }
 
       // Set up additional error handling
       const handleError = () => {
@@ -216,10 +232,12 @@ const HeroSection = () => {
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
                       onError={(e) => {
                         console.error("Video loading error:", e);
                         console.error("Error details:", e.nativeEvent);
+                        console.error("Current domain:", window.location.hostname);
                         setVideoError(true);
                         setVideoLoading(false);
 
@@ -231,11 +249,43 @@ const HeroSection = () => {
                           setUseFallbackVideo(true);
                         }
 
-                        // Fallback: try to reload the video after a delay
-                        setTimeout(() => {
-                          const video = e.target as HTMLVideoElement;
-                          video.load();
-                        }, 2000);
+                        // For custom domain, try different loading approach
+                        if (window.location.hostname === 'rotemizko.com') {
+                          console.log("Custom domain error - trying alternative loading...");
+                          setCustomDomainRetry(prev => prev + 1);
+                          
+                          if (customDomainRetry < 3) {
+                            setTimeout(() => {
+                              const video = e.target as HTMLVideoElement;
+                              // Try different loading strategies
+                              if (customDomainRetry === 0) {
+                                // First retry: change attributes
+                                video.crossOrigin = 'use-credentials';
+                                video.referrerPolicy = 'strict-origin-when-cross-origin';
+                              } else if (customDomainRetry === 1) {
+                                // Second retry: remove and recreate element
+                                const parent = video.parentNode;
+                                const newVideo = video.cloneNode(true) as HTMLVideoElement;
+                                newVideo.crossOrigin = 'anonymous';
+                                newVideo.referrerPolicy = 'no-referrer';
+                                parent?.replaceChild(newVideo, video);
+                              } else {
+                                // Third retry: try fallback video
+                                setUseFallbackVideo(true);
+                              }
+                              video.load();
+                            }, 1000 + (customDomainRetry * 500));
+                          } else {
+                            // After 3 retries, show error with manual retry option
+                            console.log("Custom domain: Max retries reached");
+                          }
+                        } else {
+                          // Standard retry for subdomain
+                          setTimeout(() => {
+                            const video = e.target as HTMLVideoElement;
+                            video.load();
+                          }, 2000);
+                        }
                       }}
                       onLoadStart={() => {
                         console.log("Video loading started");
