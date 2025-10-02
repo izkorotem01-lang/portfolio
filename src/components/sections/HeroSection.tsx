@@ -38,10 +38,10 @@ const HeroSection = () => {
     if (video) {
       // Force video to start loading
       video.load();
-      
+
       // Set up additional error handling
       const handleError = () => {
-        console.error('Video failed to load, retrying...');
+        console.error("Video failed to load, retrying...");
         setVideoError(true);
         setTimeout(() => {
           video.load();
@@ -49,10 +49,10 @@ const HeroSection = () => {
         }, 3000);
       };
 
-      video.addEventListener('error', handleError);
-      
+      video.addEventListener("error", handleError);
+
       return () => {
-        video.removeEventListener('error', handleError);
+        video.removeEventListener("error", handleError);
       };
     }
   }, []);
@@ -218,17 +218,19 @@ const HeroSection = () => {
                       crossOrigin="anonymous"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
                       onError={(e) => {
-                        console.error('Video loading error:', e);
-                        console.error('Error details:', e.nativeEvent);
+                        console.error("Video loading error:", e);
+                        console.error("Error details:", e.nativeEvent);
                         setVideoError(true);
                         setVideoLoading(false);
-                        
+
                         // Check if it's a blocked resource error
-                        if (e.nativeEvent?.type === 'error') {
-                          console.log('Attempting fallback to regular video...');
+                        if (e.nativeEvent?.type === "error") {
+                          console.log(
+                            "Attempting fallback to regular video..."
+                          );
                           setUseFallbackVideo(true);
                         }
-                        
+
                         // Fallback: try to reload the video after a delay
                         setTimeout(() => {
                           const video = e.target as HTMLVideoElement;
@@ -236,19 +238,22 @@ const HeroSection = () => {
                         }, 2000);
                       }}
                       onLoadStart={() => {
-                        console.log('Video loading started');
-                        console.log('Video source URL:', showreelVideoYT);
-                        console.log('Current domain:', window.location.hostname);
+                        console.log("Video loading started");
+                        console.log("Video source URL:", showreelVideoYT);
+                        console.log(
+                          "Current domain:",
+                          window.location.hostname
+                        );
                         setVideoLoading(true);
                         setVideoError(false);
                       }}
                       onCanPlay={() => {
-                        console.log('Video can play');
+                        console.log("Video can play");
                         setVideoLoading(false);
                         setVideoError(false);
                       }}
                       onLoadedData={() => {
-                        console.log('Video data loaded');
+                        console.log("Video data loaded");
                         setVideoLoading(false);
                       }}
                     />
@@ -305,7 +310,9 @@ const HeroSection = () => {
                             }}
                             className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm hover:bg-white/30 transition-colors"
                           >
-                            {useFallbackVideo ? 'Try YT Version' : 'Try Regular Version'}
+                            {useFallbackVideo
+                              ? "Try YT Version"
+                              : "Try Regular Version"}
                           </button>
                         </div>
                       </div>
