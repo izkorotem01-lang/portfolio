@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,8 @@ const HeroSection = () => {
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [showOverlays, setShowOverlays] = useState(true);
+  const [videoLoading, setVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   const scrollToPortfolio = () => {
     document
@@ -28,6 +30,31 @@ const HeroSection = () => {
   const scrollToContact = () => {
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Handle video loading on component mount
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      // Force video to start loading
+      video.load();
+      
+      // Set up additional error handling
+      const handleError = () => {
+        console.error('Video failed to load, retrying...');
+        setVideoError(true);
+        setTimeout(() => {
+          video.load();
+          setVideoError(false);
+        }, 3000);
+      };
+
+      video.addEventListener('error', handleError);
+      
+      return () => {
+        video.removeEventListener('error', handleError);
+      };
+    }
+  }, []);
 
   const handleVideoClick = () => {
     // Hide overlays after first tap (especially for mobile)
@@ -186,7 +213,33 @@ const HeroSection = () => {
                       muted
                       loop
                       playsInline
+                      preload="auto"
+                      crossOrigin="anonymous"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
+                      onError={(e) => {
+                        console.error('Video loading error:', e);
+                        setVideoError(true);
+                        setVideoLoading(false);
+                        // Fallback: try to reload the video after a delay
+                        setTimeout(() => {
+                          const video = e.target as HTMLVideoElement;
+                          video.load();
+                        }, 2000);
+                      }}
+                      onLoadStart={() => {
+                        console.log('Video loading started');
+                        setVideoLoading(true);
+                        setVideoError(false);
+                      }}
+                      onCanPlay={() => {
+                        console.log('Video can play');
+                        setVideoLoading(false);
+                        setVideoError(false);
+                      }}
+                      onLoadedData={() => {
+                        console.log('Video data loaded');
+                        setVideoLoading(false);
+                      }}
                     />
                     {/* Small screens: Normal version (9:16) */}
                     <video
@@ -214,10 +267,29 @@ const HeroSection = () => {
                       )}
                     </div>
 
+                    {/* Loading indicator */}
+                    {videoLoading && (
+                      <div className="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error state */}
+                    {videoError && (
+                      <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <div className="text-4xl mb-2">⚠️</div>
+                          <p className="text-sm">Video loading failed. Retrying...</p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Click to play/restart overlay */}
                     <div
                       className={`absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center transition-opacity ${
-                        showOverlays
+                        showOverlays && !videoLoading && !videoError
                           ? "group-hover:opacity-100 opacity-0 md:opacity-0"
                           : "opacity-0"
                       }`}
