@@ -64,3 +64,4 @@ export function usePerformanceMonitor() {
     shouldOptimize: metrics.isLowEndDevice || metrics.renderTime > 16, // 60fps threshold
   };
 }
+

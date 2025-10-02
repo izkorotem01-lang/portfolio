@@ -197,3 +197,4 @@ console.log("Loading video:", videoId, "Loaded count:", loadedVideos.size);
 5. **Analytics**: Add detailed performance analytics
 
 This optimization should significantly improve your mobile performance while maintaining a great user experience!
+

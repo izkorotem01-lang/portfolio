@@ -78,3 +78,4 @@ export function useStaggeredAnimation(
 
   return { ref, visibleItems, isVisible };
 }
+
