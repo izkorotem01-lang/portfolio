@@ -20,6 +20,7 @@ const HeroSection = () => {
   const [showOverlays, setShowOverlays] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [useFallbackVideo, setUseFallbackVideo] = useState(false);
 
   const scrollToPortfolio = () => {
     document
@@ -208,7 +209,7 @@ const HeroSection = () => {
                     {/* Large screens: YT version (16:9) */}
                     <video
                       ref={videoRef}
-                      src={showreelVideoYT}
+                      src={useFallbackVideo ? showreelVideo : showreelVideoYT}
                       autoPlay
                       muted
                       loop
@@ -218,8 +219,16 @@ const HeroSection = () => {
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
                       onError={(e) => {
                         console.error('Video loading error:', e);
+                        console.error('Error details:', e.nativeEvent);
                         setVideoError(true);
                         setVideoLoading(false);
+                        
+                        // Check if it's a blocked resource error
+                        if (e.nativeEvent?.type === 'error') {
+                          console.log('Attempting fallback to regular video...');
+                          setUseFallbackVideo(true);
+                        }
+                        
                         // Fallback: try to reload the video after a delay
                         setTimeout(() => {
                           const video = e.target as HTMLVideoElement;
@@ -228,6 +237,8 @@ const HeroSection = () => {
                       }}
                       onLoadStart={() => {
                         console.log('Video loading started');
+                        console.log('Video source URL:', showreelVideoYT);
+                        console.log('Current domain:', window.location.hostname);
                         setVideoLoading(true);
                         setVideoError(false);
                       }}
@@ -281,7 +292,21 @@ const HeroSection = () => {
                       <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
                         <div className="text-center text-white">
                           <div className="text-4xl mb-2">⚠️</div>
-                          <p className="text-sm">Video loading failed. Retrying...</p>
+                          <p className="text-sm mb-4">Video loading failed</p>
+                          <button
+                            onClick={() => {
+                              setVideoError(false);
+                              setVideoLoading(true);
+                              setUseFallbackVideo(!useFallbackVideo);
+                              const video = videoRef.current;
+                              if (video) {
+                                video.load();
+                              }
+                            }}
+                            className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm hover:bg-white/30 transition-colors"
+                          >
+                            {useFallbackVideo ? 'Try YT Version' : 'Try Regular Version'}
+                          </button>
                         </div>
                       </div>
                     )}
