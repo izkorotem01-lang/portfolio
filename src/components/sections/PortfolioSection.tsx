@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Play } from "lucide-react";
 import {
   getCategories,
   getVideos,
@@ -15,10 +16,31 @@ const PortfolioSection = () => {
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const [loadedVideoIds, setLoadedVideoIds] = useState<Set<string>>(new Set());
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
-  // Function to handle video click - restart video and toggle mute
-  const handleVideoClick = (videoId: string) => {
+  const hasThumbnailById = (id: string): boolean => {
+    const v = videos.find((vid) => vid.id === id);
+    return !!(v && v.thumbnailUrl && v.thumbnailUrl.trim() !== "");
+  };
+
+  // Function to handle video/thumbnail click
+  const handleVideoClick = (videoId: string, hasThumbnail: boolean) => {
+    // If video has thumbnail and hasn't been loaded yet, load it first
+    if (hasThumbnail && !loadedVideoIds.has(videoId)) {
+      // Load only this video's player; revert others with thumbnails back to their thumbnails
+      setLoadedVideoIds(new Set([videoId]));
+      // Give video a moment to load before playing
+      setTimeout(() => {
+        playVideo(videoId);
+      }, 100);
+      return;
+    }
+
+    playVideo(videoId);
+  };
+
+  const playVideo = (videoId: string) => {
     const video = videoRefs.current[videoId];
     if (video) {
       // Always restart the video from the beginning
@@ -29,18 +51,37 @@ const PortfolioSection = () => {
         video.muted = !video.muted;
         if (video.muted) {
           setPlayingVideoId(null);
+          // If this video has a thumbnail, revert to thumbnail view
+          if (hasThumbnailById(videoId)) {
+            const next = new Set(loadedVideoIds);
+            next.delete(videoId);
+            setLoadedVideoIds(next);
+          }
         } else {
           video.play().catch(console.error);
         }
       } else {
         // If clicking a different video, mute all others and unmute this one
-        Object.values(videoRefs.current).forEach((v) => {
-          if (v) v.muted = true;
+        Object.entries(videoRefs.current).forEach(([id, v]) => {
+          if (v) {
+            v.muted = true;
+            if (id !== videoId) {
+              // Pause other videos to save resources
+              try {
+                v.pause();
+              } catch {}
+            }
+          }
         });
 
         video.muted = false;
         video.play().catch(console.error);
         setPlayingVideoId(videoId);
+
+        // Ensure only this video's player stays loaded if it has a thumbnail
+        if (hasThumbnailById(videoId)) {
+          setLoadedVideoIds(new Set([videoId]));
+        }
       }
     }
   };
@@ -83,6 +124,12 @@ const PortfolioSection = () => {
     activeCategory === "all"
       ? videos
       : videos.filter((video) => video.categoryId === activeCategory);
+
+  // When category changes, reset loaded state to show thumbnails again
+  useEffect(() => {
+    setLoadedVideoIds(new Set());
+    setPlayingVideoId(null);
+  }, [activeCategory]);
 
   return (
     <section id="portfolio" className="py-20 relative z-10">
@@ -135,7 +182,10 @@ const PortfolioSection = () => {
                       index={index}
                       language={language}
                       isPlaying={playingVideoId === video.id}
-                      onVideoClick={() => handleVideoClick(video.id)}
+                      isLoaded={loadedVideoIds.has(video.id)}
+                      onVideoClick={() =>
+                        handleVideoClick(video.id, !!video.thumbnailUrl)
+                      }
                       onVideoRef={(ref) => registerVideoRef(video.id, ref)}
                     />
                   ))}
@@ -155,6 +205,7 @@ const SimpleVideoItem = ({
   index,
   language,
   isPlaying,
+  isLoaded,
   onVideoClick,
   onVideoRef,
 }: {
@@ -162,25 +213,52 @@ const SimpleVideoItem = ({
   index: number;
   language: string;
   isPlaying: boolean;
+  isLoaded: boolean;
   onVideoClick: () => void;
   onVideoRef: (ref: HTMLVideoElement | null) => void;
 }) => {
+  const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
+  const shouldShowVideo = !hasThumbnail || isLoaded;
+
   return (
     <div className="portfolio-item group relative">
       {/* Simple Video Container */}
       <div className="relative bg-gradient-secondary/20 overflow-hidden aspect-video w-full h-[35vh] sm:h-[60vh] shadow-lg">
-        <video
-          ref={onVideoRef}
-          src={video.videoUrl}
-          className="w-full h-full object-cover cursor-pointer"
-          loop
-          muted
-          autoPlay
-          playsInline
-          onClick={onVideoClick}
-        >
-          Your browser does not support the video tag.
-        </video>
+        {hasThumbnail && !isLoaded ? (
+          // Show thumbnail with play button overlay
+          <div
+            className="relative w-full h-full cursor-pointer"
+            onClick={onVideoClick}
+          >
+            <img
+              src={video.thumbnailUrl}
+              alt={language === "he" ? video.titleHe : video.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            {/* Play button overlay */}
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+              <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
+                <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Show video (either no thumbnail or already loaded)
+          <video
+            ref={onVideoRef}
+            src={video.videoUrl}
+            className="w-full h-full object-cover cursor-pointer"
+            loop
+            muted
+            autoPlay={!hasThumbnail} // Only autoplay if no thumbnail
+            playsInline
+            onClick={onVideoClick}
+            preload={hasThumbnail ? "none" : "auto"} // Don't preload if has thumbnail
+          >
+            Your browser does not support the video tag.
+          </video>
+        )}
       </div>
     </div>
   );

@@ -91,6 +91,9 @@ const Admin = () => {
   const [batchUploading, setBatchUploading] = useState(false);
   const [sessionExpiry, setSessionExpiry] = useState<Date | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedVideoForThumbnail, setSelectedVideoForThumbnail] =
+    useState<PortfolioVideo | null>(null);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
 
   // All Work section state
   const [showAllWork, setShowAllWork] = useState(false);
@@ -387,6 +390,36 @@ const Admin = () => {
         console.error("Error deleting video:", error);
         setError("Failed to delete video");
       }
+    }
+  };
+
+  const handleThumbnailUpload = async (file: File, videoId: string) => {
+    setThumbnailUploading(true);
+    try {
+      const fileName = `thumbnails/${Date.now()}-${file.name}`;
+      const thumbnailUrl = await uploadFile(file, fileName);
+
+      await updateVideo(videoId, { thumbnailUrl });
+
+      // Refresh videos
+      if (selectedCategory) {
+        await loadVideos(selectedCategory.id);
+      }
+
+      // Update selected video
+      if (selectedVideoForThumbnail) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          thumbnailUrl,
+        });
+      }
+
+      setError("");
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      setError("Failed to upload thumbnail");
+    } finally {
+      setThumbnailUploading(false);
     }
   };
 
@@ -740,6 +773,7 @@ const Admin = () => {
                       key={video.id}
                       video={video}
                       onDelete={() => handleDeleteVideo(video.id)}
+                      onSelect={() => setSelectedVideoForThumbnail(video)}
                       onDragStart={(e) => handleVideoDragStart(e, video.id)}
                       onDragOver={handleVideoDragOver}
                       onDrop={(e) => handleVideoDrop(e, video.id)}
@@ -812,6 +846,119 @@ const Admin = () => {
             </div>
           )}
         </div>
+
+        {/* Thumbnail Upload Panel */}
+        {selectedVideoForThumbnail && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Upload Thumbnail
+                  </h2>
+                  <p className="text-gray-300">
+                    {getDisplayTitle(selectedVideoForThumbnail)}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setSelectedVideoForThumbnail(null)}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+
+              {/* Current Thumbnail Preview */}
+              {selectedVideoForThumbnail.thumbnailUrl && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Current Thumbnail
+                  </label>
+                  <img
+                    src={selectedVideoForThumbnail.thumbnailUrl}
+                    alt="Current thumbnail"
+                    className="w-full rounded-lg max-h-64 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Video Preview */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Video Preview
+                </label>
+                <video
+                  src={selectedVideoForThumbnail.videoUrl}
+                  className="w-full rounded-lg"
+                  controls
+                />
+              </div>
+
+              {/* Thumbnail Upload */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Upload New Thumbnail
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
+                    }
+                  }}
+                  className="hidden"
+                  id="thumbnail-upload"
+                  disabled={thumbnailUploading}
+                />
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    thumbnailUploading
+                      ? "border-gray-600 bg-gray-700/50 cursor-not-allowed"
+                      : "border-blue-500 hover:border-blue-400 hover:bg-blue-900/10"
+                  }`}
+                  onClick={() => {
+                    if (!thumbnailUploading) {
+                      document.getElementById("thumbnail-upload")?.click();
+                    }
+                  }}
+                >
+                  {thumbnailUploading ? (
+                    <div className="flex items-center justify-center space-x-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                      <span className="text-blue-200">Uploading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 mx-auto mb-3 text-blue-400" />
+                      <p className="text-blue-300 font-medium mb-1">
+                        Click to upload thumbnail
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        PNG, JPG, WebP (recommended: 16:9 ratio)
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <Button
+                  onClick={() => setSelectedVideoForThumbnail(null)}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1134,6 +1281,7 @@ const getDisplayTitleHe = (video: PortfolioVideo) => {
 const VideoCard = ({
   video,
   onDelete,
+  onSelect,
   onDragStart,
   onDragOver,
   onDrop,
@@ -1142,12 +1290,15 @@ const VideoCard = ({
 }: {
   video: PortfolioVideo;
   onDelete: () => void;
+  onSelect: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   isDragging: boolean;
   isDropTarget?: boolean;
 }) => {
+  const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
+
   return (
     <div
       className={`bg-gray-700 rounded-lg p-4 border-2 transition-all duration-200 cursor-move hover:bg-gray-600 ${
@@ -1162,9 +1313,20 @@ const VideoCard = ({
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
+      {/* Thumbnail Preview */}
+      {hasThumbnail && (
+        <div className="mb-3 -mx-4 -mt-4">
+          <img
+            src={video.thumbnailUrl}
+            alt="Thumbnail"
+            className="w-full h-24 object-cover rounded-t-lg"
+          />
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <FileVideo className="w-4 h-4 text-gray-400" />
+        <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <FileVideo className="w-4 h-4 text-gray-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-medium text-white truncate">
               {getDisplayTitle(video)}
@@ -1176,7 +1338,7 @@ const VideoCard = ({
             )}
           </div>
         </div>
-        <div className="cursor-grab active:cursor-grabbing">
+        <div className="cursor-grab active:cursor-grabbing flex-shrink-0">
           <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-300" />
         </div>
       </div>
@@ -1190,21 +1352,48 @@ const VideoCard = ({
         )}
       </div>
 
-      <div className="flex justify-between items-center">
+      {/* Thumbnail Status Badge */}
+      <div className="mb-3">
+        <span
+          className={`text-xs px-2 py-1 rounded ${
+            hasThumbnail
+              ? "bg-green-900/30 text-green-400 border border-green-500/30"
+              : "bg-yellow-900/30 text-yellow-400 border border-yellow-500/30"
+          }`}
+        >
+          {hasThumbnail ? "✓ Has Thumbnail" : "⚠ No Thumbnail"}
+        </span>
+      </div>
+
+      <div className="flex justify-between items-center gap-2">
         <span className="text-xs text-gray-500 bg-gray-600 px-2 py-1 rounded">
           #{video.order}
         </span>
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          size="sm"
-          variant="outline"
-          className="text-red-400 border-red-400 hover:bg-red-900 h-6 w-6 p-0"
-        >
-          <Trash2 className="w-3 h-3" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            size="sm"
+            variant="outline"
+            className="text-blue-400 border-blue-400 hover:bg-blue-900 h-6 px-2"
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            <span className="text-xs">Thumbnail</span>
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            size="sm"
+            variant="outline"
+            className="text-red-400 border-red-400 hover:bg-red-900 h-6 w-6 p-0"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -1,12 +1,52 @@
+/* Local Assistant Font */
+@font-face {
+  font-family: "Assistant";
+  src: url("./assets/fonts/assistant/Assistant-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("./assets/fonts/assistant/Assistant-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("./assets/fonts/assistant/Assistant-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("./assets/fonts/assistant/Assistant-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("./assets/fonts/assistant/Assistant-ExtraBold.ttf")
+    format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import "./mobile-video-optimizations.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Rotem Izko Portfolio Design System - Modern Glassmorphism */
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap");
-@import "./mobile-video-optimizations.css";
 
 @layer base {
   :root {
@@ -141,12 +181,14 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
-    font-family: "Inter", sans-serif;
+    @apply bg-background text-foreground;
+    font-family: "Assistant", sans-serif;
+    font-weight: 600;
   }
 
   [dir="rtl"] {
-    font-family: "Rubik", sans-serif;
+    font-family: "Assistant", sans-serif;
+    font-weight: 600;
   }
 
   /* Glass Morphism Components */
@@ -208,66 +250,103 @@
     transform: translateY(20px);
   }
 
-  /* Mobile-optimized animations - reduced complexity */
+  /* Mobile-optimized animations - DISABLE ALL ANIMATIONS ON MOBILE */
   @media (max-width: 768px) {
-    .animate-fade-up {
-      animation: none;
-      opacity: 1;
-      transform: none;
+    /* GLOBAL: Disable ALL animations and transitions on mobile */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
     }
 
-    .animate-float {
-      animation: none;
+    /* Disable ALL animation classes */
+    .animate-fade-up,
+    .animate-fade-in-up,
+    .animate-fade-in-left,
+    .animate-fade-in-right,
+    .animate-scale-in,
+    .animate-scale-in-up,
+    .animate-slide-up-stagger,
+    .animate-float,
+    .animate-waveform-pulse,
+    .animate-playhead-glow,
+    .animate-spin,
+    .animate-pulse,
+    .animate-bounce {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
 
-    /* Disable all transitions on mobile for better performance */
-    .transition-smooth {
-      transition: none;
-    }
-
-    /* Disable glow effects on mobile */
-    .glow-hover {
-      box-shadow: none;
-    }
-
-    /* Disable all backdrop filters on mobile for maximum performance */
-    .backdrop-blur-sm,
-    .backdrop-blur-xl,
-    .backdrop-blur-2xl {
-      backdrop-filter: none;
+    /* Disable all animation delay classes */
+    .animate-delay-100,
+    .animate-delay-200,
+    .animate-delay-300,
+    .animate-delay-400,
+    .animate-delay-500,
+    .animate-delay-600,
+    .animate-delay-700,
+    .animate-delay-800,
+    .animate-delay-900,
+    .animate-delay-1000 {
+      animation-delay: 0s !important;
     }
 
     /* Disable all hover effects on mobile */
     .hover\:scale-105:hover,
-    .hover\:scale-110:hover {
-      transform: none;
+    .hover\:scale-110:hover,
+    .hover\:scale-\[1\.02\]:hover,
+    .md\:hover\:scale-105:hover,
+    .group:hover .group-hover\:scale-105,
+    .group:hover .group-hover\:scale-110 {
+      transform: none !important;
     }
 
     .group:hover .group-hover\:text-primary {
       color: inherit;
     }
 
-    /* Disable all animations on mobile */
-    .animate-fade-up,
-    .animate-scale-in {
-      animation: none;
-      opacity: 1;
-      transform: none;
-    }
-
     /* Disable glow effects on mobile */
     .glow,
+    .glow-hover,
     .glow-hover:hover {
-      box-shadow: none;
+      box-shadow: none !important;
     }
 
-    /* Simplify gradients on mobile for performance */
+    /* Disable all backdrop filters on mobile for maximum performance */
+    .backdrop-blur-sm,
+    .backdrop-blur-md,
+    .backdrop-blur-xl,
+    .backdrop-blur-2xl,
+    .backdrop-blur-\[20px\] {
+      backdrop-filter: none !important;
+    }
+
+    /* Simplify gradients on mobile for performance - EXCEPT background gradient */
     .bg-gradient-primary {
       background: hsl(var(--primary));
     }
 
     .bg-gradient-secondary {
       background: hsl(var(--secondary));
+    }
+
+    /* EXCEPTION: Keep background gradient animations - these are OK */
+    .animate-first,
+    .animate-second,
+    .animate-third,
+    .animate-fourth,
+    .animate-fifth {
+      animation-duration: revert !important;
+      animation-delay: revert !important;
+    }
+
+    /* EXCEPTION: Allow video controls to still work */
+    video {
+      transition-duration: revert !important;
     }
   }
 

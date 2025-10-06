@@ -2,7 +2,12 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,8 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        'inter': ['Inter', 'sans-serif'],
-        'rubik': ['Rubik', 'sans-serif'],
+        assistant: ["Assistant", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -23,8 +27,8 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        'primary-glow': "hsl(var(--primary-glow))",
-        'secondary-dark': "hsl(var(--secondary-dark))",
+        "primary-glow": "hsl(var(--primary-glow))",
+        "secondary-dark": "hsl(var(--secondary-dark))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

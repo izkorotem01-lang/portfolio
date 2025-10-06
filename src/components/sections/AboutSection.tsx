@@ -44,7 +44,17 @@ const AboutSection = () => {
               }`}
             >
               <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
-                {t("about.title")}
+                {language === "he" ? (
+                  <>
+                    <div>מי אני</div>
+                    <div className="mt-2">מה אני מציע</div>
+                  </>
+                ) : (
+                  <>
+                    <div>Who Am I</div>
+                    <div className="mt-2">What I Offer</div>
+                  </>
+                )}
               </h2>
             </div>
 
@@ -139,6 +149,7 @@ const AboutSection = () => {
                       src={rotemImage}
                       alt="Rotem Izko - Professional Video Editor"
                       className="w-full h-auto object-cover rounded-lg md:rounded-2xl shadow-md md:shadow-2xl"
+                      loading="lazy"
                     />
                   </div>
                 </div>

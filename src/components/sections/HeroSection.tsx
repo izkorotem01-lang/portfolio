@@ -38,14 +38,14 @@ const HeroSection = () => {
     const video = videoRef.current;
     if (video) {
       // Check if we're on the custom domain and adjust loading strategy
-      const isCustomDomain = window.location.hostname === 'rotemizko.com';
-      console.log('Custom domain detected:', isCustomDomain);
-      
+      const isCustomDomain = window.location.hostname === "rotemizko.com";
+      console.log("Custom domain detected:", isCustomDomain);
+
       if (isCustomDomain) {
         // For custom domain, try a different approach
-        video.crossOrigin = 'anonymous';
-        video.referrerPolicy = 'no-referrer';
-        
+        video.crossOrigin = "anonymous";
+        video.referrerPolicy = "no-referrer";
+
         // Add a small delay for custom domain
         setTimeout(() => {
           video.load();
@@ -237,7 +237,10 @@ const HeroSection = () => {
                       onError={(e) => {
                         console.error("Video loading error:", e);
                         console.error("Error details:", e.nativeEvent);
-                        console.error("Current domain:", window.location.hostname);
+                        console.error(
+                          "Current domain:",
+                          window.location.hostname
+                        );
                         setVideoError(true);
                         setVideoLoading(false);
 
@@ -250,31 +253,36 @@ const HeroSection = () => {
                         }
 
                         // For custom domain, try different loading approach
-                        if (window.location.hostname === 'rotemizko.com') {
-                          console.log("Custom domain error - trying alternative loading...");
-                          setCustomDomainRetry(prev => prev + 1);
-                          
+                        if (window.location.hostname === "rotemizko.com") {
+                          console.log(
+                            "Custom domain error - trying alternative loading..."
+                          );
+                          setCustomDomainRetry((prev) => prev + 1);
+
                           if (customDomainRetry < 3) {
                             setTimeout(() => {
                               const video = e.target as HTMLVideoElement;
                               // Try different loading strategies
                               if (customDomainRetry === 0) {
                                 // First retry: change attributes
-                                video.crossOrigin = 'use-credentials';
-                                video.referrerPolicy = 'strict-origin-when-cross-origin';
+                                video.crossOrigin = "use-credentials";
+                                video.referrerPolicy =
+                                  "strict-origin-when-cross-origin";
                               } else if (customDomainRetry === 1) {
                                 // Second retry: remove and recreate element
                                 const parent = video.parentNode;
-                                const newVideo = video.cloneNode(true) as HTMLVideoElement;
-                                newVideo.crossOrigin = 'anonymous';
-                                newVideo.referrerPolicy = 'no-referrer';
+                                const newVideo = video.cloneNode(
+                                  true
+                                ) as HTMLVideoElement;
+                                newVideo.crossOrigin = "anonymous";
+                                newVideo.referrerPolicy = "no-referrer";
                                 parent?.replaceChild(newVideo, video);
                               } else {
                                 // Third retry: try fallback video
                                 setUseFallbackVideo(true);
                               }
                               video.load();
-                            }, 1000 + (customDomainRetry * 500));
+                            }, 1000 + customDomainRetry * 500);
                           } else {
                             // After 3 retries, show error with manual retry option
                             console.log("Custom domain: Max retries reached");

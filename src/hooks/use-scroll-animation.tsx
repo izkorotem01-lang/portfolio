@@ -58,11 +58,18 @@ export function useStaggeredAnimation(
 ) {
   const { ref, isVisible } = useScrollAnimation(options);
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
+    // On mobile, show all items immediately without stagger
+    if (isMobile) {
+      setVisibleItems(Array.from({ length: itemCount }, (_, i) => i));
+      return;
+    }
+
     if (!isVisible) return;
 
-    const timeouts: Node[] = [];
+    const timeouts: NodeJS.Timeout[] = [];
 
     for (let i = 0; i < itemCount; i++) {
       const timeout = setTimeout(() => {
@@ -74,8 +81,7 @@ export function useStaggeredAnimation(
     return () => {
       timeouts.forEach((timeout) => clearTimeout(timeout));
     };
-  }, [isVisible, itemCount, delay]);
+  }, [isVisible, itemCount, delay, isMobile]);
 
   return { ref, visibleItems, isVisible };
 }
-

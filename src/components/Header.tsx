@@ -34,9 +34,10 @@ const Header = () => {
             <img
               src="/icon.png"
               alt="Rotem Izko Logo"
-              className="w-10 h-10 rounded-lg"
+              className="w-14 h-14 md:w-16 md:h-16 rounded-lg shadow-lg hover:scale-105 transition-transform"
+              loading="eager"
             />
-            <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <div className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               {t("hero.name")}
             </div>
           </div>

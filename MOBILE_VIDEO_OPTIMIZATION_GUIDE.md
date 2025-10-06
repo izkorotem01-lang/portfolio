@@ -198,3 +198,4 @@ console.log("Loading video:", videoId, "Loaded count:", loadedVideos.size);
 
 This optimization should significantly improve your mobile performance while maintaining a great user experience!
 
+
