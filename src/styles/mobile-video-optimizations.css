@@ -8,6 +8,24 @@
     -webkit-backface-visibility: hidden;
     will-change: transform;
     contain: layout style paint;
+    content-visibility: auto;
+  }
+
+  /* Optimize portfolio grid for mobile scrolling */
+  .portfolio-item {
+    contain: layout style paint;
+    content-visibility: auto;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Reduce repaints during scrolling */
+  .portfolio-item img,
+  .portfolio-item video {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   /* Disable all transitions and animations on mobile for maximum performance */

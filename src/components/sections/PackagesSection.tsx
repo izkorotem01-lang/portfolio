@@ -174,9 +174,24 @@ const PackagesSection = () => {
                         <pkg.icon className="w-8 h-8 text-white" />
                       </div>
 
-                      <h3 className="text-2xl font-bold mb-2 text-foreground">
-                        {t(`packages.${pkg.id}.title`)}
-                      </h3>
+                      {(() => {
+                        const fullTitle = t(`packages.${pkg.id}.title`);
+                        const parts = fullTitle.split(" - ");
+                        const mainTitle = parts[0] || fullTitle;
+                        const subTitle = parts[1] || "";
+                        return (
+                          <div className="mb-2">
+                            <h3 className="text-2xl font-bold text-foreground leading-tight">
+                              {mainTitle}
+                            </h3>
+                            {subTitle && (
+                              <div className="text-sm text-foreground/80 mt-1 leading-snug">
+                                {subTitle}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <div className="text-3xl font-black text-primary mb-4">
                         {t(`packages.${pkg.id}.price`)}

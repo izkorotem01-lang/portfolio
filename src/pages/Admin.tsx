@@ -94,6 +94,7 @@ const Admin = () => {
   const [selectedVideoForThumbnail, setSelectedVideoForThumbnail] =
     useState<PortfolioVideo | null>(null);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [isThumbnailDragActive, setIsThumbnailDragActive] = useState(false);
 
   // All Work section state
   const [showAllWork, setShowAllWork] = useState(false);
@@ -420,6 +421,31 @@ const Admin = () => {
       setError("Failed to upload thumbnail");
     } finally {
       setThumbnailUploading(false);
+    }
+  };
+
+  const handleRemoveThumbnail = async (videoId: string) => {
+    try {
+      // Remove thumbnail by setting thumbnailUrl to empty string
+      await updateVideo(videoId, { thumbnailUrl: "" });
+
+      // Refresh videos
+      if (selectedCategory) {
+        await loadVideos(selectedCategory.id);
+      }
+
+      // Update selected video
+      if (selectedVideoForThumbnail) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          thumbnailUrl: "",
+        });
+      }
+
+      setError("");
+    } catch (error) {
+      console.error("Error removing thumbnail:", error);
+      setError("Failed to remove thumbnail");
     }
   };
 
@@ -871,14 +897,53 @@ const Admin = () => {
 
               {/* Current Thumbnail Preview */}
               {selectedVideoForThumbnail.thumbnailUrl && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Current Thumbnail
-                  </label>
+                <div
+                  className={`mb-6 rounded-lg ${
+                    isThumbnailDragActive ? "ring-2 ring-blue-400" : ""
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!thumbnailUploading) setIsThumbnailDragActive(true);
+                  }}
+                  onDragLeave={() => setIsThumbnailDragActive(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setIsThumbnailDragActive(false);
+                    if (thumbnailUploading) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file && file.type.startsWith("image/")) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
+                    }
+                  }}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Current Thumbnail
+                    </label>
+                    <Button
+                      onClick={() =>
+                        handleRemoveThumbnail(selectedVideoForThumbnail.id)
+                      }
+                      variant="destructive"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
                   <img
                     src={selectedVideoForThumbnail.thumbnailUrl}
                     alt="Current thumbnail"
-                    className="w-full rounded-lg max-h-64 object-cover"
+                    className="w-full rounded-lg max-h-64 object-cover cursor-pointer"
+                    onClick={() => {
+                      if (!thumbnailUploading) {
+                        document.getElementById("thumbnail-upload")?.click();
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -920,11 +985,30 @@ const Admin = () => {
                   className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
                     thumbnailUploading
                       ? "border-gray-600 bg-gray-700/50 cursor-not-allowed"
+                      : isThumbnailDragActive
+                      ? "border-blue-400 bg-blue-900/10"
                       : "border-blue-500 hover:border-blue-400 hover:bg-blue-900/10"
                   }`}
                   onClick={() => {
                     if (!thumbnailUploading) {
                       document.getElementById("thumbnail-upload")?.click();
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!thumbnailUploading) setIsThumbnailDragActive(true);
+                  }}
+                  onDragLeave={() => setIsThumbnailDragActive(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setIsThumbnailDragActive(false);
+                    if (thumbnailUploading) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file && file.type.startsWith("image/")) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
                     }
                   }}
                 >

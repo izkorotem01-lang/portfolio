@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import showreelVideo from "@/assets/Showreel.mp4";
 import showreelVideoYT from "@/assets/Showreel_YT.mp4";
+import iconNoBg from "@/assets/icon-nobg.png";
 
 const HeroSection = () => {
   const { t, language } = useLanguage();
@@ -44,7 +45,6 @@ const HeroSection = () => {
       if (isCustomDomain) {
         // For custom domain, try a different approach
         video.crossOrigin = "anonymous";
-        video.referrerPolicy = "no-referrer";
 
         // Add a small delay for custom domain
         setTimeout(() => {
@@ -74,8 +74,8 @@ const HeroSection = () => {
   }, []);
 
   const handleVideoClick = () => {
-    // Hide overlays after first tap (especially for mobile)
-    setShowOverlays(false);
+    // Toggle overlays visibility on each tap/click
+    setShowOverlays((prev) => !prev);
 
     // Get the active video element (YT version for large screens, normal version for small screens)
     const activeVideo =
@@ -129,7 +129,7 @@ const HeroSection = () => {
     <section id="hero" className="min-h-screen relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center min-h-screen pt-16 md:pt-20 lg:pt-24 pb-20">
+          <div className="flex flex-col items-center min-h-screen pt-24 md:pt-20 lg:pt-24 pb-20">
             {/* Content Section - Top */}
             <div className="text-center mb-8 md:mb-12">
               {/* Main Title */}
@@ -232,7 +232,6 @@ const HeroSection = () => {
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
                       onError={(e) => {
                         console.error("Video loading error:", e);
@@ -266,8 +265,6 @@ const HeroSection = () => {
                               if (customDomainRetry === 0) {
                                 // First retry: change attributes
                                 video.crossOrigin = "use-credentials";
-                                video.referrerPolicy =
-                                  "strict-origin-when-cross-origin";
                               } else if (customDomainRetry === 1) {
                                 // Second retry: remove and recreate element
                                 const parent = video.parentNode;
@@ -275,7 +272,6 @@ const HeroSection = () => {
                                   true
                                 ) as HTMLVideoElement;
                                 newVideo.crossOrigin = "anonymous";
-                                newVideo.referrerPolicy = "no-referrer";
                                 parent?.replaceChild(newVideo, video);
                               } else {
                                 // Third retry: try fallback video
@@ -325,6 +321,36 @@ const HeroSection = () => {
                       playsInline
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
                     />
+
+                    {/* Centered subtle logo overlay */}
+                    {showOverlays && (
+                      <>
+                        {/* Dark blue fog/glow behind logo */}
+                        <div
+                          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                          aria-hidden
+                        >
+                          <div
+                            className="w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] rounded-full blur-xl opacity-100"
+                            style={{
+                              background:
+                                "radial-gradient(circle at center, rgba(10,20,60,0.9) 0%, rgba(10,20,60,0.6) 40%, rgba(10,20,60,0.2) 75%, rgba(10,20,60,0) 100%)",
+                            }}
+                          />
+                        </div>
+
+                        {/* Centered subtle logo */}
+                        <img
+                          src={iconNoBg}
+                          alt="Brand mark"
+                          className="pointer-events-none select-none absolute inset-0 m-auto w-full h-full md:w-60 md:h-auto lg:w-80 opacity-95 md:opacity-100 transform transition-transform duration-300 group-hover:scale-110 object-contain"
+                          style={{
+                            filter:
+                              "drop-shadow(0 10px 18px rgba(10,20,60,0.65))",
+                          }}
+                        />
+                      </>
+                    )}
 
                     {/* Volume indicator overlay */}
                     <div
@@ -376,18 +402,7 @@ const HeroSection = () => {
                       </div>
                     )}
 
-                    {/* Click to play/restart overlay */}
-                    <div
-                      className={`absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center transition-opacity ${
-                        showOverlays && !videoLoading && !videoError
-                          ? "group-hover:opacity-100 opacity-0 md:opacity-0"
-                          : "opacity-0"
-                      }`}
-                    >
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
-                        <Play className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
+                    {/* Click overlay removed per request: no play icon overlay */}
                   </div>
                 </div>
 
