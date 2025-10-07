@@ -27,10 +27,15 @@ const PortfolioSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [loadedVideoIds, setLoadedVideoIds] = useState<Set<string>>(new Set());
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const containerRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Filter videos based on active category
+  const filteredVideos = useMemo(() => {
+    return activeCategory === "all"
+      ? videos
+      : videos.filter((video) => video.categoryId === activeCategory);
+  }, [activeCategory, videos]);
 
   const hasThumbnailById = useCallback(
     (id: string): boolean => {
@@ -116,41 +121,6 @@ const PortfolioSection = () => {
     []
   );
 
-  // Intersection Observer for lazy loading
-  useEffect(() => {
-    if (!containerRef.current || !shouldOptimize) return;
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const videoId = entry.target.getAttribute("data-video-id");
-          if (videoId) {
-            if (entry.isIntersecting) {
-              setVisibleItems((prev) => new Set([...prev, videoId]));
-            } else {
-              setVisibleItems((prev) => {
-                const next = new Set(prev);
-                next.delete(videoId);
-                return next;
-              });
-            }
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "100px",
-        threshold: 0.1,
-      }
-    );
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [shouldOptimize]);
-
   useEffect(() => {
     const loadPortfolioData = async () => {
       try {
@@ -179,21 +149,8 @@ const PortfolioSection = () => {
     })),
   ];
 
-  // Filter videos based on active category with memoization
-  const filteredVideos = useMemo(() => {
-    return activeCategory === "all"
-      ? videos
-      : videos.filter((video) => video.categoryId === activeCategory);
-  }, [activeCategory, videos]);
-
-  // Mobile optimization: limit visible videos for better performance
-  const displayVideos = useMemo(() => {
-    if (!shouldOptimize || !isMobile) return filteredVideos;
-
-    // On mobile with performance issues, limit to 12 videos initially
-    // More will load as user scrolls due to intersection observer
-    return filteredVideos.slice(0, 12);
-  }, [filteredVideos, shouldOptimize, isMobile]);
+  // Display all videos - no artificial limits
+  const displayVideos = filteredVideos;
 
   // When category changes, reset loaded state to show thumbnails again
   useEffect(() => {
@@ -256,12 +213,10 @@ const PortfolioSection = () => {
                       language={language}
                       isPlaying={playingVideoId === video.id}
                       isLoaded={loadedVideoIds.has(video.id)}
-                      isVisible={!shouldOptimize || visibleItems.has(video.id)}
                       onVideoClick={() =>
                         handleVideoClick(video.id, !!video.thumbnailUrl)
                       }
                       onVideoRef={(ref) => registerVideoRef(video.id, ref)}
-                      observer={observerRef.current}
                     />
                   ))}
                 </div>
@@ -282,53 +237,71 @@ const SimpleVideoItem = React.memo(
     language,
     isPlaying,
     isLoaded,
-    isVisible,
     onVideoClick,
     onVideoRef,
-    observer,
   }: {
     video: PortfolioVideo;
     index: number;
     language: string;
     isPlaying: boolean;
     isLoaded: boolean;
-    isVisible: boolean;
     onVideoClick: () => void;
     onVideoRef: (ref: HTMLVideoElement | null) => void;
-    observer: IntersectionObserver | null;
   }) => {
     const itemRef = useRef<HTMLDivElement>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const [isInView, setIsInView] = useState(false);
+    const [hasLoaded, setHasLoaded] = useState(false);
     const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
     const shouldShowVideo = !hasThumbnail || isLoaded;
+    const isMobile = useIsMobile();
 
-    // Set up intersection observer
+    // Simple intersection observer to detect when video is in view
     useEffect(() => {
-      if (observer && itemRef.current) {
-        itemRef.current.setAttribute("data-video-id", video.id);
-        observer.observe(itemRef.current);
+      if (!itemRef.current) return;
 
-        return () => {
-          if (itemRef.current) {
-            observer.unobserve(itemRef.current);
-          }
-        };
-      }
-    }, [observer, video.id]);
-
-    // Don't render if not visible and we're optimizing
-    if (!isVisible) {
-      return (
-        <div
-          ref={itemRef}
-          className="portfolio-item group relative"
-          data-video-id={video.id}
-        >
-          <div className="relative bg-gradient-secondary/20 overflow-hidden aspect-video w-full h-[35vh] sm:h-[60vh] shadow-lg">
-            <div className="w-full h-full bg-black"></div>
-          </div>
-        </div>
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setIsInView(true);
+            }
+          });
+        },
+        {
+          rootMargin: "200px", // Start loading when video is 200px from viewport
+          threshold: 0.01,
+        }
       );
-    }
+
+      observer.observe(itemRef.current);
+
+      return () => {
+        observer.disconnect();
+      };
+    }, []);
+
+    // Auto-play when video loads (for videos without thumbnails)
+    useEffect(() => {
+      if (!videoRef.current || !hasLoaded || hasThumbnail) return;
+
+      const videoElement = videoRef.current;
+      videoElement.muted = true;
+
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.log("Autoplay prevented - tap to play:", err);
+        });
+      }
+    }, [hasLoaded, hasThumbnail]);
+
+    // Store ref for parent component
+    useEffect(() => {
+      if (videoRef.current) {
+        onVideoRef(videoRef.current);
+      }
+    }, [onVideoRef]);
 
     return (
       <div
@@ -360,23 +333,62 @@ const SimpleVideoItem = React.memo(
             </div>
           ) : (
             // Show video (either no thumbnail or already loaded)
-            <video
-              ref={onVideoRef}
-              src={video.videoUrl}
-              className="w-full h-full object-cover cursor-pointer"
-              loop
-              muted
-              autoPlay={!hasThumbnail} // Only autoplay if no thumbnail
-              playsInline
-              onClick={onVideoClick}
-              preload={hasThumbnail ? "none" : "auto"} // Don't preload if has thumbnail
-              style={{
-                contain: "layout style paint",
-                willChange: "transform",
-              }}
-            >
-              Your browser does not support the video tag.
-            </video>
+            <>
+              {isInView ? (
+                <video
+                  ref={(el) => {
+                    videoRef.current = el;
+                    onVideoRef(el);
+                  }}
+                  src={video.videoUrl}
+                  poster={video.thumbnailUrl || undefined}
+                  className="w-full h-full object-cover cursor-pointer"
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controls={false}
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  onClick={(e) => {
+                    const videoEl = e.currentTarget;
+                    if (videoEl.paused) {
+                      videoEl.muted = true;
+                      videoEl.play().catch((err) => {
+                        console.log("Play on tap failed:", err);
+                      });
+                    }
+                    onVideoClick();
+                  }}
+                  onLoadedData={() => {
+                    console.log("Video loaded:", video.id);
+                    setHasLoaded(true);
+                  }}
+                  onError={(e) => {
+                    console.error("Video error:", video.id, e);
+                  }}
+                  style={{
+                    backgroundColor: "#000",
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                // Placeholder until video comes into view
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  {video.thumbnailUrl ? (
+                    <img
+                      src={video.thumbnailUrl}
+                      alt={language === "he" ? video.titleHe : video.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Play className="h-12 w-12 text-white/50" />
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
