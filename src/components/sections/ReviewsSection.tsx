@@ -35,7 +35,7 @@ const ReviewsSection = () => {
         name: "Shaked Siroa",
         company: "Content Creator",
         rating: 5,
-        text: "I've been working with Rotem for over 3 years, and he's one of the most professional and reliable people I've had the pleasure of working with. He has edited dozens of videos for me, including some of my most popular videos, and always knows how to deliver high-level editing that produces attractive and professional results. He doesn't just do what's asked of him, but also thinks outside the box, brings new ideas, and adds real value to every project. He's an excellent business partner: organized, responsible, proactive, and knows how to work both in a team and independently. For anyone looking for a creative, sharp video editor who knows how to take raw material and turn it into a quality product that attracts audiences – I wholeheartedly recommend him.",
+        text: "I've been working with Rotem for over 8 years, and he's one of the most professional and reliable people I've had the pleasure of working with. He has edited dozens of videos for me, including some of my most popular videos, and always knows how to deliver high-level editing that produces attractive and professional results. He doesn't just do what's asked of him, but also thinks outside the box, brings new ideas, and adds real value to every project. He's an excellent business partner: organized, responsible, proactive, and knows how to work both in a team and independently. For anyone looking for a creative, sharp video editor who knows how to take raw material and turn it into a quality product that attracts audiences – I wholeheartedly recommend him.",
       },
     ],
   };

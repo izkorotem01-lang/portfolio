@@ -21,7 +21,7 @@ const AboutSection = () => {
     },
     {
       icon: Award,
-      number: "2+",
+      number: "8+",
       label: language === "he" ? "שנות ניסיון" : "Years Experience",
     },
     { icon: Zap, number: "24/7", label: "Support" },
