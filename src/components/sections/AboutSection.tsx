@@ -122,7 +122,7 @@ const AboutSection = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary mb-1">
-                      2+
+                      8+
                     </div>
                     <div className="text-xs text-foreground/70">
                       Years Experience
