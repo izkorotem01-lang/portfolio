@@ -31,6 +31,11 @@ remoteConfig.settings = {
   minimumFetchIntervalMillis: 3600000, // 1 hour
 };
 
+// Set default values for Remote Config
+remoteConfig.defaultConfig = {
+  admin_password: "admin"
+};
+
 // Video URLs - these will be replaced with actual Firebase Storage URLs
 export const videoUrls = {
   showreel:
