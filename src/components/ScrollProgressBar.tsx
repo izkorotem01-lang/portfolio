@@ -277,7 +277,7 @@ const ScrollProgressBar: React.FC = () => {
               return (
                 <div
                   key={section.id}
-                  className={`absolute h-4 bg-gradient-to-r rounded border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
+                  className={`absolute h-3 sm:h-4 bg-gradient-to-r rounded border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
                     gradientColors[section.id]
                   }`}
                   style={{
@@ -286,7 +286,7 @@ const ScrollProgressBar: React.FC = () => {
                   }}
                   onClick={() => scrollToSection(section.id)}
                 >
-                  <span className="text-xs text-white font-semibold tracking-wide truncate px-1">
+                  <span className="text-[8px] sm:text-[10px] md:text-xs text-white font-semibold tracking-wide px-0.5 sm:px-1 whitespace-nowrap scale-90 sm:scale-100">
                     {section.name}
                   </span>
                 </div>
