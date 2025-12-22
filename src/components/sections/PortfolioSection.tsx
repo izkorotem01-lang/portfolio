@@ -327,7 +327,8 @@ const SimpleVideoItem = React.memo(
     // Use the isYouTube prop if provided, otherwise check from video URL
     const isYouTubeVideo = isYouTube !== undefined ? isYouTube : isYouTubeUrl(video.videoUrl);
     const [youtubePlaying, setYoutubePlaying] = useState(false);
-    const youtubeEmbedUrl = isYouTubeVideo ? getYouTubeEmbedUrl(video.videoUrl, youtubePlaying, !youtubePlaying) : null;
+    // YouTube videos start unmuted (volume enabled by default)
+    const youtubeEmbedUrl = isYouTubeVideo ? getYouTubeEmbedUrl(video.videoUrl, youtubePlaying, false) : null;
 
     // Simple intersection observer to detect when video is in view
     useEffect(() => {
@@ -393,29 +394,29 @@ const SimpleVideoItem = React.memo(
           {/* YouTube Video Embed */}
           {isYouTubeVideo && youtubeEmbedUrl ? (
             <div 
-              className="relative w-full cursor-pointer" 
+              className="relative w-full" 
               style={{ aspectRatio: "16/9" }}
-              onClick={() => {
-                if (!youtubePlaying) {
-                  setYoutubePlaying(true);
-                }
-              }}
             >
               <iframe
-                key={youtubePlaying ? "playing-unmuted" : "paused-muted"}
+                key={youtubePlaying ? "playing-unmuted" : "paused-unmuted"}
                 src={youtubeEmbedUrl}
                 className="absolute top-0 left-0 w-full h-full rounded-lg"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 title={language === "he" ? video.titleHe : video.title}
               />
-              {!youtubePlaying && (
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors rounded-lg pointer-events-none">
-                  <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
-                    <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
-                  </div>
+              <div 
+                className={`absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-all duration-300 rounded-lg z-10 cursor-pointer ${
+                  youtubePlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+                onClick={() => {
+                  setYoutubePlaying(true);
+                }}
+              >
+                <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
+                  <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
                 </div>
-              )}
+              </div>
             </div>
           ) : hasThumbnail && !isLoaded ? (
             // Show thumbnail with play button overlay

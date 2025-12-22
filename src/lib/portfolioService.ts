@@ -63,7 +63,7 @@ export const getYouTubeVideoId = (url: string): string | null => {
 };
 
 // Helper function to get YouTube embed URL
-export const getYouTubeEmbedUrl = (url: string, autoplay: boolean = false, muted: boolean = true): string | null => {
+export const getYouTubeEmbedUrl = (url: string, autoplay: boolean = false, muted: boolean = false): string | null => {
   const videoId = getYouTubeVideoId(url);
   if (!videoId) return null;
   return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0&enablejsapi=1`;
