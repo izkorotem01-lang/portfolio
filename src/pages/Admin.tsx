@@ -113,14 +113,18 @@ const Admin = () => {
         const adminPasswordValue = getValue(remoteConfig, "admin_password");
         const passwordString = adminPasswordValue.asString();
         setRemotePassword(passwordString);
-        
+
         // Debug: Log if password is empty (helps identify configuration issues)
         if (!passwordString) {
-          console.warn("Admin password is empty in Remote Config. Please set it in Firebase Console > Remote Config");
+          console.warn(
+            "Admin password is empty in Remote Config. Please set it in Firebase Console > Remote Config"
+          );
         }
       } catch (error) {
         console.error("Error fetching remote config:", error);
-        setError("Failed to load configuration. Please check Firebase Remote Config setup.");
+        setError(
+          "Failed to load configuration. Please check Firebase Remote Config setup."
+        );
       }
     };
 
@@ -185,25 +189,30 @@ const Admin = () => {
 
     try {
       // Fetch latest remote config
-      await fetchAndActivate(remoteConfig);
+      console.log("Fetching remote config...");
+      const activated = await fetchAndActivate(remoteConfig);
+      console.log("Remote config activated:", activated);
+
       const adminPasswordValue = getValue(remoteConfig, "admin_password");
       const currentRemotePassword = adminPasswordValue.asString().trim();
 
       // Check if remote password is configured
       if (!currentRemotePassword) {
-        setError("Admin password not configured in Firebase Remote Config. Please set 'admin_password' in Firebase Console.");
+        setError(
+          "Admin password not configured in Firebase Remote Config. Please set 'admin_password' in Firebase Console."
+        );
         setIsLoading(false);
         return;
       }
 
       // Compare passwords (trim both to avoid whitespace issues)
       const enteredPassword = password.trim();
-      
+
       if (enteredPassword === currentRemotePassword) {
         // Save session first
         saveAdminSession();
         const expiryTime = new Date(Date.now() + SESSION_DURATION);
-        
+
         // Update state
         setSessionExpiry(expiryTime);
         setError("");
@@ -215,7 +224,9 @@ const Admin = () => {
       }
     } catch (error) {
       console.error("Error validating password:", error);
-      setError("Authentication failed. Please check your connection and try again.");
+      setError(
+        "Authentication failed. Please check your connection and try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -342,8 +353,14 @@ const Admin = () => {
       const allVideosData = await getVideos();
       // Sort by a separate "allWorkOrder" field if it exists, otherwise by order
       const sortedVideos = allVideosData.sort((a, b) => {
-        const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
-        const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
+        const aOrder =
+          (a as any).allWorkOrder !== undefined
+            ? (a as any).allWorkOrder
+            : a.order;
+        const bOrder =
+          (b as any).allWorkOrder !== undefined
+            ? (b as any).allWorkOrder
+            : b.order;
         return aOrder - bOrder;
       });
       setAllVideos(sortedVideos);
@@ -417,7 +434,11 @@ const Admin = () => {
     }
   };
 
-  const handleAddVideoByUrl = async (url: string, title: string, titleHe: string) => {
+  const handleAddVideoByUrl = async (
+    url: string,
+    title: string,
+    titleHe: string
+  ) => {
     if (!selectedCategory) return;
 
     try {
@@ -430,7 +451,9 @@ const Admin = () => {
       // Check if it's a YouTube URL
       const isYouTube = isYouTubeUrl(url);
       if (!isYouTube) {
-        setError("Currently only YouTube URLs are supported. Please use a YouTube link.");
+        setError(
+          "Currently only YouTube URLs are supported. Please use a YouTube link."
+        );
         return;
       }
 
@@ -439,19 +462,17 @@ const Admin = () => {
       const finalTitle = title.trim() || `YouTube Video ${videoId || ""}`;
       const finalTitleHe = titleHe.trim() || finalTitle;
 
-      const videoData: Omit<
-        PortfolioVideo,
-        "id" | "createdAt" | "updatedAt"
-      > = {
-        categoryId: selectedCategory.id,
-        title: finalTitle,
-        titleHe: finalTitleHe,
-        subtitle: "",
-        subtitleHe: "",
-        videoUrl: url.trim(),
-        thumbnailUrl: "",
-        order: videos.length + 1,
-      };
+      const videoData: Omit<PortfolioVideo, "id" | "createdAt" | "updatedAt"> =
+        {
+          categoryId: selectedCategory.id,
+          title: finalTitle,
+          titleHe: finalTitleHe,
+          subtitle: "",
+          subtitleHe: "",
+          videoUrl: url.trim(),
+          thumbnailUrl: "",
+          order: videos.length + 1,
+        };
 
       await createVideo(videoData);
       await loadVideos(selectedCategory.id);
@@ -584,8 +605,14 @@ const Admin = () => {
     try {
       // Sort all videos by current allWorkOrder (or order as fallback) before reordering
       const sortedVideos = [...allVideos].sort((a, b) => {
-        const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
-        const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
+        const aOrder =
+          (a as any).allWorkOrder !== undefined
+            ? (a as any).allWorkOrder
+            : a.order;
+        const bOrder =
+          (b as any).allWorkOrder !== undefined
+            ? (b as any).allWorkOrder
+            : b.order;
         return aOrder - bOrder;
       });
 
@@ -606,19 +633,25 @@ const Admin = () => {
       // Update allWorkOrder for all videos
       const updatePromises = sortedVideos.map((video, index) => {
         const newOrder = index + 1;
-        console.log(`Updating video ${video.id} (${getDisplayTitle(video)}) to allWorkOrder: ${newOrder}`);
+        console.log(
+          `Updating video ${video.id} (${getDisplayTitle(
+            video
+          )}) to allWorkOrder: ${newOrder}`
+        );
         return updateVideo(video.id, { allWorkOrder: newOrder });
       });
 
       const results = await Promise.all(updatePromises);
       console.log("All videos updated successfully:", results);
-      
+
       // Reload all videos to see the changes
       await loadAllVideos();
-      
+
       // Show success message
       setError(""); // Clear any previous errors
-      alert(`Video order updated successfully! Refresh the portfolio page to see changes.`);
+      alert(
+        `Video order updated successfully! Refresh the portfolio page to see changes.`
+      );
     } catch (error) {
       console.error("Error updating all work video order:", error);
       setError("Failed to update all work video order. Please try again.");
@@ -798,7 +831,9 @@ const Admin = () => {
                   disabled={batchUploading}
                 >
                   <Video className="w-4 h-4 mr-2" />
-                  {showVideoUrlForm ? "Cancel URL Input" : "Add Video by URL (YouTube)"}
+                  {showVideoUrlForm
+                    ? "Cancel URL Input"
+                    : "Add Video by URL (YouTube)"}
                 </Button>
               </div>
 
@@ -1319,7 +1354,8 @@ const VideoUrlForm = ({
             required
           />
           <p className="text-xs text-gray-400 mt-1">
-            Paste your YouTube video URL here (supports youtube.com and youtu.be links)
+            Paste your YouTube video URL here (supports youtube.com and youtu.be
+            links)
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
