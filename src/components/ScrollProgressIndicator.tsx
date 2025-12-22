@@ -123,13 +123,13 @@ const ScrollProgressIndicator = () => {
   return (
     <>
       <div
-        className={`fixed top-1/2 transform -translate-y-1/2 z-10 hidden lg:block ${
+        className={`fixed top-1/2 transform -translate-y-1/2 z-10 hidden 2xl:block ${
           language === "he" ? "right-6" : "left-6"
         }`}
       >
-        <div className="relative">
+        <div className="relative scale-75 2xl:scale-90">
           {/* Animated Background Blur */}
-          <div className="absolute inset-0 -m-6 rounded-2xl backdrop-blur-sm bg-black/2"></div>
+          <div className="absolute inset-0 -m-4 rounded-2xl backdrop-blur-sm bg-black/2"></div>
 
           {/* Main Connecting Line - Background */}
           <div
@@ -153,7 +153,7 @@ const ScrollProgressIndicator = () => {
           </div>
 
           {/* Steps with Enhanced Design */}
-          <div className="space-y-10 relative z-10">
+          <div className="space-y-4 2xl:space-y-6 relative z-10">
             {steps.map((step, index) => {
               const isActive = index === activeStep;
               const isPassed = index < activeStep;
@@ -266,7 +266,7 @@ const ScrollProgressIndicator = () => {
                     {/* Step Content Card */}
                     <div
                       className={`
-                        backdrop-blur-md bg-transparent border-transparent rounded-xl p-4 transition-all duration-700 ease-out relative z-10
+                        backdrop-blur-md bg-transparent border-transparent rounded-xl p-1.5 2xl:p-3 transition-all duration-700 ease-out relative z-10
                         ${
                           isActive
                             ? "bg-transparent border-transparent"
@@ -277,9 +277,9 @@ const ScrollProgressIndicator = () => {
                       {/* Floating animation effect - removed for full transparency */}
 
                       {/* Step title */}
-                      <div className="flex items-center gap-2 mb-2 relative z-10">
+                      <div className="flex items-center gap-1.5 2xl:gap-2 mb-0.5 2xl:mb-1 relative z-10">
                         <div
-                          className={`text-sm font-bold transition-all duration-500 ${
+                          className={`text-[10px] 2xl:text-xs font-bold transition-all duration-500 ${
                             index <= activeStep ? "text-white" : "text-white"
                           } group-hover:text-white`}
                         >
@@ -289,7 +289,7 @@ const ScrollProgressIndicator = () => {
 
                       {/* Step description */}
                       <div
-                        className={`text-xs font-medium transition-all duration-500 leading-relaxed relative z-10 ${
+                        className={`text-[9px] 2xl:text-[10px] font-medium transition-all duration-500 leading-tight 2xl:leading-relaxed relative z-10 ${
                           index <= activeStep ? "text-white" : "text-white"
                         } group-hover:text-white`}
                       >
@@ -300,7 +300,7 @@ const ScrollProgressIndicator = () => {
                     {/* Individual Connecting Line to Next Step */}
                     {index < steps.length - 1 && (
                       <div
-                        className={`absolute top-full w-px h-10 transform -translate-x-1/2 ${
+                        className={`absolute top-full w-px h-4 2xl:h-6 transform -translate-x-1/2 ${
                           language === "he" ? "right-4" : "left-4"
                         }`}
                       >
@@ -347,7 +347,7 @@ const ScrollProgressIndicator = () => {
       {/* Extension Line to Contact Section */}
       {isInContactSection && (
         <div
-          className={`fixed z-10 hidden lg:block pointer-events-none ${
+          className={`fixed z-10 hidden 2xl:block pointer-events-none ${
             language === "he" ? "right-6" : "left-6"
           }`}
         >

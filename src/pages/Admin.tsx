@@ -98,6 +98,9 @@ const Admin = () => {
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [isThumbnailDragActive, setIsThumbnailDragActive] = useState(false);
   const [showVideoUrlForm, setShowVideoUrlForm] = useState(false);
+  const [categoryVideoDropTarget, setCategoryVideoDropTarget] = useState<
+    string | null
+  >(null);
 
   // All Work section state
   const [showAllWork, setShowAllWork] = useState(false);
@@ -277,7 +280,11 @@ const Admin = () => {
   // Drag and drop functions
   const handleDragStart = (e: React.DragEvent, categoryId: string) => {
     setDraggedItem(categoryId);
+    setDraggedVideo(null); // Clear video drag state
+    setCategoryVideoDropTarget(null); // Clear drop target
     e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("dragType", "category");
+    e.dataTransfer.setData("categoryId", categoryId);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -285,11 +292,66 @@ const Admin = () => {
     e.dataTransfer.dropEffect = "move";
   };
 
+  // Handle drag over category card (for video drops)
+  const handleCategoryDragOver = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check if we're dragging a video by checking the draggedVideo state
+    // or by checking dataTransfer types (for cross-element drags)
+    const dragType = e.dataTransfer.types.includes("text/plain")
+      ? e.dataTransfer.getData("dragType")
+      : draggedVideo
+      ? "video"
+      : draggedItem
+      ? "category"
+      : "";
+
+    // Only allow video drops on categories (not category reordering)
+    if (dragType === "video" && draggedVideo) {
+      e.dataTransfer.dropEffect = "move";
+      setCategoryVideoDropTarget(categoryId);
+    } else if (dragType === "category") {
+      // Allow category reordering
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  // Handle drag leave from category card
+  const handleCategoryDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the category card itself, not entering a child element
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setCategoryVideoDropTarget(null);
+    }
+  };
+
   const handleDrop = async (e: React.DragEvent, targetCategoryId: string) => {
     e.preventDefault();
+    e.stopPropagation();
 
+    // Check drag type - prefer checking state, then dataTransfer
+    const dragType = draggedVideo
+      ? "video"
+      : e.dataTransfer.types.includes("text/plain")
+      ? e.dataTransfer.getData("dragType")
+      : "category";
+
+    // Handle video drop on category
+    if (dragType === "video" && draggedVideo) {
+      const videoId = draggedVideo || e.dataTransfer.getData("videoId");
+      if (videoId) {
+        await handleVideoDropOnCategory(videoId, targetCategoryId);
+      }
+      setDraggedVideo(null);
+      setCategoryVideoDropTarget(null);
+      return;
+    }
+
+    // Handle category reordering
     if (!draggedItem || draggedItem === targetCategoryId) {
       setDraggedItem(null);
+      setCategoryVideoDropTarget(null);
       return;
     }
 
@@ -298,6 +360,7 @@ const Admin = () => {
 
     if (!draggedCategory || !targetCategory) {
       setDraggedItem(null);
+      setCategoryVideoDropTarget(null);
       return;
     }
 
@@ -332,6 +395,7 @@ const Admin = () => {
     }
 
     setDraggedItem(null);
+    setCategoryVideoDropTarget(null);
   };
 
   // Video management functions
@@ -542,7 +606,11 @@ const Admin = () => {
   // Video drag and drop functions
   const handleVideoDragStart = (e: React.DragEvent, videoId: string) => {
     setDraggedVideo(videoId);
+    setDraggedItem(null); // Clear category drag state
+    setCategoryVideoDropTarget(null); // Clear drop target
     e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("dragType", "video");
+    e.dataTransfer.setData("videoId", videoId);
   };
 
   const handleVideoDragOver = (e: React.DragEvent) => {
@@ -578,6 +646,61 @@ const Admin = () => {
     }
 
     setDraggedVideo(null);
+  };
+
+  // Handle video drop on category card
+  const handleVideoDropOnCategory = async (
+    videoId: string,
+    targetCategoryId: string
+  ) => {
+    try {
+      // Get all videos to find the dragged video and target category videos
+      const allVideos = await getVideos();
+      const videoToMove = allVideos.find((v) => v.id === videoId);
+
+      if (!videoToMove) {
+        setError("Video not found");
+        return;
+      }
+
+      // Don't move if already in the target category
+      if (videoToMove.categoryId === targetCategoryId) {
+        return;
+      }
+
+      // Get videos in the target category to determine new order
+      const targetCategoryVideos = allVideos.filter(
+        (v) => v.categoryId === targetCategoryId
+      );
+      const newOrder =
+        targetCategoryVideos.length > 0
+          ? Math.max(...targetCategoryVideos.map((v) => v.order)) + 1
+          : 1;
+
+      // Update the video's category and order
+      await updateVideo(videoId, {
+        categoryId: targetCategoryId,
+        order: newOrder,
+      });
+
+      // Reload videos if the source or target category is currently selected
+      if (selectedCategory) {
+        if (
+          selectedCategory.id === videoToMove.categoryId ||
+          selectedCategory.id === targetCategoryId
+        ) {
+          await loadVideos(selectedCategory.id);
+        }
+      }
+
+      // Reload all videos for the "All Work" section
+      await loadAllVideos();
+
+      setError(""); // Clear any previous errors
+    } catch (error) {
+      console.error("Error moving video to category:", error);
+      setError("Failed to move video to category");
+    }
   };
 
   // All Work drag and drop functions
@@ -956,9 +1079,14 @@ const Admin = () => {
               )}
 
               {/* Video Drag Instructions */}
-              {draggedVideo && (
+              {draggedVideo && !categoryVideoDropTarget && (
                 <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-                  Drag to reorder videos
+                  Drag to reorder videos or drop on a category to move
+                </div>
+              )}
+              {draggedVideo && categoryVideoDropTarget && (
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                  Drop to move video to this category
                 </div>
               )}
             </div>
@@ -990,10 +1118,17 @@ const Admin = () => {
                 onDelete={() => handleDeleteCategory(category.id)}
                 onSelect={() => handleCategorySelect(category)}
                 onDragStart={(e) => handleDragStart(e, category.id)}
-                onDragOver={handleDragOver}
+                onDragOver={(e) => handleCategoryDragOver(e, category.id)}
+                onDragLeave={handleCategoryDragLeave}
                 onDrop={(e) => handleDrop(e, category.id)}
                 isDragging={draggedItem === category.id}
-                isDropTarget={draggedItem && draggedItem !== category.id}
+                isDropTarget={
+                  (draggedItem && draggedItem !== category.id) ||
+                  (draggedVideo && categoryVideoDropTarget === category.id)
+                }
+                isVideoDropTarget={
+                  draggedVideo && categoryVideoDropTarget === category.id
+                }
                 isSelected={selectedCategory?.id === category.id}
               />
             ))}
@@ -1239,9 +1374,11 @@ const CategoryCard = ({
   onSelect,
   onDragStart,
   onDragOver,
+  onDragLeave,
   onDrop,
   isDragging,
   isDropTarget,
+  isVideoDropTarget,
   isSelected,
 }: {
   category: PortfolioCategory;
@@ -1250,9 +1387,11 @@ const CategoryCard = ({
   onSelect: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   isDragging: boolean;
   isDropTarget?: boolean;
+  isVideoDropTarget?: boolean;
   isSelected?: boolean;
 }) => {
   return (
@@ -1260,6 +1399,8 @@ const CategoryCard = ({
       className={`bg-gray-800 rounded-lg p-6 border-2 transition-all duration-200 cursor-pointer hover:bg-gray-700 ${
         isDragging
           ? "border-blue-500 opacity-50"
+          : isVideoDropTarget
+          ? "border-green-500 bg-green-900/30 ring-2 ring-green-400"
           : isDropTarget
           ? "border-green-500 bg-green-900/20"
           : isSelected
@@ -1269,6 +1410,7 @@ const CategoryCard = ({
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={onSelect}
     >

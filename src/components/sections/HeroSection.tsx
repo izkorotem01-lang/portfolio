@@ -23,6 +23,7 @@ const HeroSection = () => {
   const [videoError, setVideoError] = useState(false);
   const [useFallbackVideo, setUseFallbackVideo] = useState(false);
   const [customDomainRetry, setCustomDomainRetry] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const scrollToPortfolio = () => {
     document
@@ -73,18 +74,28 @@ const HeroSection = () => {
     }
   }, []);
 
-  const handleVideoClick = () => {
-    // Toggle overlays visibility on each tap/click
-    setShowOverlays((prev) => !prev);
-
+  const handleVideoClick = async () => {
     // Get the active video element (YT version for large screens, normal version for small screens)
     const activeVideo =
       window.innerWidth >= 768 ? videoRef.current : mobileVideoRef.current;
 
     if (activeVideo) {
-      // Restart video from beginning
-      activeVideo.currentTime = 0;
-      activeVideo.play();
+      // If video is playing, pause it from current position
+      if (!activeVideo.paused) {
+        activeVideo.pause();
+        setIsPlaying(false);
+        setShowOverlays(true);
+      } else {
+        // If video is paused, play it from current position
+        try {
+          await activeVideo.play();
+          setIsPlaying(true);
+          // Hide overlays when playing starts
+          setShowOverlays(false);
+        } catch (error) {
+          console.error("Error playing video:", error);
+        }
+      }
 
       // Toggle volume
       if (isMuted) {
@@ -226,13 +237,14 @@ const HeroSection = () => {
                     <video
                       ref={videoRef}
                       src={useFallbackVideo ? showreelVideo : showreelVideoYT}
-                      autoPlay
                       muted
                       loop
                       playsInline
                       preload="auto"
                       crossOrigin="anonymous"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
                       onError={(e) => {
                         console.error("Video loading error:", e);
                         console.error("Error details:", e.nativeEvent);
@@ -315,15 +327,17 @@ const HeroSection = () => {
                     <video
                       ref={mobileVideoRef}
                       src={showreelVideo}
-                      autoPlay
                       muted
                       loop
                       playsInline
+                      preload="auto"
                       className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
                     />
 
-                    {/* Centered subtle logo overlay */}
-                    {showOverlays && (
+                    {/* Centered logo overlay with click to play text - only show when video is paused */}
+                    {!isPlaying && (
                       <>
                         {/* Dark blue fog/glow behind logo */}
                         <div
@@ -339,16 +353,22 @@ const HeroSection = () => {
                           />
                         </div>
 
-                        {/* Centered subtle logo */}
-                        <img
-                          src={iconNoBg}
-                          alt="Brand mark"
-                          className="pointer-events-none select-none absolute inset-0 m-auto w-full h-full md:w-60 md:h-auto lg:w-80 opacity-95 md:opacity-100 transform transition-transform duration-300 group-hover:scale-110 object-contain"
-                          style={{
-                            filter:
-                              "drop-shadow(0 10px 18px rgba(10,20,60,0.65))",
-                          }}
-                        />
+                        {/* Centered logo with click to play text */}
+                        <div className="absolute inset-0 flex flex-col-reverse md:flex-col items-center justify-center pointer-events-none">
+                          <img
+                            src={iconNoBg}
+                            alt="Brand mark"
+                            className="select-none w-full h-full md:w-60 md:h-auto lg:w-80 opacity-95 md:opacity-100 transform transition-transform duration-300 group-hover:scale-110 object-contain"
+                            style={{
+                              filter:
+                                "drop-shadow(0 10px 18px rgba(10,20,60,0.65))",
+                            }}
+                          />
+                          {/* Click to Play text - above on mobile, below on desktop */}
+                          <p className="mb-8 md:mb-0 md:mt-8 text-white text-sm md:text-base lg:text-lg font-semibold drop-shadow-2xl">
+                            {language === "he" ? "לחץ כדי לצפות" : "Click to Play"}
+                          </p>
+                        </div>
                       </>
                     )}
 
