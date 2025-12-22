@@ -28,6 +28,8 @@ import {
   createVideo,
   updateVideo,
   deleteVideo,
+  isYouTubeUrl,
+  getYouTubeVideoId,
 } from "@/lib/portfolioService";
 
 // Helper functions for localStorage authentication
@@ -95,6 +97,7 @@ const Admin = () => {
     useState<PortfolioVideo | null>(null);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [isThumbnailDragActive, setIsThumbnailDragActive] = useState(false);
+  const [showVideoUrlForm, setShowVideoUrlForm] = useState(false);
 
   // All Work section state
   const [showAllWork, setShowAllWork] = useState(false);
@@ -108,10 +111,16 @@ const Admin = () => {
       try {
         await fetchAndActivate(remoteConfig);
         const adminPasswordValue = getValue(remoteConfig, "admin_password");
-        setRemotePassword(adminPasswordValue.asString());
+        const passwordString = adminPasswordValue.asString();
+        setRemotePassword(passwordString);
+        
+        // Debug: Log if password is empty (helps identify configuration issues)
+        if (!passwordString) {
+          console.warn("Admin password is empty in Remote Config. Please set it in Firebase Console > Remote Config");
+        }
       } catch (error) {
         console.error("Error fetching remote config:", error);
-        setError("Failed to load configuration");
+        setError("Failed to load configuration. Please check Firebase Remote Config setup.");
       }
     };
 
@@ -178,21 +187,35 @@ const Admin = () => {
       // Fetch latest remote config
       await fetchAndActivate(remoteConfig);
       const adminPasswordValue = getValue(remoteConfig, "admin_password");
-      const currentRemotePassword = adminPasswordValue.asString();
+      const currentRemotePassword = adminPasswordValue.asString().trim();
 
-      if (password === currentRemotePassword) {
-        setIsAuthenticated(true);
-        saveAdminSession(); // Save session to localStorage
+      // Check if remote password is configured
+      if (!currentRemotePassword) {
+        setError("Admin password not configured in Firebase Remote Config. Please set 'admin_password' in Firebase Console.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Compare passwords (trim both to avoid whitespace issues)
+      const enteredPassword = password.trim();
+      
+      if (enteredPassword === currentRemotePassword) {
+        // Save session first
+        saveAdminSession();
         const expiryTime = new Date(Date.now() + SESSION_DURATION);
+        
+        // Update state
         setSessionExpiry(expiryTime);
         setError("");
+        setPassword(""); // Clear password field
+        setIsAuthenticated(true); // Set authenticated last to trigger re-render
       } else {
-        setError("Invalid password");
+        setError("Invalid password. Please try again.");
         setPassword("");
       }
     } catch (error) {
       console.error("Error validating password:", error);
-      setError("Authentication failed");
+      setError("Authentication failed. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -319,8 +342,8 @@ const Admin = () => {
       const allVideosData = await getVideos();
       // Sort by a separate "allWorkOrder" field if it exists, otherwise by order
       const sortedVideos = allVideosData.sort((a, b) => {
-        const aOrder = (a as any).allWorkOrder || a.order;
-        const bOrder = (b as any).allWorkOrder || b.order;
+        const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
+        const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
         return aOrder - bOrder;
       });
       setAllVideos(sortedVideos);
@@ -391,6 +414,52 @@ const Admin = () => {
         console.error("Error deleting video:", error);
         setError("Failed to delete video");
       }
+    }
+  };
+
+  const handleAddVideoByUrl = async (url: string, title: string, titleHe: string) => {
+    if (!selectedCategory) return;
+
+    try {
+      // Validate URL
+      if (!url || !url.trim()) {
+        setError("Please enter a valid URL");
+        return;
+      }
+
+      // Check if it's a YouTube URL
+      const isYouTube = isYouTubeUrl(url);
+      if (!isYouTube) {
+        setError("Currently only YouTube URLs are supported. Please use a YouTube link.");
+        return;
+      }
+
+      // Extract video ID for title if not provided
+      const videoId = getYouTubeVideoId(url);
+      const finalTitle = title.trim() || `YouTube Video ${videoId || ""}`;
+      const finalTitleHe = titleHe.trim() || finalTitle;
+
+      const videoData: Omit<
+        PortfolioVideo,
+        "id" | "createdAt" | "updatedAt"
+      > = {
+        categoryId: selectedCategory.id,
+        title: finalTitle,
+        titleHe: finalTitleHe,
+        subtitle: "",
+        subtitleHe: "",
+        videoUrl: url.trim(),
+        thumbnailUrl: "",
+        order: videos.length + 1,
+      };
+
+      await createVideo(videoData);
+      await loadVideos(selectedCategory.id);
+      setShowVideoUrlForm(false);
+      setError("");
+    } catch (error) {
+      console.error("Error adding video by URL:", error);
+      setError("Failed to add video. Please check the URL and try again.");
     }
   };
 
@@ -513,25 +582,46 @@ const Admin = () => {
     }
 
     try {
-      const sortedVideos = [...allVideos];
+      // Sort all videos by current allWorkOrder (or order as fallback) before reordering
+      const sortedVideos = [...allVideos].sort((a, b) => {
+        const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
+        const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
+        return aOrder - bOrder;
+      });
+
       const draggedIndex = sortedVideos.findIndex(
         (v) => v.id === draggedAllWorkVideo
       );
       const targetIndex = sortedVideos.findIndex((v) => v.id === targetVideoId);
 
+      if (draggedIndex === -1 || targetIndex === -1) {
+        setError("Could not find video to reorder");
+        setDraggedAllWorkVideo(null);
+        return;
+      }
+
       const [movedVideo] = sortedVideos.splice(draggedIndex, 1);
       sortedVideos.splice(targetIndex, 0, movedVideo);
 
       // Update allWorkOrder for all videos
-      const updatePromises = sortedVideos.map((video, index) =>
-        updateVideo(video.id, { allWorkOrder: index + 1 })
-      );
+      const updatePromises = sortedVideos.map((video, index) => {
+        const newOrder = index + 1;
+        console.log(`Updating video ${video.id} (${getDisplayTitle(video)}) to allWorkOrder: ${newOrder}`);
+        return updateVideo(video.id, { allWorkOrder: newOrder });
+      });
 
-      await Promise.all(updatePromises);
+      const results = await Promise.all(updatePromises);
+      console.log("All videos updated successfully:", results);
+      
+      // Reload all videos to see the changes
       await loadAllVideos();
+      
+      // Show success message
+      setError(""); // Clear any previous errors
+      alert(`Video order updated successfully! Refresh the portfolio page to see changes.`);
     } catch (error) {
       console.error("Error updating all work video order:", error);
-      setError("Failed to update all work video order");
+      setError("Failed to update all work video order. Please try again.");
     }
 
     setDraggedAllWorkVideo(null);
@@ -698,6 +788,26 @@ const Admin = () => {
                     ></div>
                   </div>
                 </div>
+              )}
+
+              {/* Add Video by URL Button */}
+              <div className="mb-4 flex gap-2">
+                <Button
+                  onClick={() => setShowVideoUrlForm(!showVideoUrlForm)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={batchUploading}
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  {showVideoUrlForm ? "Cancel URL Input" : "Add Video by URL (YouTube)"}
+                </Button>
+              </div>
+
+              {/* Video URL Form */}
+              {showVideoUrlForm && (
+                <VideoUrlForm
+                  onSubmit={handleAddVideoByUrl}
+                  onCancel={() => setShowVideoUrlForm(false)}
+                />
               )}
 
               {/* Upload Area - Always visible for adding more videos */}
@@ -1168,6 +1278,90 @@ const CategoryCard = ({
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
+    </div>
+  );
+};
+
+// Video URL Form Component
+const VideoUrlForm = ({
+  onSubmit,
+  onCancel,
+}: {
+  onSubmit: (url: string, title: string, titleHe: string) => void;
+  onCancel: () => void;
+}) => {
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [titleHe, setTitleHe] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(url, title, titleHe);
+    // Reset form
+    setUrl("");
+    setTitle("");
+    setTitleHe("");
+  };
+
+  return (
+    <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-600">
+      <h3 className="text-xl font-bold text-white mb-4">Add Video by URL</h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            YouTube URL *
+          </label>
+          <Input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="bg-gray-700 border-gray-500 text-white"
+            required
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Paste your YouTube video URL here (supports youtube.com and youtu.be links)
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Title (English)
+            </label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Video title in English (optional)"
+              className="bg-gray-700 border-gray-500 text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Title (Hebrew)
+            </label>
+            <Input
+              value={titleHe}
+              onChange={(e) => setTitleHe(e.target.value)}
+              placeholder="Video title in Hebrew (optional)"
+              className="bg-gray-700 border-gray-500 text-white"
+            />
+          </div>
+        </div>
+        <div className="flex space-x-4">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Save className="w-4 h-4 mr-2" />
+            Add Video
+          </Button>
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="outline"
+            className="border-gray-500 text-gray-300"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

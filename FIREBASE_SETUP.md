@@ -63,26 +63,45 @@ service firebase.storage {
 }
 ```
 
-## 7. Test the Integration
+## 7. Set Up Remote Config for Admin Password
+
+The admin panel uses Firebase Remote Config to store the admin password securely.
+
+1. In Firebase Console, go to **Remote Config** (under Build section)
+2. Click **"Add parameter"** or **"Create configuration"** if this is your first time
+3. Add a new parameter:
+   - **Parameter key**: `admin_password`
+   - **Default value**: Enter your desired admin password
+   - **Description**: "Admin panel access password"
+4. Click **"Publish changes"** to save
+5. The password will be available immediately (or after a short propagation delay)
+
+**Important Notes:**
+- The password is case-sensitive
+- Make sure to use a strong password
+- You can update the password anytime in Remote Config
+- Changes take effect immediately after publishing
+
+## 8. Test the Integration
 
 1. Start your dev server: `npm run dev`
 2. Check browser console for any errors
 3. Videos should load from Firebase Storage
 
-## 8. Performance Tips
+## 9. Performance Tips
 
 - Compress videos before uploading
 - Use H.264 codec
 - Consider multiple resolutions (720p, 1080p)
 - Monitor Firebase usage in console
 
-## 9. Cost Monitoring
+## 10. Cost Monitoring
 
 - Check Firebase Console > Usage for costs
 - Set up billing alerts
 - Monitor bandwidth usage
 
-## 10. Future Enhancements
+## 11. Future Enhancements
 
 - Add video compression service
 - Implement lazy loading

@@ -35,6 +35,40 @@ export interface PortfolioVideo {
   updatedAt: Timestamp;
 }
 
+// Helper function to check if a URL is a YouTube URL
+export const isYouTubeUrl = (url: string): boolean => {
+  if (!url) return false;
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+  return youtubeRegex.test(url);
+};
+
+// Helper function to extract YouTube video ID from URL
+export const getYouTubeVideoId = (url: string): string | null => {
+  if (!url) return null;
+  
+  // Handle various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return null;
+};
+
+// Helper function to get YouTube embed URL
+export const getYouTubeEmbedUrl = (url: string, autoplay: boolean = false, muted: boolean = true): string | null => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return null;
+  return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0&enablejsapi=1`;
+};
+
 // Categories CRUD
 export const createCategory = async (
   category: Omit<PortfolioCategory, "id" | "createdAt" | "updatedAt">
@@ -106,12 +140,10 @@ export const getVideos = async (
 
   // Sort by allWorkOrder if it exists, otherwise by order
   const sortedVideos = videos.sort((a, b) => {
-    // Use allWorkOrder if both videos have it
-    if (a.allWorkOrder !== undefined && b.allWorkOrder !== undefined) {
-      return a.allWorkOrder - b.allWorkOrder;
-    }
-    // Use order field for consistent sorting
-    return a.order - b.order;
+    // Use allWorkOrder if it exists (even if only one has it)
+    const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
+    const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
+    return aOrder - bOrder;
   });
 
   return sortedVideos;
