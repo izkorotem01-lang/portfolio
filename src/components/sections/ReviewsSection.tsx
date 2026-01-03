@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import review3Video from "@/assets/reviews/review3_video.mp4";
+import review3Thumbnail from "@/assets/reviews/review3_tn.jpeg";
 
 const ReviewsSection = () => {
   const { language } = useLanguage();
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // Multiple reviews content based on language
   const reviewsContent = {
@@ -23,6 +27,14 @@ const ReviewsSection = () => {
         rating: 5,
         text: "אני עובד עם רותם כבר מעל ל-3 שנים, והוא אחד האנשים הכי מקצועיים ואמינים שיצא לי לעבוד איתם. הוא ערך עבורי עשרות סרטונים, כולל חלק מהסרטונים שהכי התפרסמו שלי, ותמיד ידע להביא עריכה ברמה גבוהה שמייצרת תוצאה מושכת וצורחת מקצועיות. הוא לא רק מבצע את מה שמבקשים ממנו, אלא גם חושב מחוץ לקופסה, מביא רעיונות חדשים ומוסיף ערך אמיתי לכל פרויקט. הוא שותף עסקי מצוין: מסודר, אחראי, יוזם ויודע לעבוד גם בצוות וגם עצמאית. מי שמחפש עורך וידאו יצירתי, חד, שיודע לקחת חומר גלם ולהפוך אותו למוצר איכותי ומושך קהל – אני ממליץ עליו בלב שלם.",
       },
+      {
+        name: "ישי גביאן",
+        company: "מלך האטסי",
+        rating: 5,
+        text: "",
+        video: review3Video,
+        thumbnail: review3Thumbnail,
+      },
     ],
     english: [
       {
@@ -36,6 +48,14 @@ const ReviewsSection = () => {
         company: "Content Creator",
         rating: 5,
         text: "I've been working with Rotem for over 8 years, and he's one of the most professional and reliable people I've had the pleasure of working with. He has edited dozens of videos for me, including some of my most popular videos, and always knows how to deliver high-level editing that produces attractive and professional results. He doesn't just do what's asked of him, but also thinks outside the box, brings new ideas, and adds real value to every project. He's an excellent business partner: organized, responsible, proactive, and knows how to work both in a team and independently. For anyone looking for a creative, sharp video editor who knows how to take raw material and turn it into a quality product that attracts audiences – I wholeheartedly recommend him.",
+      },
+      {
+        name: "Yishai Gabian",
+        company: "King of Atsi",
+        rating: 5,
+        text: "I recently had the opportunity to work with Yishai Gabian - the most insane Atsi wizard in the country",
+        video: review3Video,
+        thumbnail: review3Thumbnail,
       },
     ],
   };
@@ -64,6 +84,26 @@ const ReviewsSection = () => {
   useEffect(() => {
     setCurrentReviewIndex(0);
   }, [language]);
+
+  // Handle video play/pause when review changes
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  }, [currentReviewIndex]);
+
+  const toggleVideo = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+        setIsVideoPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsVideoPlaying(true);
+      }
+    }
+  };
 
   const nextReview = () => {
     if (isTransitioning) return;
@@ -112,13 +152,8 @@ const ReviewsSection = () => {
 
           {/* Reviews Carousel */}
           <div className="relative">
-            <div className="glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30 h-[520px] md:h-[550px]">
+            <div className={`glass-card p-8 md:p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30 ${currentReview.video && currentReview.thumbnail ? 'min-h-[520px] md:min-h-[650px]' : 'h-[520px] md:h-[550px]'}`}>
               <div className="text-center relative h-full flex flex-col">
-                {/* Quote Icon */}
-                <div className="mb-8 md:mb-6 flex-shrink-0">
-                  <Quote className="w-12 h-12 text-primary mx-auto" />
-                </div>
-
                 {/* Review Content - Fixed height with scroll */}
                 <div
                   className={`flex-1 transition-opacity duration-300 ${
@@ -126,34 +161,69 @@ const ReviewsSection = () => {
                   } flex flex-col justify-center min-h-0`}
                 >
                   <div className="flex-1 flex flex-col justify-center">
-                    <div className="max-h-64 md:max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-                      <p
-                        className={`text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 ${
-                          language === "he" ? "text-right" : "text-left"
-                        }`}
-                      >
-                        "{currentReview.text}"
-                      </p>
-                    </div>
+                    {/* Video/Thumbnail Section */}
+                    {currentReview.video && currentReview.thumbnail && (
+                      <div className="mb-8 flex justify-center flex-shrink-0">
+                        <div className="relative w-full max-w-xs md:max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black/20">
+                          <video
+                            ref={videoRef}
+                            src={currentReview.video}
+                            poster={currentReview.thumbnail}
+                            className="w-full h-auto max-h-[500px] object-contain"
+                            controls={isVideoPlaying}
+                            onPlay={() => setIsVideoPlaying(true)}
+                            onPause={() => setIsVideoPlaying(false)}
+                            onEnded={() => setIsVideoPlaying(false)}
+                          />
+                          {!isVideoPlaying && (
+                            <button
+                              onClick={toggleVideo}
+                              className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-all duration-300 group"
+                              aria-label="Play video"
+                            >
+                              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/80 backdrop-blur-md flex items-center justify-center hover:bg-primary hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl">
+                                <Play className="w-10 h-10 md:w-12 md:h-12 text-white ml-1" fill="white" />
+                              </div>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Rating */}
-                    <div className="flex justify-center pt-3 mb-4">
-                      {[...Array(currentReview.rating)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-6 h-6 text-yellow-400 fill-current"
-                        />
-                      ))}
-                    </div>
+                    {/* Text - only show if no video or if text exists */}
+                    {(!currentReview.video || !currentReview.thumbnail) && currentReview.text && (
+                      <div className="max-h-64 md:max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                        <p
+                          className={`text-lg md:text-xl text-foreground/90 leading-relaxed mb-6 ${
+                            language === "he" ? "text-right" : "text-left"
+                          }`}
+                        >
+                          "{currentReview.text}"
+                        </p>
+                      </div>
+                    )}
 
-                    {/* Reviewer Info */}
-                    <div>
-                      <h4 className="text-xl font-bold text-foreground mb-1">
-                        {currentReview.name}
-                      </h4>
-                      <p className="text-foreground/70">
-                        {currentReview.company}
-                      </p>
+                    {/* Rating and Reviewer Info - better spacing for video reviews */}
+                    <div className={`flex flex-col items-center ${currentReview.video && currentReview.thumbnail ? 'mt-2' : ''}`}>
+                      {/* Rating */}
+                      <div className="flex justify-center mb-5">
+                        {[...Array(currentReview.rating)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="w-6 h-6 md:w-7 md:h-7 text-yellow-400 fill-current mx-1"
+                          />
+                        ))}
+                      </div>
+
+                      {/* Reviewer Info */}
+                      <div className="text-center">
+                        <h4 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                          {currentReview.name}
+                        </h4>
+                        <p className="text-base md:text-lg text-foreground/60">
+                          {currentReview.company}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
