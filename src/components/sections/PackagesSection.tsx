@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, Crown, Zap } from "lucide-react";
+import { Check, Star, Crown, Zap } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const PackagesSection = () => {
@@ -12,49 +12,43 @@ const PackagesSection = () => {
 
   const packages = [
     {
-      id: "basic",
+      id: "core",
       icon: Zap,
-      popular: false,
-      features: [
-        { key: "feature.editing", included: true },
-        { key: "feature.music", included: true },
-        { key: "feature.sound", included: true },
-        { key: "feature.subtitles", included: true },
-        { key: "feature.graphics", included: true },
-        { key: "feature.platform", included: true },
-        { key: "feature.revisions", included: true },
-        { key: "feature.noafx", included: false },
-        { key: "feature.noai", included: false },
-      ],
-    },
-    {
-      id: "premium",
-      icon: Crown,
       popular: true,
       features: [
-        { key: "feature.editing", included: true },
-        { key: "feature.animated", included: true },
-        { key: "feature.aftereffects", included: true },
-        { key: "feature.brand", included: true },
-        { key: "feature.additional", included: true },
-        { key: "feature.creative", included: true },
-        { key: "feature.ai", included: true },
-        { key: "feature.revisions4", included: true },
+        { key: "feature.core.volume", included: true },
+        { key: "feature.core.audience", included: true },
+        { key: "feature.core.message", included: true },
+        { key: "feature.core.premium", included: true },
+        { key: "feature.core.optimization", included: true },
+        { key: "feature.core.guidance", included: true },
+        { key: "feature.core.leads", included: true },
       ],
     },
     {
-      id: "custom",
+      id: "growth",
+      icon: Crown,
+      popular: false,
+      features: [
+        { key: "feature.growth.volume", included: true },
+        { key: "feature.growth.strategy", included: true },
+        { key: "feature.growth.concepts", included: true },
+        { key: "feature.growth.platforms", included: true },
+        { key: "feature.growth.performance", included: true },
+        { key: "feature.growth.marketing", included: true },
+      ],
+    },
+    {
+      id: "full",
       icon: Star,
       popular: false,
       features: [
-        { key: "feature.planning", included: true },
-        { key: "feature.multiple", included: true },
-        { key: "feature.identity", included: true },
-        { key: "feature.support", included: true },
-        { key: "feature.photography", included: true },
-        { key: "feature.consultation", included: true },
-        { key: "feature.meetings", included: true },
-        { key: "feature.exclusive", included: true },
+        { key: "feature.full.everything", included: true },
+        { key: "feature.full.shootDays", included: true },
+        { key: "feature.full.strategy", included: true },
+        { key: "feature.full.guidance", included: true },
+        { key: "feature.full.analysis", included: true },
+        { key: "feature.full.improvement", included: true },
       ],
     },
   ];
@@ -73,13 +67,15 @@ const PackagesSection = () => {
       }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    const node = sectionRef.current;
+
+    if (node) {
+      observer.observe(node);
     }
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
+      if (node) {
+        observer.unobserve(node);
       }
     };
   }, []);
@@ -99,6 +95,9 @@ const PackagesSection = () => {
               <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
                 {t("packages.title")}
               </h2>
+              <p className="max-w-3xl mx-auto text-lg md:text-2xl font-semibold text-foreground/90 leading-relaxed">
+                {t("packages.statement")}
+              </p>
             </div>
 
             {/* Packages Grid */}
@@ -163,7 +162,7 @@ const PackagesSection = () => {
                     {pkg.popular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                         <div className="bg-gradient-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-semibold">
-                          Most Popular
+                          {t("packages.badge")}
                         </div>
                       </div>
                     )}
@@ -174,24 +173,14 @@ const PackagesSection = () => {
                         <pkg.icon className="w-8 h-8 text-white" />
                       </div>
 
-                      {(() => {
-                        const fullTitle = t(`packages.${pkg.id}.title`);
-                        const parts = fullTitle.split(" - ");
-                        const mainTitle = parts[0] || fullTitle;
-                        const subTitle = parts[1] || "";
-                        return (
-                          <div className="mb-2">
-                            <h3 className="text-2xl font-bold text-foreground leading-tight">
-                              {mainTitle}
-                            </h3>
-                            {subTitle && (
-                              <div className="text-sm text-foreground/80 mt-1 leading-snug">
-                                {subTitle}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+                      <div className="mb-2">
+                        <h3 className="text-2xl font-bold text-foreground leading-tight">
+                          {t(`packages.${pkg.id}.title`)}
+                        </h3>
+                        <div className="text-sm text-foreground/80 mt-1 leading-snug">
+                          {t(`packages.${pkg.id}.subtitle`)}
+                        </div>
+                      </div>
 
                       <div className="text-3xl font-black text-primary mb-4">
                         {t(`packages.${pkg.id}.price`)}
@@ -203,13 +192,9 @@ const PackagesSection = () => {
                       {pkg.features.map((feature, featureIndex) => (
                         <div
                           key={featureIndex}
-                          className="flex items-start space-x-3"
+                          className="flex items-start gap-3"
                         >
-                          {feature.included ? (
-                            <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                          )}
+                          <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                           <span
                             className={`text-sm ${
                               feature.included
@@ -234,7 +219,7 @@ const PackagesSection = () => {
                           ?.scrollIntoView({ behavior: "smooth" })
                       }
                     >
-                      Get Started
+                      {t("packages.cta")}
                     </Button>
 
                     {/* Background Glow */}
