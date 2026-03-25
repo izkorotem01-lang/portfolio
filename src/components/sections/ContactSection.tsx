@@ -39,7 +39,7 @@ const ContactSection = () => {
       icon: Mail,
       title: "Email",
       value: t("contact.email"),
-      action: () => window.open("mailto:izkorotem01@gmail.com"),
+      action: () => window.open("mailto:contact@rotemizko.com"),
       color: "from-blue-500 to-blue-600",
     },
     {

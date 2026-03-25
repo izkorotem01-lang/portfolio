@@ -23,7 +23,7 @@ const Footer = () => {
               <p className="text-foreground/70 mb-4">{t("hero.subtitle")}</p>
               <div className="flex space-x-4">
                 <a
-                  href="mailto:izkorotem01@gmail.com"
+                  href="mailto:contact@rotemizko.com"
                   className="text-foreground/70 hover:text-primary transition-smooth"
                 >
                   <Mail className="w-5 h-5" />

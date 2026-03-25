@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "@/hooks/use-location";
 
@@ -24,6 +25,10 @@ const translations = {
     "hero.name": "ROTEM IZKO",
     "hero.subtitle": "PROFESSIONAL VIDEO EDITOR & MOTION GRAPHIC DESIGNER",
     "hero.cta": "View My Work",
+    "trusted.title": "Trusted By",
+    "trusted.subtitle": "Brands and creators I have helped with sharp, high-converting content.",
+    "trusted.visit": "Visit site",
+    "trusted.client": "Client partner",
 
     // About Section
     "about.title": "Who Am I & What I Offer",
@@ -75,7 +80,7 @@ const translations = {
     // Contact
     "contact.title": "Let's Work Together",
     "contact.subtitle": "Ready to take your content to the next level?",
-    "contact.email": "izkorotem01@gmail.com",
+    "contact.email": "contact@rotemizko.com",
     "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "WhatsApp Consultation",
 
@@ -122,6 +127,10 @@ const translations = {
     "hero.name": "רותם איצקוביץ",
     "hero.subtitle": "עורך וידאו מקצועי ומעצב גרפיקה בתנועה",
     "hero.cta": "צפה בעבודות שלי",
+    "trusted.title": "סומכים עליי",
+    "trusted.subtitle": "מותגים ויוצרים שליוויתי עם תוכן חד, מקצועי וממיר.",
+    "trusted.visit": "לאתר",
+    "trusted.client": "לקוח פעיל",
 
     // About Section
     "about.title": "מי אני ומה אני מציע",
@@ -170,7 +179,7 @@ const translations = {
     // Contact
     "contact.title": "בואו נעבוד יחד",
     "contact.subtitle": "מוכנים לקחת את התוכן שלכם לשלב הבא?",
-    "contact.email": "izkorotem01@gmail.com",
+    "contact.email": "contact@rotemizko.com",
     "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "יעוץ בוואטסאפ",
 

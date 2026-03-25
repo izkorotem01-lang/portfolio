@@ -2,6 +2,7 @@ import React from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/sections/HeroSection";
+import TrustedBySection from "@/components/sections/TrustedBySection";
 import AboutSection from "@/components/sections/AboutSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PackagesSection from "@/components/sections/PackagesSection";
@@ -18,6 +19,7 @@ const Index = () => {
         {/* <Header /> */}
         <main>
           <HeroSection />
+          <TrustedBySection />
           <ReviewsSection />
           <AboutSection />
           <ServicesSection />
