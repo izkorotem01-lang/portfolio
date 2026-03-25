@@ -25,7 +25,7 @@
 5. Copy the config object
 
 ## 4. Update Configuration
-
+hjgjhtjgjg
 Replace the placeholder values in `src/lib/firebase.ts`:
 
 ```typescript
