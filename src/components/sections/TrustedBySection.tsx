@@ -1,6 +1,9 @@
 import React from "react";
 import _Marquee from "react-fast-marquee";
-const Marquee = _Marquee.default || _Marquee;
+
+/** CJS/ESM interop: some bundlers expose the component as `.default`. */
+const Marquee =
+  (_Marquee as unknown as { default?: typeof _Marquee }).default ?? _Marquee;
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import trustedByClients from "@/data/trusted-by.json";
