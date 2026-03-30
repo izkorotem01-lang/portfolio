@@ -5,13 +5,48 @@
     "url": "https://timelapseit.co.il"
   },
   {
-    "name": "Ilay's Editing",
-    "icon": "ilay-edits",
-    "url": "https://ilays-editing.lovable.app/"
-  },
-  {
     "name": "Noam Firuz",
     "icon": "noam-firuz",
+    "url": null
+  },
+  {
+    "name": "XAU Funded",
+    "icon": "xaufunded",
+    "url": null
+  },
+  {
+    "name": "MB",
+    "icon": "MB",
+    "url": null
+  },
+  {
+    "name": "Itay Dahari",
+    "icon": "itay-dahari",
+    "url": null
+  },
+  {
+    "name": "Margoa Natania",
+    "icon": "margoa-natania",
+    "url": null
+  },
+  {
+    "name": "Palet Jewelry",
+    "icon": "palet-jewlry",
+    "url": null
+  },
+  {
+    "name": "Sarit Farjun",
+    "icon": "sarit-farjun",
+    "url": null
+  },
+  {
+    "name": "Shapo Digital",
+    "icon": "shapo-digital",
+    "url": null
+  },
+  {
+    "name": "The Bold Crew",
+    "icon": "the-bold-crew",
     "url": null
   }
 ]
