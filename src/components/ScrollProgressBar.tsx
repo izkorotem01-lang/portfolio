@@ -14,7 +14,6 @@ const ScrollProgressBar: React.FC = () => {
   // Define the sections with useMemo to prevent re-creation on every render
   const sections = useMemo(
     () => [
-      { id: "hero", name: "Introduction", color: "#ef4444" },
       { id: "reviews", name: "Reviews", color: "#8b5cf6" },
       { id: "about", name: "About", color: "#3b82f6" },
       { id: "portfolio", name: "Portfolio", color: "#10b981" },
@@ -249,7 +248,10 @@ const ScrollProgressBar: React.FC = () => {
   }, [totalLines, majorLineInterval]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto">
+    <div
+      dir="ltr"
+      className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto"
+    >
       {/* Video Editing Timeline Container */}
       <div className="bg-gray-900/98 backdrop-blur-sm border-t border-gray-600/50 shadow-2xl">
         {/* Top Bars - Site Sections */}
@@ -277,7 +279,7 @@ const ScrollProgressBar: React.FC = () => {
               return (
                 <div
                   key={section.id}
-                  className={`absolute h-3 sm:h-4 bg-gradient-to-r rounded border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
+                  className={`absolute h-4 sm:h-5 bg-gradient-to-r rounded-md border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
                     gradientColors[section.id]
                   }`}
                   style={{
@@ -286,7 +288,7 @@ const ScrollProgressBar: React.FC = () => {
                   }}
                   onClick={() => scrollToSection(section.id)}
                 >
-                  <span className="text-[8px] sm:text-[10px] md:text-xs text-white font-semibold tracking-wide px-0.5 sm:px-1 whitespace-nowrap scale-90 sm:scale-100">
+                  <span className="text-[9px] sm:text-xs md:text-sm text-white font-semibold tracking-wide px-1 sm:px-1.5 whitespace-nowrap">
                     {section.name}
                   </span>
                 </div>

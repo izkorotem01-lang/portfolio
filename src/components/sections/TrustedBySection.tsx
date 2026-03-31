@@ -40,11 +40,111 @@ type TrustedClient = {
 const TrustedBySection = () => {
   const { t } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const mobileScrollerRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileInteractionTimeoutRef = React.useRef<number | null>(null);
+  const isMobileInteractingRef = React.useRef(false);
 
   const clients = (trustedByClients as TrustedClient[]).map((client) => ({
     ...client,
     iconSrc: iconMap[client.icon],
   }));
+
+  React.useEffect(() => {
+    const scroller = mobileScrollerRef.current;
+
+    if (!scroller) {
+      return;
+    }
+
+    let animationFrame = 0;
+    let lastTimestamp = 0;
+    const pixelsPerSecond = 28;
+
+    const step = (timestamp: number) => {
+      if (!lastTimestamp) {
+        lastTimestamp = timestamp;
+      }
+
+      const elapsed = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      if (!isMobileInteractingRef.current) {
+        const loopWidth = scroller.scrollWidth / 2;
+        scroller.scrollLeft += (pixelsPerSecond * elapsed) / 1000;
+
+        if (scroller.scrollLeft >= loopWidth) {
+          scroller.scrollLeft -= loopWidth;
+        }
+      }
+
+      animationFrame = window.requestAnimationFrame(step);
+    };
+
+    animationFrame = window.requestAnimationFrame(step);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+
+      if (mobileInteractionTimeoutRef.current !== null) {
+        window.clearTimeout(mobileInteractionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const pauseMobileAutoScroll = () => {
+    isMobileInteractingRef.current = true;
+
+    if (mobileInteractionTimeoutRef.current !== null) {
+      window.clearTimeout(mobileInteractionTimeoutRef.current);
+      mobileInteractionTimeoutRef.current = null;
+    }
+  };
+
+  const resumeMobileAutoScroll = () => {
+    if (mobileInteractionTimeoutRef.current !== null) {
+      window.clearTimeout(mobileInteractionTimeoutRef.current);
+    }
+
+    mobileInteractionTimeoutRef.current = window.setTimeout(() => {
+      isMobileInteractingRef.current = false;
+      mobileInteractionTimeoutRef.current = null;
+    }, 1200);
+  };
+
+  const renderClient = (client: TrustedClient & { iconSrc: string }) => {
+    const content = (
+      <img
+        src={client.iconSrc}
+        alt={client.name}
+        className="h-20 md:h-24 w-auto object-contain opacity-80 transition-all duration-300 hover:opacity-100"
+      />
+    );
+
+    if (!client.url) {
+      return (
+        <div
+          key={client.name}
+          className="flex shrink-0 items-center justify-center"
+          aria-label={client.name}
+        >
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <a
+        key={client.name}
+        href={client.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex shrink-0 items-center justify-center hover:-translate-y-1 transition-transform duration-300"
+        aria-label={`${client.name} website`}
+      >
+        {content}
+      </a>
+    );
+  };
 
   return (
     <section
@@ -62,42 +162,33 @@ const TrustedBySection = () => {
         </div>
       </div>
 
-      <div dir="ltr">
+      <div
+        ref={mobileScrollerRef}
+        dir="ltr"
+        className="md:hidden overflow-x-auto scrollbar-hide px-4"
+        onTouchStart={pauseMobileAutoScroll}
+        onTouchEnd={resumeMobileAutoScroll}
+        onTouchCancel={resumeMobileAutoScroll}
+        onMouseDown={pauseMobileAutoScroll}
+        onMouseUp={resumeMobileAutoScroll}
+        onMouseLeave={resumeMobileAutoScroll}
+      >
+        <div className="flex w-max min-w-full items-center gap-8 touch-pan-x pr-8">
+          {[...clients, ...clients].map((client, index) => (
+            <div key={`${client.name}-${index}`}>
+              {renderClient(client)}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div dir="ltr" className="hidden md:block">
         <Marquee speed={40} autoFill pauseOnHover={false}>
-          {clients.map((client) => {
-            const content = (
-              <img
-                src={client.iconSrc}
-                alt={client.name}
-                className="h-20 md:h-24 w-auto object-contain opacity-80 transition-all duration-300 hover:opacity-100"
-              />
-            );
-
-            if (!client.url) {
-              return (
-                <div
-                  key={client.name}
-                  className="flex items-center justify-center mx-8 md:mx-12"
-                  aria-label={client.name}
-                >
-                  {content}
-                </div>
-              );
-            }
-
-            return (
-              <a
-                key={client.name}
-                href={client.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center mx-8 md:mx-12 hover:-translate-y-1 transition-transform duration-300"
-                aria-label={`${client.name} website`}
-              >
-                {content}
-              </a>
-            );
-          })}
+          {clients.map((client) => (
+            <div key={client.name} className="mx-8 md:mx-12">
+              {renderClient(client)}
+            </div>
+          ))}
         </Marquee>
       </div>
     </section>

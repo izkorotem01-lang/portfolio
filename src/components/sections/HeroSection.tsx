@@ -145,7 +145,7 @@ const HeroSection = () => {
             <div className="text-center mb-8 md:mb-12">
               {/* Main Title */}
               <h1
-                className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 bg-gradient-primary bg-clip-text text-transparent animate-fade-up"
+                className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 bg-gradient-primary bg-clip-text text-transparent animate-fade-up"
                 style={{
                   animationDelay: "0.2s",
                   filter: "drop-shadow(0 4px 5px rgba(0, 0, 0, 0.6))",
@@ -156,7 +156,7 @@ const HeroSection = () => {
 
               {/* Subtitle */}
               <p
-                className="text-xl md:text-2xl text-foreground/95 mb-6 leading-relaxed animate-fade-up drop-shadow-md"
+                className="text-2xl md:text-3xl lg:text-4xl text-foreground/95 mb-6 leading-relaxed animate-fade-up drop-shadow-md"
                 style={{ animationDelay: "0.4s" }}
               >
                 {t("hero.subtitle")}

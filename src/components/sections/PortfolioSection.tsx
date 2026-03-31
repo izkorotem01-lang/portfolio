@@ -18,6 +18,12 @@ import {
   getYouTubeEmbedUrl,
 } from "@/lib/portfolioService";
 
+const hasThumbnail = (video: PortfolioVideo) =>
+  !!(video.thumbnailUrl && video.thumbnailUrl.trim() !== "");
+
+const shouldUseThumbnailPreview = (video: PortfolioVideo) =>
+  !video.autoplayInBackground;
+
 const PortfolioSection = () => {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -29,6 +35,9 @@ const PortfolioSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [loadedVideoIds, setLoadedVideoIds] = useState<Set<string>>(new Set());
+  const [pendingPlayVideoId, setPendingPlayVideoId] = useState<string | null>(
+    null
+  );
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -49,31 +58,12 @@ const PortfolioSection = () => {
     });
   }, [filteredVideos]);
 
-  const hasThumbnailById = useCallback(
+  const usesThumbnailPreviewById = useCallback(
     (id: string): boolean => {
       const v = videos.find((vid) => vid.id === id);
-      return !!(v && v.thumbnailUrl && v.thumbnailUrl.trim() !== "");
+      return !!(v && shouldUseThumbnailPreview(v));
     },
     [videos]
-  );
-
-  // Function to handle video/thumbnail click
-  const handleVideoClick = useCallback(
-    (videoId: string, hasThumbnail: boolean) => {
-      // If video has thumbnail and hasn't been loaded yet, load it first
-      if (hasThumbnail && !loadedVideoIds.has(videoId)) {
-        // Load only this video's player; revert others with thumbnails back to their thumbnails
-        setLoadedVideoIds(new Set([videoId]));
-        // Give video a moment to load before playing
-        setTimeout(() => {
-          playVideo(videoId);
-        }, 100);
-        return;
-      }
-
-      playVideo(videoId);
-    },
-    [loadedVideoIds]
   );
 
   const playVideo = useCallback(
@@ -89,10 +79,13 @@ const PortfolioSection = () => {
           if (video.muted) {
             setPlayingVideoId(null);
             // If this video has a thumbnail, revert to thumbnail view
-            if (hasThumbnailById(videoId)) {
+            if (usesThumbnailPreviewById(videoId)) {
               const next = new Set(loadedVideoIds);
               next.delete(videoId);
               setLoadedVideoIds(next);
+            }
+            if (pendingPlayVideoId === videoId) {
+              setPendingPlayVideoId(null);
             }
           } else {
             video.play().catch(console.error);
@@ -114,15 +107,44 @@ const PortfolioSection = () => {
           video.muted = false;
           video.play().catch(console.error);
           setPlayingVideoId(videoId);
+          setPendingPlayVideoId(null);
 
           // Ensure only this video's player stays loaded if it has a thumbnail
-          if (hasThumbnailById(videoId)) {
+          if (usesThumbnailPreviewById(videoId)) {
             setLoadedVideoIds(new Set([videoId]));
           }
         }
       }
     },
-    [playingVideoId, loadedVideoIds, hasThumbnailById]
+    [playingVideoId, loadedVideoIds, pendingPlayVideoId, usesThumbnailPreviewById]
+  );
+
+  // Function to handle video/thumbnail click
+  const handleVideoClick = useCallback(
+    (videoId: string, usesThumbnailPreview: boolean) => {
+      // If video has thumbnail and hasn't been loaded yet, load it first
+      if (usesThumbnailPreview && !loadedVideoIds.has(videoId)) {
+        // Load only this video's player; revert others with thumbnails back to their thumbnails
+        setLoadedVideoIds(new Set([videoId]));
+        setPendingPlayVideoId(videoId);
+        return;
+      }
+
+      setPendingPlayVideoId(null);
+      playVideo(videoId);
+    },
+    [loadedVideoIds, playVideo]
+  );
+
+  const handleVideoReady = useCallback(
+    (videoId: string) => {
+      if (pendingPlayVideoId !== videoId) {
+        return;
+      }
+
+      playVideo(videoId);
+    },
+    [pendingPlayVideoId, playVideo]
   );
 
   // Function to register video ref
@@ -168,6 +190,7 @@ const PortfolioSection = () => {
   useEffect(() => {
     setLoadedVideoIds(new Set());
     setPlayingVideoId(null);
+    setPendingPlayVideoId(null);
   }, [activeCategory]);
 
   return (
@@ -227,12 +250,17 @@ const PortfolioSection = () => {
                               video={video}
                               index={index}
                               language={language}
-                              isPlaying={playingVideoId === video.id}
-                              isLoaded={loadedVideoIds.has(video.id)}
+                                isPlaying={playingVideoId === video.id}
+                                isLoaded={loadedVideoIds.has(video.id)}
                               onVideoClick={() =>
-                                handleVideoClick(video.id, !!video.thumbnailUrl)
+                                handleVideoClick(
+                                  video.id,
+                                  shouldUseThumbnailPreview(video)
+                                )
                               }
+                              onVideoReady={() => handleVideoReady(video.id)}
                               onVideoRef={(ref) => registerVideoRef(video.id, ref)}
+                              shouldStartPlaying={pendingPlayVideoId === video.id}
                               isYouTube={true}
                             />
                           </div>
@@ -273,9 +301,14 @@ const PortfolioSection = () => {
                                 isPlaying={playingVideoId === v.id}
                                 isLoaded={loadedVideoIds.has(v.id)}
                                 onVideoClick={() =>
-                                  handleVideoClick(v.id, !!v.thumbnailUrl)
+                                  handleVideoClick(
+                                    v.id,
+                                    shouldUseThumbnailPreview(v)
+                                  )
                                 }
+                                onVideoReady={() => handleVideoReady(v.id)}
                                 onVideoRef={(ref) => registerVideoRef(v.id, ref)}
+                                shouldStartPlaying={pendingPlayVideoId === v.id}
                                 isYouTube={false}
                               />
                             ))}
@@ -304,7 +337,9 @@ const SimpleVideoItem = React.memo(
     isPlaying,
     isLoaded,
     onVideoClick,
+    onVideoReady,
     onVideoRef,
+    shouldStartPlaying,
     isYouTube = false,
   }: {
     video: PortfolioVideo;
@@ -313,16 +348,19 @@ const SimpleVideoItem = React.memo(
     isPlaying: boolean;
     isLoaded: boolean;
     onVideoClick: () => void;
+    onVideoReady: () => void;
     onVideoRef: (ref: HTMLVideoElement | null) => void;
+    shouldStartPlaying: boolean;
     isYouTube?: boolean;
   }) => {
     const itemRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
+    const previewVideoRef = useRef<HTMLVideoElement | null>(null);
     const [isInView, setIsInView] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
     const [videoError, setVideoError] = useState(false);
-    const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
-    const shouldShowVideo = !hasThumbnail || isLoaded;
+    const videoHasThumbnail = hasThumbnail(video);
+    const usesThumbnailPreview = shouldUseThumbnailPreview(video);
     const isMobile = useIsMobile();
     // Use the isYouTube prop if provided, otherwise check from video URL
     const isYouTubeVideo = isYouTube !== undefined ? isYouTube : isYouTubeUrl(video.videoUrl);
@@ -357,18 +395,18 @@ const SimpleVideoItem = React.memo(
 
     // Auto-play when video loads (for videos without thumbnails)
     useEffect(() => {
-      if (!videoRef.current || !hasLoaded || hasThumbnail) return;
+      if (!videoRef.current || !hasLoaded || usesThumbnailPreview) return;
 
       const videoElement = videoRef.current;
       videoElement.muted = true;
 
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.log("Autoplay prevented - tap to play:", err);
-        });
+          playPromise.catch((err) => {
+            console.log("Autoplay prevented - tap to play:", err);
+          });
       }
-    }, [hasLoaded, hasThumbnail]);
+    }, [hasLoaded, usesThumbnailPreview]);
 
     // Store ref for parent component
     useEffect(() => {
@@ -376,6 +414,26 @@ const SimpleVideoItem = React.memo(
         onVideoRef(videoRef.current);
       }
     }, [onVideoRef]);
+
+    useEffect(() => {
+      if (shouldStartPlaying && hasLoaded && !videoError) {
+        onVideoReady();
+      }
+    }, [hasLoaded, onVideoReady, shouldStartPlaying, videoError]);
+
+    const seekPreviewVideo = () => {
+      const previewVideo = previewVideoRef.current;
+
+      if (!previewVideo || videoHasThumbnail) {
+        return;
+      }
+
+      const previewTime = Math.min(0.5, Math.max(previewVideo.duration * 0.15, 0));
+
+      if (previewTime > 0 && Math.abs(previewVideo.currentTime - previewTime) > 0.05) {
+        previewVideo.currentTime = previewTime;
+      }
+    };
 
     return (
       <div
@@ -418,26 +476,6 @@ const SimpleVideoItem = React.memo(
                 </div>
               </div>
             </div>
-          ) : hasThumbnail && !isLoaded ? (
-            // Show thumbnail with play button overlay
-            <div
-              className="relative w-full h-full cursor-pointer"
-              onClick={onVideoClick}
-            >
-              <img
-                src={video.thumbnailUrl}
-                alt={language === "he" ? video.titleHe : video.title}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-              {/* Play button overlay */}
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
-                  <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
-                </div>
-              </div>
-            </div>
           ) : (
             // Show video (either no thumbnail or already loaded)
             <>
@@ -451,11 +489,17 @@ const SimpleVideoItem = React.memo(
                     }
                   }}
                   poster={video.thumbnailUrl || undefined}
-                  className="w-full h-full object-cover cursor-pointer"
+                  className={`w-full h-full object-cover transition-opacity duration-200 ${
+                    usesThumbnailPreview && !isLoaded
+                      ? "opacity-0 pointer-events-none"
+                      : "opacity-100 cursor-pointer"
+                  }`}
                   loop
                   muted
                   playsInline
-                  preload="metadata"
+                  preload={
+                    usesThumbnailPreview && videoHasThumbnail ? "auto" : "metadata"
+                  }
                   controls={false}
                   disablePictureInPicture
                   disableRemotePlayback
@@ -528,7 +572,7 @@ const SimpleVideoItem = React.memo(
                       <Play className="h-12 w-12 text-white/50 mx-auto mb-2" />
                       <p className="text-white/70 text-sm">Video unavailable</p>
                     </div>
-                  ) : video.thumbnailUrl ? (
+                  ) : videoHasThumbnail ? (
                     <img
                       src={video.thumbnailUrl}
                       alt={language === "he" ? video.titleHe : video.title}
@@ -538,6 +582,47 @@ const SimpleVideoItem = React.memo(
                   ) : (
                     <Play className="h-12 w-12 text-white/50" />
                   )}
+                </div>
+              )}
+
+              {usesThumbnailPreview && !isLoaded && (
+                <div
+                  className="absolute inset-0 cursor-pointer"
+                  onClick={onVideoClick}
+                >
+                  {videoHasThumbnail ? (
+                    <img
+                      src={video.thumbnailUrl}
+                      alt={language === "he" ? video.titleHe : video.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <video
+                      ref={previewVideoRef}
+                      src={video.videoUrl}
+                      className="w-full h-full object-cover"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      controls={false}
+                      onLoadedMetadata={seekPreviewVideo}
+                      onLoadedData={(e) => {
+                        e.currentTarget.pause();
+                        seekPreviewVideo();
+                      }}
+                      onSeeked={(e) => {
+                        e.currentTarget.pause();
+                      }}
+                    />
+                  )}
+
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                    <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
+                      <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
+                    </div>
+                  </div>
                 </div>
               )}
             </>

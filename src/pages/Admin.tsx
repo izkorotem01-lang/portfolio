@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Lock,
   Plus,
@@ -468,6 +469,7 @@ const Admin = () => {
           subtitleHe: "",
           videoUrl,
           thumbnailUrl: "",
+          autoplayInBackground: false,
           order: videos.length + index + 1,
         };
 
@@ -535,6 +537,7 @@ const Admin = () => {
           subtitleHe: "",
           videoUrl: url.trim(),
           thumbnailUrl: "",
+          autoplayInBackground: false,
           order: videos.length + 1,
         };
 
@@ -600,6 +603,42 @@ const Admin = () => {
     } catch (error) {
       console.error("Error removing thumbnail:", error);
       setError("Failed to remove thumbnail");
+    }
+  };
+
+  const handleAutoplayPreferenceChange = async (
+    video: PortfolioVideo,
+    autoplayInBackground: boolean
+  ) => {
+    try {
+      await updateVideo(video.id, { autoplayInBackground });
+
+      setVideos((currentVideos) =>
+        currentVideos.map((currentVideo) =>
+          currentVideo.id === video.id
+            ? { ...currentVideo, autoplayInBackground }
+            : currentVideo
+        )
+      );
+
+      setAllVideos((currentVideos) =>
+        currentVideos.map((currentVideo) =>
+          currentVideo.id === video.id
+            ? { ...currentVideo, autoplayInBackground }
+            : currentVideo
+        )
+      );
+
+      setSelectedVideoForThumbnail((currentVideo) =>
+        currentVideo?.id === video.id
+          ? { ...currentVideo, autoplayInBackground }
+          : currentVideo
+      );
+
+      setError("");
+    } catch (error) {
+      console.error("Error updating autoplay preference:", error);
+      setError("Failed to update autoplay preference");
     }
   };
 
@@ -1068,6 +1107,9 @@ const Admin = () => {
                       video={video}
                       onDelete={() => handleDeleteVideo(video.id)}
                       onSelect={() => setSelectedVideoForThumbnail(video)}
+                      onAutoplayChange={(checked) =>
+                        handleAutoplayPreferenceChange(video, checked)
+                      }
                       onDragStart={(e) => handleVideoDragStart(e, video.id)}
                       onDragOver={handleVideoDragOver}
                       onDrop={(e) => handleVideoDrop(e, video.id)}
@@ -1738,6 +1780,7 @@ const VideoCard = ({
   video,
   onDelete,
   onSelect,
+  onAutoplayChange,
   onDragStart,
   onDragOver,
   onDrop,
@@ -1747,6 +1790,7 @@ const VideoCard = ({
   video: PortfolioVideo;
   onDelete: () => void;
   onSelect: () => void;
+  onAutoplayChange: (checked: boolean) => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -1754,6 +1798,7 @@ const VideoCard = ({
   isDropTarget?: boolean;
 }) => {
   const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
+  const autoplayInBackground = !!video.autoplayInBackground;
 
   return (
     <div
@@ -1820,6 +1865,27 @@ const VideoCard = ({
           {hasThumbnail ? "✓ Has Thumbnail" : "⚠ No Thumbnail"}
         </span>
       </div>
+
+      <label
+        className="mb-3 flex items-start gap-2 rounded border border-gray-600 bg-gray-800/70 p-2"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox
+          checked={autoplayInBackground}
+          onCheckedChange={(checked) => onAutoplayChange(checked === true)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="mt-0.5 border-gray-400 data-[state=checked]:bg-blue-500"
+        />
+        <div className="min-w-0">
+          <div className="text-xs font-medium text-white">
+            Autoplay in background
+          </div>
+          <div className="text-[11px] text-gray-400">
+            When off, the thumbnail is shown first if one exists.
+          </div>
+        </div>
+      </label>
 
       <div className="flex justify-between items-center gap-2">
         <span className="text-xs text-gray-500 bg-gray-600 px-2 py-1 rounded">
