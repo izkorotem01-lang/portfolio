@@ -14,10 +14,17 @@ import {
   Video,
   Folder,
   FileVideo,
+  Download,
 } from "lucide-react";
 import { remoteConfig, storage } from "@/lib/firebase";
 import { fetchAndActivate, getValue } from "firebase/remote-config";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  getMetadata,
+} from "firebase/storage";
 import {
   PortfolioCategory,
   PortfolioVideo,
@@ -72,6 +79,172 @@ const clearAdminSession = () => {
   localStorage.removeItem(ADMIN_SESSION_KEY);
 };
 
+const FREECONVERT_API_KEY_STORAGE_KEY = "freeconvert_api_key";
+const DEFAULT_COMPRESSION_TARGET_MB = "8";
+const FREECONVERT_API_BASE_URL = "https://api.freeconvert.com/v1";
+const FREECONVERT_POLL_INTERVAL_MS = 4000;
+const FREECONVERT_MAX_POLLS = 90;
+
+type FreeConvertTaskStatus =
+  | "created"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "canceled"
+  | "deleted";
+
+interface FreeConvertTask {
+  id: string;
+  name?: string;
+  operation?: string;
+  status?: FreeConvertTaskStatus;
+  expiresAt?: string;
+  result?: {
+    url?: string;
+    errorCode?: string;
+    msg?: string;
+    [key: string]: unknown;
+  };
+}
+
+interface FreeConvertJobResponse {
+  id: string;
+  status?: "created" | "processing" | "completed" | "failed";
+  tasks?: FreeConvertTask[];
+}
+
+interface CompressionPreview {
+  downloadUrl: string;
+  previewUrl: string;
+  blob: Blob;
+  sizeBytes: number;
+  expiresAt?: string;
+  jobId: string;
+}
+
+const sleep = (ms: number) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const freeConvertRequest = async <T,>(
+  apiKey: string,
+  path: string,
+  init?: RequestInit
+): Promise<T> => {
+  const response = await fetch(`${FREECONVERT_API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      ...(init?.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    let message = `FreeConvert request failed (${response.status})`;
+
+    try {
+      const errorBody = await response.json();
+      const apiMessage =
+        errorBody?.message ||
+        errorBody?.error ||
+        errorBody?.msg ||
+        errorBody?.result?.msg;
+
+      if (typeof apiMessage === "string" && apiMessage.trim()) {
+        message = apiMessage;
+      }
+    } catch {
+      // Ignore JSON parsing errors and keep the fallback message.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<T>;
+};
+
+const getExportTaskFromJob = (job: FreeConvertJobResponse) => {
+  const tasks = Array.isArray(job.tasks) ? job.tasks : [];
+
+  return (
+    tasks.find((task) => task.operation === "export/url") ||
+    tasks.find((task) => task.name === "export") ||
+    null
+  );
+};
+
+const createCompressionJob = async (
+  apiKey: string,
+  sourceUrl: string,
+  fileName: string,
+  targetMb: number
+) => {
+  return freeConvertRequest<FreeConvertJobResponse>(apiKey, "/process/jobs", {
+    method: "POST",
+    body: JSON.stringify({
+      tasks: {
+        import: {
+          operation: "import/url",
+          url: sourceUrl,
+          filename: fileName,
+        },
+        compress: {
+          operation: "compress",
+          input: "import",
+          input_format: "mp4",
+          output_format: "mp4",
+          options: {
+            video_codec_compress: "h264",
+            compress_video: "by_size",
+            video_compress_max_filesize: targetMb,
+          },
+        },
+        export: {
+          operation: "export/url",
+          input: ["compress"],
+        },
+      },
+    }),
+  });
+};
+
+const waitForCompressionResult = async (apiKey: string, jobId: string) => {
+  for (let attempt = 0; attempt < FREECONVERT_MAX_POLLS; attempt += 1) {
+    const job = await freeConvertRequest<FreeConvertJobResponse>(
+      apiKey,
+      `/process/jobs/${jobId}`
+    );
+
+    const exportTask = getExportTaskFromJob(job);
+    const exportUrl = exportTask?.result?.url;
+
+    if (exportTask?.status === "completed" && typeof exportUrl === "string") {
+      return {
+        downloadUrl: exportUrl,
+        expiresAt: exportTask.expiresAt,
+      };
+    }
+
+    if (
+      job.status === "failed" ||
+      exportTask?.status === "failed" ||
+      exportTask?.status === "canceled"
+    ) {
+      const errorMessage =
+        exportTask?.result?.msg ||
+        exportTask?.result?.errorCode ||
+        "Compression failed in FreeConvert.";
+
+      throw new Error(errorMessage);
+    }
+
+    await sleep(FREECONVERT_POLL_INTERVAL_MS);
+  }
+
+  throw new Error("Compression timed out. Please try again.");
+};
+
 const Admin = () => {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -96,9 +269,29 @@ const Admin = () => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedVideoForThumbnail, setSelectedVideoForThumbnail] =
     useState<PortfolioVideo | null>(null);
+  const [selectedVideoForCompression, setSelectedVideoForCompression] =
+    useState<PortfolioVideo | null>(null);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [isThumbnailDragActive, setIsThumbnailDragActive] = useState(false);
   const [showVideoUrlForm, setShowVideoUrlForm] = useState(false);
+  const [freeConvertApiKey, setFreeConvertApiKey] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    return localStorage.getItem(FREECONVERT_API_KEY_STORAGE_KEY) || "";
+  });
+  const [compressionTargetMb, setCompressionTargetMb] = useState(
+    DEFAULT_COMPRESSION_TARGET_MB
+  );
+  const [compressionPreview, setCompressionPreview] =
+    useState<CompressionPreview | null>(null);
+  const [compressionOriginalSizeBytes, setCompressionOriginalSizeBytes] =
+    useState<number | null>(null);
+  const [compressionStatus, setCompressionStatus] = useState("");
+  const [compressionError, setCompressionError] = useState("");
+  const [compressionSubmitting, setCompressionSubmitting] = useState(false);
+  const [compressionKeeping, setCompressionKeeping] = useState(false);
   const [categoryVideoDropTarget, setCategoryVideoDropTarget] = useState<
     string | null
   >(null);
@@ -134,6 +327,66 @@ const Admin = () => {
 
     fetchRemoteConfig();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const trimmedApiKey = freeConvertApiKey.trim();
+
+    if (trimmedApiKey) {
+      localStorage.setItem(FREECONVERT_API_KEY_STORAGE_KEY, trimmedApiKey);
+    } else {
+      localStorage.removeItem(FREECONVERT_API_KEY_STORAGE_KEY);
+    }
+  }, [freeConvertApiKey]);
+
+  useEffect(() => {
+    return () => {
+      if (compressionPreview?.previewUrl) {
+        URL.revokeObjectURL(compressionPreview.previewUrl);
+      }
+    };
+  }, [compressionPreview]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (
+      !selectedVideoForCompression ||
+      !isFirebaseStorageUrl(selectedVideoForCompression.videoUrl)
+    ) {
+      setCompressionOriginalSizeBytes(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getMetadata(ref(storage, selectedVideoForCompression.videoUrl))
+      .then((metadata) => {
+        if (!isActive) {
+          return;
+        }
+
+        const size =
+          typeof metadata.size === "number"
+            ? metadata.size
+            : Number(metadata.size);
+
+        setCompressionOriginalSizeBytes(Number.isFinite(size) ? size : null);
+      })
+      .catch((metadataError) => {
+        console.error("Error loading original video metadata:", metadataError);
+        if (isActive) {
+          setCompressionOriginalSizeBytes(null);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedVideoForCompression]);
 
   // Check for existing admin session on component mount
   useEffect(() => {
@@ -448,6 +701,39 @@ const Admin = () => {
     return await getDownloadURL(snapshot.ref);
   };
 
+  const uploadBlob = async (
+    blob: Blob,
+    path: string,
+    contentType: string = "video/mp4"
+  ): Promise<string> => {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, blob, {
+      contentType,
+    });
+
+    return getDownloadURL(snapshot.ref);
+  };
+
+  const isManagedStorageUrl = (fileUrl?: string) => {
+    return isFirebaseStorageUrl(fileUrl);
+  };
+
+  const deleteStorageFileIfManaged = async (fileUrl?: string) => {
+    if (!isManagedStorageUrl(fileUrl)) {
+      return;
+    }
+
+    try {
+      await deleteObject(ref(storage, fileUrl));
+    } catch (error: any) {
+      if (error?.code === "storage/object-not-found") {
+        return;
+      }
+
+      throw error;
+    }
+  };
+
   const handleBatchVideoUpload = async (files: File[], categoryId: string) => {
     setBatchUploading(true);
     try {
@@ -486,17 +772,201 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteVideo = async (videoId: string) => {
+  const handleDeleteVideo = async (video: PortfolioVideo) => {
     if (window.confirm("Are you sure you want to delete this video?")) {
       try {
-        await deleteVideo(videoId);
+        await Promise.all([
+          deleteStorageFileIfManaged(video.videoUrl),
+          deleteStorageFileIfManaged(video.thumbnailUrl),
+        ]);
+
+        await deleteVideo(video.id);
+
+        if (selectedVideoForThumbnail?.id === video.id) {
+          setSelectedVideoForThumbnail(null);
+        }
+
+        setAllVideos((currentVideos) =>
+          currentVideos.filter((currentVideo) => currentVideo.id !== video.id)
+        );
+
         if (selectedCategory) {
           await loadVideos(selectedCategory.id);
         }
       } catch (error) {
         console.error("Error deleting video:", error);
-        setError("Failed to delete video");
+        setError("Failed to delete video and storage files");
       }
+    }
+  };
+
+  const clearCompressionPreview = () => {
+    setCompressionPreview((currentPreview) => {
+      if (currentPreview?.previewUrl) {
+        URL.revokeObjectURL(currentPreview.previewUrl);
+      }
+
+      return null;
+    });
+  };
+
+  const closeCompressionModal = () => {
+    clearCompressionPreview();
+    setSelectedVideoForCompression(null);
+    setCompressionError("");
+    setCompressionStatus("");
+    setCompressionSubmitting(false);
+    setCompressionKeeping(false);
+    setCompressionOriginalSizeBytes(null);
+  };
+
+  const openCompressionModal = (video: PortfolioVideo) => {
+    if (!isFirebaseStorageUrl(video.videoUrl)) {
+      setError("Compression is only available for Firebase-hosted videos.");
+      return;
+    }
+
+    clearCompressionPreview();
+    setCompressionError("");
+    setCompressionStatus("");
+    setCompressionOriginalSizeBytes(null);
+    setCompressionTargetMb(DEFAULT_COMPRESSION_TARGET_MB);
+    setSelectedVideoForCompression(video);
+  };
+
+  const handleCompressVideo = async () => {
+    if (!selectedVideoForCompression) {
+      return;
+    }
+
+    const apiKey = freeConvertApiKey.trim();
+    const targetMb = Number(compressionTargetMb);
+
+    if (!apiKey) {
+      setCompressionError("Enter your FreeConvert API key first.");
+      return;
+    }
+
+    if (!Number.isFinite(targetMb) || targetMb <= 0) {
+      setCompressionError("Enter a valid target size in MB.");
+      return;
+    }
+
+    setCompressionSubmitting(true);
+    setCompressionError("");
+    setCompressionStatus("Submitting compression job...");
+    clearCompressionPreview();
+
+    try {
+      const fileName = getVideoFileName(selectedVideoForCompression.videoUrl);
+      const createdJob = await createCompressionJob(
+        apiKey,
+        selectedVideoForCompression.videoUrl,
+        fileName,
+        targetMb
+      );
+
+      setCompressionStatus("FreeConvert is compressing the video...");
+
+      const jobId = createdJob.id;
+      if (!jobId) {
+        throw new Error("FreeConvert did not return a job id.");
+      }
+
+      const result = await waitForCompressionResult(apiKey, jobId);
+
+      setCompressionStatus("Downloading compressed preview...");
+
+      const previewResponse = await fetch(result.downloadUrl);
+      if (!previewResponse.ok) {
+        throw new Error("Failed to download compressed preview.");
+      }
+
+      const previewBlob = await previewResponse.blob();
+      const previewUrl = URL.createObjectURL(previewBlob);
+
+      setCompressionPreview({
+        downloadUrl: result.downloadUrl,
+        previewUrl,
+        blob: previewBlob,
+        sizeBytes: previewBlob.size,
+        expiresAt: result.expiresAt,
+        jobId,
+      });
+      setCompressionStatus("Compression ready. Review the result below.");
+    } catch (compressionRequestError) {
+      console.error("Error compressing video:", compressionRequestError);
+      setCompressionError(
+        compressionRequestError instanceof Error
+          ? compressionRequestError.message
+          : "Compression failed. Please try again."
+      );
+      setCompressionStatus("");
+    } finally {
+      setCompressionSubmitting(false);
+    }
+  };
+
+  const handleKeepCompressedVideo = async () => {
+    if (!selectedVideoForCompression || !compressionPreview) {
+      return;
+    }
+
+    setCompressionKeeping(true);
+    setCompressionError("");
+    setCompressionStatus("Uploading compressed video to Firebase...");
+
+    try {
+      const fileName = getVideoFileName(selectedVideoForCompression.videoUrl);
+      const uploadPath = `videos/${Date.now()}-compressed-${fileName}`;
+      const contentType = compressionPreview.blob.type || "video/mp4";
+      const newVideoUrl = await uploadBlob(
+        compressionPreview.blob,
+        uploadPath,
+        contentType
+      );
+
+      await updateVideo(selectedVideoForCompression.id, { videoUrl: newVideoUrl });
+
+      try {
+        await deleteStorageFileIfManaged(selectedVideoForCompression.videoUrl);
+      } catch (storageDeleteError) {
+        console.error("Error deleting old storage file:", storageDeleteError);
+      }
+
+      setVideos((currentVideos) =>
+        currentVideos.map((video) =>
+          video.id === selectedVideoForCompression.id
+            ? { ...video, videoUrl: newVideoUrl }
+            : video
+        )
+      );
+      setAllVideos((currentVideos) =>
+        currentVideos.map((video) =>
+          video.id === selectedVideoForCompression.id
+            ? { ...video, videoUrl: newVideoUrl }
+            : video
+        )
+      );
+
+      if (selectedVideoForThumbnail?.id === selectedVideoForCompression.id) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          videoUrl: newVideoUrl,
+        });
+      }
+
+      closeCompressionModal();
+    } catch (keepCompressedVideoError) {
+      console.error("Error keeping compressed video:", keepCompressedVideoError);
+      setCompressionError(
+        keepCompressedVideoError instanceof Error
+          ? keepCompressedVideoError.message
+          : "Failed to replace the video."
+      );
+      setCompressionStatus("");
+    } finally {
+      setCompressionKeeping(false);
     }
   };
 
@@ -1105,7 +1575,8 @@ const Admin = () => {
                     <VideoCard
                       key={video.id}
                       video={video}
-                      onDelete={() => handleDeleteVideo(video.id)}
+                      onDelete={() => handleDeleteVideo(video)}
+                      onCompress={() => openCompressionModal(video)}
                       onSelect={() => setSelectedVideoForThumbnail(video)}
                       onAutoplayChange={(checked) =>
                         handleAutoplayPreferenceChange(video, checked)
@@ -1360,6 +1831,207 @@ const Admin = () => {
                   className="border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedVideoForCompression && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6 gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Compress Video
+                  </h2>
+                  <p className="text-gray-300">
+                    {getDisplayTitle(selectedVideoForCompression)}
+                  </p>
+                </div>
+                <Button
+                  onClick={closeCompressionModal}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        FreeConvert API Key
+                      </label>
+                      <Input
+                        type="password"
+                        value={freeConvertApiKey}
+                        onChange={(e) => setFreeConvertApiKey(e.target.value)}
+                        placeholder="Paste your FreeConvert API key"
+                        className="bg-gray-700 border-gray-500 text-white"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Stored only in this browser. Frontend-only testing exposes
+                        the key in the admin session.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Target Size (MB)
+                      </label>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="0.5"
+                        value={compressionTargetMb}
+                        onChange={(e) => setCompressionTargetMb(e.target.value)}
+                        className="bg-gray-700 border-gray-500 text-white"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Start around 5-8 MB for most portfolio clips.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-400">Original Size</div>
+                        <div className="text-white font-medium">
+                          {formatFileSize(compressionOriginalSizeBytes)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Target</div>
+                        <div className="text-white font-medium">
+                          {compressionTargetMb || "-"} MB
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Compressed Size</div>
+                        <div className="text-white font-medium">
+                          {compressionPreview
+                            ? formatFileSize(compressionPreview.sizeBytes)
+                            : "Not ready"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {compressionStatus && (
+                    <div className="rounded-lg border border-blue-500/40 bg-blue-900/20 px-4 py-3 text-sm text-blue-200">
+                      {compressionStatus}
+                    </div>
+                  )}
+
+                  {compressionError && (
+                    <div className="rounded-lg border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-200">
+                      {compressionError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-4 text-sm text-gray-300">
+                  <div className="font-medium text-white mb-2">How it works</div>
+                  <p className="mb-2">
+                    Compress sends the current Firebase video URL to FreeConvert,
+                    downloads the compressed result back into the admin page, and
+                    lets you review it.
+                  </p>
+                  <p>
+                    Keep uploads that compressed file back to Firebase and swaps
+                    the video URL automatically. No manual reupload step.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                <Button
+                  onClick={handleCompressVideo}
+                  disabled={compressionSubmitting || compressionKeeping}
+                  className="bg-violet-600 hover:bg-violet-700"
+                >
+                  {compressionSubmitting
+                    ? "Compressing..."
+                    : compressionPreview
+                    ? "Compress Again"
+                    : "Compress"}
+                </Button>
+                {compressionPreview && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-emerald-500 text-emerald-300 hover:bg-emerald-900/40"
+                  >
+                    <a
+                      href={compressionPreview.previewUrl}
+                      download={`compressed-${getVideoFileName(
+                        selectedVideoForCompression.videoUrl
+                      )}`}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Preview
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Original Video
+                  </label>
+                  <video
+                    src={selectedVideoForCompression.videoUrl}
+                    className="w-full rounded-lg bg-black"
+                    controls
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Compressed Preview
+                  </label>
+                  {compressionPreview ? (
+                    <>
+                      <video
+                        src={compressionPreview.previewUrl}
+                        className="w-full rounded-lg bg-black mb-2"
+                        controls
+                      />
+                      <p className="text-xs text-gray-400">
+                        {compressionPreview.expiresAt
+                          ? `Temporary FreeConvert result available until ${new Date(
+                              compressionPreview.expiresAt
+                            ).toLocaleString()}`
+                          : "Temporary FreeConvert preview loaded into the admin panel."}
+                      </p>
+                    </>
+                  ) : (
+                    <div className="h-full min-h-64 rounded-lg border border-dashed border-gray-600 bg-gray-900/40 flex items-center justify-center text-sm text-gray-500 px-6 text-center">
+                      Run compression to review the output here.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={closeCompressionModal}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  disabled={compressionKeeping}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleKeepCompressedVideo}
+                  disabled={!compressionPreview || compressionSubmitting || compressionKeeping}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {compressionKeeping ? "Replacing..." : "Keep and Replace"}
                 </Button>
               </div>
             </div>
@@ -1696,14 +2368,49 @@ const CategoryForm = ({
 };
 
 // Helper functions for video display
+const isFirebaseStorageUrl = (fileUrl?: string) => {
+  if (!fileUrl?.trim()) return false;
+
+  return (
+    fileUrl.startsWith("gs://") ||
+    fileUrl.includes("firebasestorage.googleapis.com") ||
+    fileUrl.includes(".firebasestorage.app")
+  );
+};
+
 const getVideoFileName = (url: string) => {
   try {
-    const urlParts = url.split("/");
-    const fileName = urlParts[urlParts.length - 1];
-    return fileName.split("?")[0]; // Remove query parameters
+    const parsedUrl = new URL(url);
+    const storageObjectMatch = parsedUrl.pathname.match(/\/o\/(.+)$/);
+
+    if (storageObjectMatch?.[1]) {
+      const storageObjectPath = decodeURIComponent(storageObjectMatch[1]);
+      return storageObjectPath.split("/").pop() || "video.mp4";
+    }
+
+    return decodeURIComponent(
+      parsedUrl.pathname.split("/").pop() || "video.mp4"
+    );
   } catch {
-    return "video.mp4";
+    try {
+      const fallbackParts = decodeURIComponent(url).split("/");
+      return fallbackParts[fallbackParts.length - 1].split("?")[0] || "video.mp4";
+    } catch {
+      return "video.mp4";
+    }
   }
+};
+
+const formatFileSize = (bytes: number | null) => {
+  if (bytes === null || !Number.isFinite(bytes) || bytes <= 0) {
+    return "Size unavailable";
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
 const extractNameFromFileName = (
@@ -1779,6 +2486,7 @@ const getDisplayTitleHe = (video: PortfolioVideo) => {
 const VideoCard = ({
   video,
   onDelete,
+  onCompress,
   onSelect,
   onAutoplayChange,
   onDragStart,
@@ -1789,6 +2497,7 @@ const VideoCard = ({
 }: {
   video: PortfolioVideo;
   onDelete: () => void;
+  onCompress: () => void;
   onSelect: () => void;
   onAutoplayChange: (checked: boolean) => void;
   onDragStart: (e: React.DragEvent) => void;
@@ -1799,6 +2508,57 @@ const VideoCard = ({
 }) => {
   const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
   const autoplayInBackground = !!video.autoplayInBackground;
+  const isStorageHostedVideo = isFirebaseStorageUrl(video.videoUrl);
+  const [fileSizeBytes, setFileSizeBytes] = React.useState<number | null>(null);
+  const [isFileSizeLoading, setIsFileSizeLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    let isActive = true;
+
+    if (!isStorageHostedVideo) {
+      setFileSizeBytes(null);
+      setIsFileSizeLoading(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsFileSizeLoading(true);
+
+    getMetadata(ref(storage, video.videoUrl))
+      .then((metadata) => {
+        if (!isActive) return;
+
+        const size =
+          typeof metadata.size === "number"
+            ? metadata.size
+            : Number(metadata.size);
+
+        setFileSizeBytes(Number.isFinite(size) ? size : null);
+      })
+      .catch((error) => {
+        console.error("Error loading video metadata:", error);
+        if (isActive) {
+          setFileSizeBytes(null);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsFileSizeLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isStorageHostedVideo, video.videoUrl]);
+
+  const fileSizeLabel = isStorageHostedVideo
+    ? isFileSizeLoading
+      ? "Checking size..."
+      : formatFileSize(fileSizeBytes)
+    : "External video";
+  const downloadLabel = isStorageHostedVideo ? "Download" : "Open";
 
   return (
     <div
@@ -1845,6 +2605,7 @@ const VideoCard = ({
       </div>
 
       <div className="space-y-1 mb-3">
+        <p className="text-xs text-gray-400 truncate">Size: {fileSizeLabel}</p>
         {video.subtitle && (
           <p className="text-xs text-gray-400 truncate">{video.subtitle}</p>
         )}
@@ -1892,6 +2653,36 @@ const VideoCard = ({
           #{video.order}
         </span>
         <div className="flex gap-2">
+          {isStorageHostedVideo && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCompress();
+              }}
+              size="sm"
+              variant="outline"
+              className="text-violet-400 border-violet-400 hover:bg-violet-900 h-6 px-2"
+            >
+              <span className="text-xs">Compress</span>
+            </Button>
+          )}
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="text-emerald-400 border-emerald-400 hover:bg-emerald-900 h-6 px-2"
+          >
+            <a
+              href={video.videoUrl}
+              download={isStorageHostedVideo ? getVideoFileName(video.videoUrl) : undefined}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Download className="w-3 h-3 mr-1" />
+              <span className="text-xs">{downloadLabel}</span>
+            </a>
+          </Button>
           <Button
             onClick={(e) => {
               e.stopPropagation();
