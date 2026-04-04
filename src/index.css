@@ -252,10 +252,10 @@
 
   /* Mobile-optimized animations - DISABLE ALL ANIMATIONS ON MOBILE */
   @media (max-width: 768px) {
-    /* GLOBAL: Disable ALL animations and transitions on mobile */
-    *,
-    *::before,
-    *::after {
+    /* GLOBAL: Disable ALL animations and transitions on mobile (except marquee) */
+    *:not(#trusted-by *),
+    *:not(#trusted-by *)::before,
+    *:not(#trusted-by *)::after {
       animation-duration: 0s !important;
       animation-delay: 0s !important;
       transition-duration: 0s !important;

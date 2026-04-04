@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "@/hooks/use-location";
 
@@ -24,11 +25,17 @@ const translations = {
     "hero.name": "ROTEM IZKO",
     "hero.subtitle": "PROFESSIONAL VIDEO EDITOR & MOTION GRAPHIC DESIGNER",
     "hero.cta": "View My Work",
+    "trusted.title": "Trusted By",
+    "trusted.subtitle": "Brands and creators I have helped with sharp, high-converting content.",
+    "trusted.visit": "Visit site",
+    "trusted.client": "Client partner",
 
     // About Section
     "about.title": "Who Am I & What I Offer",
     "about.content":
       "I'm a 23-year-old professional video editor specializing in creating immersive content for social media platforms including YouTube, Instagram, TikTok and more. I edit short/long form videos, podcasts, and upgrade each project to the highest level using leading software like Premiere Pro and After Effects. I don't just come to edit a video. I come to help your business grow.",
+    "about.leadsImpact":
+      "My videos generate hundreds — and even thousands — of leads for businesses.",
     "about.digitalPresence":
       "I build digital presence for everyone - whether you're a small business owner, large corporation, content creator, YouTuber, freelancer, or anyone who needs a strong digital presence on social networks. I'm your go-to solution for all digital presence needs.",
 
@@ -46,13 +53,22 @@ const translations = {
     "services.digitalPresence": "Digital Presence Building",
 
     // Packages
-    "packages.title": "Choose Your Package",
-    "packages.basic.title": "BASIC - Video for Business, No Headaches",
-    "packages.basic.price": "₪250-₪400",
-    "packages.premium.title": "PREMIUM - Complete Production in Your Hands",
-    "packages.premium.price": "₪400-₪550",
-    "packages.custom.title": "CUSTOM - Complete Solution",
-    "packages.custom.price": "Custom Pricing",
+    "packages.title": "Content Systems",
+    "packages.statement":
+      "I don't sell videos — I build content systems that drive results",
+    "packages.badge": "Main Package",
+    "packages.cta": "Let's Build Your System",
+    "packages.core.title": "Content System",
+    "packages.core.subtitle": "A monthly content system that delivers results",
+    "packages.core.price": "₪6,500 - ₪7,500",
+    "packages.growth.title": "Growth System",
+    "packages.growth.subtitle":
+      "For brands that want to grow and turn content into an engine",
+    "packages.growth.price": "₪9,000 - ₪12,000",
+    "packages.full.title": "Full Content Engine",
+    "packages.full.subtitle":
+      "A complete content system for a business that wants real results",
+    "packages.full.price": "₪12,000 - ₪15,000",
 
     // Portfolio
     "portfolio.title": "My Work",
@@ -67,7 +83,7 @@ const translations = {
     // Contact
     "contact.title": "Let's Work Together",
     "contact.subtitle": "Ready to take your content to the next level?",
-    "contact.email": "izkorotem01@gmail.com",
+    "contact.email": "contact@rotemizko.com",
     "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "WhatsApp Consultation",
 
@@ -82,30 +98,25 @@ const translations = {
     "reviews.cta.portfolio": "View My Work",
 
     // Features
-    "feature.editing": "Video editing up to 3 minutes",
-    "feature.music": "Copyright-free music",
-    "feature.sound": "Quality sound",
-    "feature.subtitles": "Basic subtitles",
-    "feature.graphics": "General graphics (posts, banners, basic logo)",
-    "feature.platform": "Platform optimization (Reels, Stories, YouTube)",
-    "feature.revisions": "Up to 2 revision rounds",
-    "feature.noafx": "❌ No After Effects",
-    "feature.noai": "❌ No AI tools",
-    "feature.animated": "Animated subtitles",
-    "feature.aftereffects": "After Effects (intros, transitions, animations)",
-    "feature.brand": "Brand integration (logo/brand colors/elements)",
-    "feature.additional": "Additional 1-minute video (teaser, intro, ad)",
-    "feature.creative": "Advanced creative concept",
-    "feature.ai": "AI tools integration",
-    "feature.revisions4": "Up to 4 revision rounds",
-    "feature.planning": "Monthly content planning",
-    "feature.multiple": "Multiple monthly videos",
-    "feature.identity": "Complete brand identity",
-    "feature.support": "Ongoing creative support",
-    "feature.photography": "Photography services",
-    "feature.consultation": "Marketing consultation",
-    "feature.meetings": "Monthly strategy meetings",
-    "feature.exclusive": "Exclusive creator support",
+    "feature.core.volume": "12-16 Reels videos",
+    "feature.core.audience": "Audience-fit content planning",
+    "feature.core.message": "A clear message built for every video",
+    "feature.core.premium": "Premium editing (AE + AI)",
+    "feature.core.optimization": "Ongoing optimization",
+    "feature.core.guidance": "Shooting guidance",
+    "feature.core.leads": "Content designed for leads and conversions",
+    "feature.growth.volume": "20-30 videos",
+    "feature.growth.strategy": "Content strategy development",
+    "feature.growth.concepts": "Tailored content concepts",
+    "feature.growth.platforms": "Platform-specific adaptation",
+    "feature.growth.performance": "Monthly performance improvement",
+    "feature.growth.marketing": "Deep marketing thinking",
+    "feature.full.everything": "Everything in Growth",
+    "feature.full.shootDays": "Shoot days",
+    "feature.full.strategy": "Full strategy build",
+    "feature.full.guidance": "Personal guidance",
+    "feature.full.analysis": "Performance analysis",
+    "feature.full.improvement": "Continuous improvement",
   },
   he: {
     // Header
@@ -119,11 +130,16 @@ const translations = {
     "hero.name": "רותם איצקוביץ",
     "hero.subtitle": "עורך וידאו מקצועי ומעצב גרפיקה בתנועה",
     "hero.cta": "צפה בעבודות שלי",
+    "trusted.title": "סומכים עליי",
+    "trusted.subtitle": "מותגים ויוצרים שליוויתי עם תוכן חד, מקצועי וממיר.",
+    "trusted.visit": "לאתר",
+    "trusted.client": "לקוח פעיל",
 
     // About Section
     "about.title": "מי אני ומה אני מציע",
     "about.content":
       "אני רותם איצקוביץ, עורך וידאו מקצועי בן 23. מתמחה ביצירת תוכן סוחף לרשתות החברתיות – יוטיוב, אינסטגרם, טיקטוק ועוד. אני עורך סרטונים קצרים וארוכים, פודקאסטים, ומשדרג כל פרויקט לרמה הגבוהה ביותר עם תוכנות מובילות כמו Premiere Pro ו-After Effects. אני לא מגיע רק כדי לערוך סרטון. אני מגיע כדי לעזור לעסק שלך לגדול.",
+    "about.leadsImpact": "הסרטונים שאני יוצר מביאים מאות ואלפי לידים לעסקים.",
     "about.digitalPresence":
       "אני בונה נוכחות דיגיטלית לכולם - בין אם אתה בעל עסק קטן, תאגיד גדול, יוצר תוכן, יוטיובר, פרילנסר, או כל מי שצריך נוכחות דיגיטלית חזקה ברשתות החברתיות. אני הכתובת שלך לכל צרכי הנוכחות הדיגיטלית.",
 
@@ -141,13 +157,19 @@ const translations = {
     "services.digitalPresence": "בניית נוכחות דיגיטלית",
 
     // Packages
-    "packages.title": "בחר את החבילה שלך",
-    "packages.basic.title": "BASIC - וידאו לעסק, בלי כאב ראש",
-    "packages.basic.price": "₪250-₪400",
-    "packages.premium.title": "PREMIUM - הפקה שלמה בידיים שלך",
-    "packages.premium.price": "₪400-₪550",
-    "packages.custom.title": "CUSTOM - פתרון חודשי מלא לעסק",
-    "packages.custom.price": "תמחור בהתאמה אישית",
+    "packages.title": "מערכות תוכן",
+    "packages.statement": "אני לא מוכר סרטונים — אני בונה מערכת תוכן שמביאה תוצאות",
+    "packages.badge": "החבילה המרכזית",
+    "packages.cta": "בואו נבנה את המערכת שלכם",
+    "packages.core.title": "Content System",
+    "packages.core.subtitle": "מערכת תוכן חודשית שמביאה תוצאות",
+    "packages.core.price": "₪6,500 - ₪7,500",
+    "packages.growth.title": "Growth System",
+    "packages.growth.subtitle": "למי שרוצה לגדול ולהפוך את התוכן למנוע",
+    "packages.growth.price": "₪9,000 - ₪12,000",
+    "packages.full.title": "Full Content Engine",
+    "packages.full.subtitle": "מערכת תוכן מלאה לעסק שרוצה תוצאות אמיתיות",
+    "packages.full.price": "₪12,000 - ₪15,000",
 
     // Portfolio
     "portfolio.title": "העבודות שלי",
@@ -162,7 +184,7 @@ const translations = {
     // Contact
     "contact.title": "בואו נעבוד יחד",
     "contact.subtitle": "מוכנים לקחת את התוכן שלכם לשלב הבא?",
-    "contact.email": "izkorotem01@gmail.com",
+    "contact.email": "contact@rotemizko.com",
     "contact.phone": "+972 54-970-2996",
     "contact.whatsapp": "יעוץ בוואטסאפ",
 
@@ -175,30 +197,25 @@ const translations = {
     "reviews.cta.portfolio": "צפה בעבודות שלי",
 
     // Features
-    "feature.editing": "עריכת סרטון באורך של עד 3 דקות",
-    "feature.music": "מוזיקה ללא קופירייט",
-    "feature.sound": "סאונד איכותי",
-    "feature.subtitles": "כתוביות בסיסיות",
-    "feature.graphics": "גרפיקות כלליות (פוסטים, באנרים, לוגו בסיסי)",
-    "feature.platform": "התאמה לפלטפורמות שונות",
-    "feature.revisions": "עד 2 סבבי תיקונים",
-    "feature.noafx": "❌ ללא After Effects",
-    "feature.noai": "❌ ללא כלי AI",
-    "feature.animated": "כתוביות מונפשות",
-    "feature.aftereffects": "אפטר אפקטס (פתיחים, מעברים, אנימציות)",
-    "feature.brand": "מותג אישי – שילוב לוגו/צבעי מותג",
-    "feature.additional": "סרטון נוסף עד דקה",
-    "feature.creative": "קריאייטיב מתקדם",
-    "feature.ai": "שימוש בכלי AI",
-    "feature.revisions4": "עד 4 סבבי תיקונים",
-    "feature.planning": "בניית תכנית חודשית של תוכן ווידאו",
-    "feature.multiple": "מספר סרטונים חודשי משתנה",
-    "feature.identity": "זהות מותגית מלאה",
-    "feature.support": "ליווי שוטף וקריאייטיב חודשי",
-    "feature.photography": "שירותי צילום",
-    "feature.consultation": "ייעוץ שיווקי",
-    "feature.meetings": "פגישת תכנון חודשית",
-    "feature.exclusive": "ליווי יוצר תוכן מומחה",
+    "feature.core.volume": "12-16 סרטוני רילס",
+    "feature.core.audience": "התאמה לקהל יעד",
+    "feature.core.message": "בניית מסר לכל סרטון",
+    "feature.core.premium": "עריכה פרימיום (AE + AI)",
+    "feature.core.optimization": "אופטימיזציה תוך כדי",
+    "feature.core.guidance": "ייעוץ לצילום",
+    "feature.core.leads": "תוכן שמכוון ללידים והמרות",
+    "feature.growth.volume": "20-30 סרטונים",
+    "feature.growth.strategy": "בניית אסטרטגיית תוכן",
+    "feature.growth.concepts": "קונספטים מותאמים",
+    "feature.growth.platforms": "התאמה לפלטפורמות",
+    "feature.growth.performance": "שיפור ביצועים חודשי",
+    "feature.growth.marketing": "חשיבה שיווקית עמוקה",
+    "feature.full.everything": "הכל מ-Growth",
+    "feature.full.shootDays": "ימי צילום",
+    "feature.full.strategy": "בניית אסטרטגיה מלאה",
+    "feature.full.guidance": "ליווי אישי",
+    "feature.full.analysis": "ניתוח ביצועים",
+    "feature.full.improvement": "שיפור מתמיד",
   },
 };
 

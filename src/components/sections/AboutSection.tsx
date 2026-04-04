@@ -69,6 +69,10 @@ const AboutSection = () => {
                   {t("about.content")}
                 </p>
 
+                <p className="text-lg leading-relaxed text-primary font-semibold mb-6">
+                  {t("about.leadsImpact")}
+                </p>
+
                 {/* Digital Presence Highlight */}
                 <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 border border-primary/20 rounded-2xl p-6 mb-8">
                   <h3 className="text-2xl font-bold text-primary mb-4">

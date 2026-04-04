@@ -6,6 +6,7 @@ import {
   deleteDoc,
   getDocs,
   query,
+  where,
   orderBy,
   Timestamp,
 } from "firebase/firestore";
@@ -29,6 +30,7 @@ export interface PortfolioVideo {
   subtitleHe: string;
   videoUrl: string;
   thumbnailUrl?: string;
+  autoplayInBackground?: boolean;
   order: number;
   allWorkOrder?: number;
   createdAt: Timestamp;
@@ -154,7 +156,7 @@ export const getVideosByCategory = async (
 ): Promise<PortfolioVideo[]> => {
   const q = query(
     collection(db, "videos"),
-    orderBy("categoryId", "==", categoryId),
+    where("categoryId", "==", categoryId),
     orderBy("order", "asc")
   );
   const querySnapshot = await getDocs(q);
