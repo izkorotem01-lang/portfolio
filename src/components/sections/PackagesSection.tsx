@@ -84,7 +84,7 @@ const PackagesSection = () => {
     <section
       ref={sectionRef}
       id="packages"
-      className="py-20 relative overflow-hidden z-10"
+      className="section-band py-24 md:py-28 relative overflow-hidden z-10"
     >
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
@@ -92,7 +92,7 @@ const PackagesSection = () => {
           <div className="glass-card p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30">
             {/* Section Title */}
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+              <h2 className="section-title">
                 {t("packages.title")}
               </h2>
               <p className="max-w-3xl mx-auto text-lg md:text-2xl font-semibold text-foreground/90 leading-relaxed">
@@ -145,7 +145,7 @@ const PackagesSection = () => {
                   <div
                     key={pkg.id}
                     className={`package-card relative flex flex-col h-full transition-all duration-1000 ease-out ${
-                      pkg.popular ? "glow" : ""
+                      pkg.popular ? "border-brand-orange/50" : ""
                     }`}
                     style={{
                       transform: transform,
@@ -161,7 +161,7 @@ const PackagesSection = () => {
                     {/* Popular Badge */}
                     {pkg.popular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <div className="bg-gradient-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-semibold">
+                        <div className="border border-brand-orange text-brand-orange px-4 py-1 rounded-full text-xs font-semibold">
                           {t("packages.badge")}
                         </div>
                       </div>
@@ -169,7 +169,7 @@ const PackagesSection = () => {
 
                     {/* Header */}
                     <div className="text-center mb-8">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-2xl flex items-center justify-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-brand-cyan/15 border border-brand-cyan/30 rounded-2xl flex items-center justify-center text-brand-cyan">
                         <pkg.icon className="w-8 h-8 text-white" />
                       </div>
 
@@ -224,7 +224,7 @@ const PackagesSection = () => {
 
                     {/* Background Glow */}
                     {pkg.popular && (
-                      <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-3xl -z-10" />
+                      <div className="absolute inset-0 bg-brand-cyan/5 rounded-3xl -z-10" />
                     )}
                   </div>
                 );

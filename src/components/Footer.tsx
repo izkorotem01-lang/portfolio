@@ -10,14 +10,14 @@ const Footer = () => {
   };
 
   return (
-    <footer className="py-12 relative bg-black">
+    <footer className="py-12 relative bg-background">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Main Footer Content */}
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             {/* Brand */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold mb-4 text-foreground">
                 {t("hero.name")}
               </h3>
               <p className="text-foreground/70 mb-4">{t("hero.subtitle")}</p>

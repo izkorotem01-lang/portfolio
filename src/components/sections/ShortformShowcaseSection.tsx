@@ -94,7 +94,7 @@ const ShortformVideoCard = ({
       <button
         type="button"
         onClick={handleClick}
-        className="hero-showreel-frame relative block w-full aspect-[9/16] cursor-pointer overflow-hidden bg-[hsl(330_100%_58%)] text-left"
+        className="brand-video-frame hero-showreel-frame relative block w-full aspect-[9/16] cursor-pointer overflow-hidden bg-black text-left"
         aria-label={title}
       >
         <span className="hero-handle hero-handle-tl" aria-hidden />
@@ -149,7 +149,7 @@ const ShortformVideoCard = ({
             ) : isActive && isLoaded && isMuted ? (
               <VolumeX className="h-8 w-8 text-white/90" />
             ) : (
-              <div className="rounded-full bg-primary/40 p-3 backdrop-blur-sm transition-transform group-hover:scale-110">
+              <div className="play-button-overlay rounded-full p-3 transition-transform group-hover:scale-110">
                 <Play className="h-7 w-7 fill-white text-white" />
               </div>
             )}
@@ -168,7 +168,7 @@ const ShortformVideoCard = ({
 
 const ShortformShowcaseSection = () => {
   const { t, language } = useLanguage();
-  const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.15 });
+  const { ref: sectionRef } = useScrollAnimation({ threshold: 0.15 });
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -205,14 +205,15 @@ const ShortformShowcaseSection = () => {
     <section
       ref={sectionRef}
       id="shortform-showcase"
-      className={`relative z-10 py-6 md:py-8 transition-all duration-700 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      }`}
+      className="relative z-10 py-12 md:py-16"
     >
       <div className="container mx-auto px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <header className="mb-6 md:mb-10">
-            <h2 className="showcase-glow-title">{t("showcase.title")}</h2>
+            <h2 className="showcase-glow-title riz-neon-title riz-neon-text">
+              {t("showcase.title")}
+            </h2>
+            <div className="riz-timeline-ticks" aria-hidden />
           </header>
 
           {isLoading ? (

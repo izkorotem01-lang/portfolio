@@ -135,12 +135,12 @@ const ReviewsSection = () => {
   };
 
   return (
-    <section id="reviews" className="py-20 relative">
+    <section id="reviews" className="py-24 md:py-28 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Title */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+            <h2 className="section-title">
               {language === "he" ? "המלצות" : "Reviews"}
             </h2>
             <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
@@ -164,7 +164,7 @@ const ReviewsSection = () => {
                     {/* Video/Thumbnail Section */}
                     {currentReview.video && currentReview.thumbnail && (
                       <div className="mb-8 flex justify-center flex-shrink-0">
-                        <div className="relative w-full max-w-xs md:max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black/20">
+                        <div className="relative w-full max-w-xs md:max-w-sm rounded-2xl overflow-hidden border border-brand-cyan/35 bg-black/20 shadow-[0_0_28px_hsl(var(--brand-cyan)/0.18)]">
                           <video
                             ref={videoRef}
                             src={currentReview.video}
@@ -181,7 +181,7 @@ const ReviewsSection = () => {
                               className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-all duration-300 group"
                               aria-label="Play video"
                             >
-                              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/80 backdrop-blur-md flex items-center justify-center hover:bg-primary hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl">
+                              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-brand-orange/85 backdrop-blur-md flex items-center justify-center hover:bg-brand-orange hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl">
                                 <Play className="w-10 h-10 md:w-12 md:h-12 text-white ml-1" fill="white" />
                               </div>
                             </button>

@@ -40,14 +40,14 @@ const ContactSection = () => {
       title: "Email",
       value: t("contact.email"),
       action: () => window.open("mailto:contact@rotemizko.com"),
-      color: "from-blue-500 to-blue-600",
+      color: "bg-brand-cyan/12 border border-brand-cyan/30 text-brand-cyan",
     },
     {
       icon: MessageCircle,
       title: t("contact.whatsapp"),
       value: "Quick Response",
       action: () => window.open("https://wa.me/972549702996"),
-      color: "from-green-500 to-green-600",
+      color: "bg-brand-orange/12 border border-brand-orange/30 text-brand-orange",
     },
   ];
 
@@ -56,13 +56,13 @@ const ContactSection = () => {
       icon: Instagram,
       platform: "Instagram",
       url: "https://www.instagram.com/rotemizko_/",
-      color: "from-pink-500 to-purple-600",
+      color: "bg-brand-cyan/12 border border-brand-cyan/30 text-brand-cyan",
     },
     {
       icon: Youtube,
       platform: "YouTube",
       url: "https://www.youtube.com/@RoTeMIZKo",
-      color: "from-red-500 to-red-600",
+      color: "bg-brand-cyan/12 border border-brand-cyan/30 text-brand-cyan",
     },
     {
       icon: () => (
@@ -72,19 +72,19 @@ const ContactSection = () => {
       ),
       platform: "TikTok",
       url: "https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1",
-      color: "from-black to-gray-800",
+      color: "bg-brand-cyan/12 border border-brand-cyan/30 text-brand-cyan",
     },
   ];
 
   return (
-    <section id="contact" className="py-20 relative overflow-hidden z-10">
+    <section id="contact" className="py-24 md:py-28 relative overflow-hidden z-10">
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container */}
           <div className="glass-card p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30">
             {/* Section Title */}
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+              <h2 className="section-title">
                 {t("contact.title")}
               </h2>
               <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
@@ -111,9 +111,9 @@ const ContactSection = () => {
                         }`}
                       >
                         <div
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${method.color} flex items-center justify-center group-hover:glow`}
+                          className={`w-12 h-12 rounded-xl ${method.color} flex items-center justify-center`}
                         >
-                          <method.icon className="w-6 h-6 text-white" />
+                          <method.icon className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-smooth">
@@ -142,9 +142,9 @@ const ContactSection = () => {
                       <button
                         key={index}
                         onClick={() => window.open(social.url)}
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${social.color} flex items-center justify-center hover:scale-110 glow-hover transition-smooth`}
+                        className={`w-12 h-12 rounded-xl ${social.color} flex items-center justify-center hover:scale-110 transition-smooth`}
                       >
-                        <social.icon className="w-6 h-6 text-white" />
+                        <social.icon className="w-6 h-6" />
                       </button>
                     ))}
                   </div>

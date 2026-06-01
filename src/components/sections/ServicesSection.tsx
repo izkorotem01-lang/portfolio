@@ -22,61 +22,51 @@ const ServicesSection = () => {
       icon: Video,
       title: t("services.video"),
       description: "Professional video editing with cutting-edge techniques",
-      color: "from-red-500 to-orange-500",
     },
     {
       icon: Sparkles,
       title: t("services.motion"),
       description: "Eye-catching motion graphics and animations",
-      color: "from-purple-500 to-pink-500",
     },
     {
       icon: Share2,
       title: t("services.social"),
       description: "Optimized content for all social platforms",
-      color: "from-blue-500 to-cyan-500",
     },
     {
       icon: Camera,
       title: t("services.photo"),
       description: "Professional photo editing and retouching",
-      color: "from-green-500 to-teal-500",
     },
     {
       icon: Music,
       title: t("services.aiSongs"),
       description: "Create original songs and music using AI technology",
-      color: "from-orange-500 to-red-500",
     },
     {
       icon: Image,
       title: t("services.aiContent"),
       description: "Generate stunning images, videos and graphics with AI",
-      color: "from-indigo-500 to-purple-500",
     },
     {
       icon: Zap,
       title: t("services.logos"),
       description: "Professional logo design and brand identity",
-      color: "from-yellow-500 to-orange-500",
     },
     {
       icon: Target,
       title: t("services.aiAdvertising"),
       description: "AI-powered advertising creation and campaigns",
-      color: "from-red-500 to-pink-500",
     },
     {
       icon: Mic,
       title: t("services.voiceover"),
       description: "Professional voiceover and narration services",
-      color: "from-emerald-500 to-green-500",
     },
     {
       icon: TrendingUp,
       title: t("services.digitalPresence"),
       description: "Build your complete digital presence across all platforms",
-      color: "from-violet-500 to-purple-500",
     },
   ];
 
@@ -87,7 +77,7 @@ const ServicesSection = () => {
   } = useStaggeredAnimation(services.length, 100, { threshold: 0.1 });
 
   return (
-    <section ref={sectionRef} id="services" className="py-20 relative">
+    <section ref={sectionRef} id="services" className="py-24 md:py-28 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Title */}
@@ -96,7 +86,7 @@ const ServicesSection = () => {
               isVisible ? "animate-fade-in-up" : ""
             }`}
           >
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+            <h2 className="section-title">
               {t("services.title")}
             </h2>
           </div>
@@ -117,9 +107,9 @@ const ServicesSection = () => {
                 {/* Icon */}
                 <div className="mb-1 md:mb-3">
                   <div
-                    className={`w-7 h-7 md:w-12 md:h-12 rounded-md md:rounded-xl bg-gradient-to-r ${service.color} p-1.5 md:p-3 flex items-center justify-center`}
+                    className="w-7 h-7 md:w-12 md:h-12 rounded-md md:rounded-xl bg-brand-cyan/12 border border-brand-cyan/30 p-1.5 md:p-3 flex items-center justify-center"
                   >
-                    <service.icon className="w-3.5 h-3.5 md:w-6 md:h-6 text-white" />
+                    <service.icon className="w-3.5 h-3.5 md:w-6 md:h-6 text-brand-cyan" />
                   </div>
                 </div>
 

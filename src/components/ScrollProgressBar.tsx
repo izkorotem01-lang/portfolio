@@ -14,11 +14,11 @@ const ScrollProgressBar: React.FC = () => {
   // Define the sections with useMemo to prevent re-creation on every render
   const sections = useMemo(
     () => [
-      { id: "reviews", name: "Reviews", color: "#8b5cf6" },
-      { id: "about", name: "About", color: "#3b82f6" },
-      { id: "portfolio", name: "Portfolio", color: "#10b981" },
-      { id: "packages", name: "Packages", color: "#f59e0b" },
-      { id: "contact", name: "Contact", color: "#06b6d4" },
+      { id: "reviews", name: "Reviews", color: "hsl(192 60% 42%)" },
+      { id: "about", name: "About", color: "hsl(192 70% 48%)" },
+      { id: "portfolio", name: "Portfolio", color: "hsl(192 80% 52%)" },
+      { id: "packages", name: "Packages", color: "hsl(16 85% 52%)" },
+      { id: "contact", name: "Contact", color: "hsl(192 100% 50%)" },
     ],
     []
   );
@@ -252,34 +252,35 @@ const ScrollProgressBar: React.FC = () => {
       dir="ltr"
       className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto"
     >
-      {/* Video Editing Timeline Container */}
-      <div className="bg-gray-900/98 backdrop-blur-sm border-t border-gray-600/50 shadow-2xl">
+      {/* Video Editing Timeline Container — slim, recedes until hover */}
+      <div className="bg-gray-900/75 backdrop-blur-md border-t border-white/5 shadow-2xl opacity-65 hover:opacity-100 transition-opacity duration-300">
         {/* Top Bars - Site Sections */}
-        <div className="h-6 bg-gray-800/90 relative px-2 py-1">
+        <div className="h-5 bg-gray-800/50 relative px-2 py-1">
           {sectionSizes.length > 0 &&
             sections.map((section, index) => {
               const sizeData = sectionSizes.find((s) => s.id === section.id);
               if (!sizeData) return null;
 
               // Define gradient colors for each section
+              // Muted, on-brand timeline: cyan for most sections, a single
+              // orange anchor on Packages (the conversion block).
+              const cyanBar =
+                "from-brand-cyan/80 to-brand-cyan/45 border-brand-cyan/40 shadow-brand-cyan/20 hover:shadow-brand-cyan/30";
+              const orangeBar =
+                "from-brand-orange/80 to-brand-orange/45 border-brand-orange/40 shadow-brand-orange/20 hover:shadow-brand-orange/30";
               const gradientColors: Record<string, string> = {
-                hero: "from-orange-600 to-red-600 border-orange-500 shadow-orange-500/30 hover:shadow-orange-500/40",
-                reviews:
-                  "from-purple-600 to-indigo-600 border-purple-500 shadow-purple-500/30 hover:shadow-purple-500/40",
-                about:
-                  "from-blue-600 to-cyan-600 border-blue-500 shadow-blue-500/30 hover:shadow-blue-500/40",
-                portfolio:
-                  "from-orange-500 to-red-500 border-orange-400 shadow-orange-500/30 hover:shadow-orange-500/40",
-                packages:
-                  "from-indigo-600 to-purple-600 border-indigo-500 shadow-indigo-500/30 hover:shadow-indigo-500/40",
-                contact:
-                  "from-teal-600 to-green-600 border-teal-500 shadow-teal-500/30 hover:shadow-teal-500/40",
+                hero: cyanBar,
+                reviews: cyanBar,
+                about: cyanBar,
+                portfolio: cyanBar,
+                packages: orangeBar,
+                contact: cyanBar,
               };
 
               return (
                 <div
                   key={section.id}
-                  className={`absolute h-4 sm:h-5 bg-gradient-to-r rounded-md border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
+                  className={`absolute h-3 sm:h-3.5 bg-gradient-to-r rounded border flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 ${
                     gradientColors[section.id]
                   }`}
                   style={{
@@ -296,9 +297,9 @@ const ScrollProgressBar: React.FC = () => {
             })}
         </div>
 
-        {/* Timeline Grid Lines */}
+        {/* Timeline Grid Lines — hidden for a calmer, premium strip */}
         <div
-          className={`h-5 bg-gray-800/90 relative cursor-pointer select-none ${
+          className={`hidden h-5 bg-gray-800/90 relative cursor-pointer select-none ${
             isDragging ? "cursor-grabbing" : "cursor-grab"
           }`}
           onMouseDown={handleMouseDown}
@@ -351,64 +352,33 @@ const ScrollProgressBar: React.FC = () => {
         >
           {/* Pin Line - Cyan vertical line that follows scroll progress */}
           <div
-            className="absolute -top-2 bottom-0 w-1 bg-cyan-500 z-10 pointer-events-none shadow-lg shadow-cyan-500/50"
+            className="absolute -top-2 bottom-0 w-1 bg-brand-cyan z-10 pointer-events-none shadow-lg shadow-brand-cyan/50"
             style={{ left: `${scrollProgress}%` }}
           >
             {/* House-shaped Pin Marker with pointy head pointing up */}
             <div
-              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-cyan-500 shadow-lg shadow-cyan-500/50"
+              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-brand-cyan shadow-lg shadow-brand-cyan/50"
               style={{
                 clipPath: "polygon(0% 0%, 100% 0%, 100% 40%, 50% 100%, 0% 40%)",
               }}
             />
           </div>
-          {/* V1 Track - Rose Red */}
-          <div className="h-4 bg-gray-700/30 border-b border-gray-600/20 flex items-center">
-            <div className="w-6 h-3 bg-cyan-500/90 rounded-sm flex items-center justify-center flex-shrink-0">
-              <span className="text-xs text-white font-bold">V1</span>
+          {/* Single slim progress track — cyan fill to the playhead */}
+          <div className="h-2.5 bg-gray-700/30 relative overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-cyan/40 to-brand-cyan/20 pointer-events-none"
+              style={{ width: `${scrollProgress}%` }}
+            />
+            {/* Subtle grid markers */}
+            <div className="absolute inset-0 flex pointer-events-none">
+              {Array.from({ length: 18 }, (_, i) => (
+                <div
+                  key={i}
+                  className="h-full w-px bg-white/10"
+                  style={{ left: `${i * 5.55}%` }}
+                />
+              ))}
             </div>
-            <div className="flex-1 h-3 bg-rose-500/90 rounded-sm ml-1"></div>
-          </div>
-
-          {/* A1 Track - Teal */}
-          <div className="h-4 bg-gray-700/30 flex items-center">
-            <div className="w-6 h-3 bg-cyan-500/90 rounded-sm flex items-center justify-center flex-shrink-0">
-              <span className="text-xs text-white font-bold">A1</span>
-            </div>
-            <div className="flex-1 h-3 bg-teal-500/90 rounded-sm ml-1 relative overflow-hidden">
-              {/* Extremely dense waveform - 2000 lines */}
-              {Array.from({ length: 2000 }, (_, i) => {
-                // Complex static pattern for realistic waveform
-                const normalizedPos = i / 1999;
-                const wave1 = Math.sin(normalizedPos * Math.PI * 20) * 0.3;
-                const wave2 = Math.sin(normalizedPos * Math.PI * 35) * 0.2;
-                const wave3 = Math.sin(normalizedPos * Math.PI * 8) * 0.1;
-                const height = Math.max(0.02, wave1 + wave2 + wave3 + 0.5);
-                const left = (i / 1999) * 100;
-                return (
-                  <div
-                    key={i}
-                    className="absolute bg-white w-px"
-                    style={{
-                      height: `${height * 100}%`,
-                      left: `${left}%`,
-                      top: `${(1 - height) * 50}%`,
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Timeline grid markers */}
-          <div className="absolute inset-0 flex pointer-events-none">
-            {Array.from({ length: 18 }, (_, i) => (
-              <div
-                key={i}
-                className="h-full w-px bg-gray-500/30"
-                style={{ left: `${i * 5.55}%` }}
-              />
-            ))}
           </div>
         </div>
       </div>

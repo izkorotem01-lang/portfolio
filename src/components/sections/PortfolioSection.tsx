@@ -399,14 +399,14 @@ const PortfolioSection = () => {
   }, [activeCategory]);
 
   return (
-    <section id="portfolio" className="py-20 relative z-10">
+    <section id="portfolio" className="section-band py-24 md:py-28 relative z-10">
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container */}
           <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-border/50 shadow-2xl">
             {/* Header */}
             <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+              <h2 className="section-title mb-4">
                 {t("portfolio.title")}
               </h2>
             </div>
@@ -762,7 +762,7 @@ const SimpleVideoItem = React.memo(
                   setYoutubePlaying(true);
                 }}
               >
-                <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
+                <div className="play-button-overlay rounded-full p-4 md:p-6 group-hover:scale-110 transition-all shadow-lg">
                   <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
                 </div>
               </div>
@@ -910,7 +910,7 @@ const SimpleVideoItem = React.memo(
                   )}
 
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                    <div className="bg-primary/40 backdrop-blur-sm rounded-full p-4 md:p-6 group-hover:scale-110 group-hover:bg-primary/60 transition-all shadow-lg">
+                    <div className="play-button-overlay rounded-full p-4 md:p-6 group-hover:scale-110 transition-all shadow-lg">
                       <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
                     </div>
                   </div>

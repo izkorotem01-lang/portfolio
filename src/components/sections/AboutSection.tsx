@@ -31,7 +31,7 @@ const AboutSection = () => {
     <section
       ref={sectionRef}
       id="about"
-      className="py-20 relative overflow-hidden z-10"
+      className="section-band py-24 md:py-28 relative overflow-hidden z-10"
     >
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
@@ -43,7 +43,7 @@ const AboutSection = () => {
                 isVisible ? "animate-fade-in-up" : ""
               }`}
             >
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+              <h2 className="section-title">
                 {language === "he" ? (
                   <>
                     <div>מי אני</div>
@@ -74,7 +74,7 @@ const AboutSection = () => {
                 </p>
 
                 {/* Digital Presence Highlight */}
-                <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 border border-primary/20 rounded-2xl p-6 mb-8">
+                <div className="bg-brand-cyan/8 border border-brand-cyan/20 rounded-2xl p-6 mb-8">
                   <h3 className="text-2xl font-bold text-primary mb-4">
                     {language === "he" ? "המטרה שלי" : "My Mission"}
                   </h3>
@@ -152,25 +152,12 @@ const AboutSection = () => {
                     <img
                       src={rotemImage}
                       alt="Rotem Izko - Professional Video Editor"
-                      className="w-full h-auto object-cover rounded-lg md:rounded-2xl shadow-md md:shadow-2xl"
+                      className="about-portrait w-full h-auto object-cover rounded-lg md:rounded-2xl shadow-md md:shadow-2xl"
                       loading="lazy"
                     />
                   </div>
                 </div>
 
-                {/* Floating Elements - Hidden on mobile for performance */}
-                <div
-                  className={`hidden md:block absolute -top-4 -right-4 w-20 h-20 bg-primary/20 rounded-full animate-float ${
-                    isVisible ? "animate-scale-in-up" : ""
-                  }`}
-                  style={{ animationDelay: "0.8s" }}
-                />
-                <div
-                  className={`hidden md:block absolute -bottom-4 -left-4 w-16 h-16 bg-primary-glow/30 rounded-full animate-float ${
-                    isVisible ? "animate-scale-in-up" : ""
-                  }`}
-                  style={{ animationDelay: "1.0s" }}
-                />
               </div>
             </div>
           </div>

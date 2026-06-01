@@ -107,7 +107,7 @@ const HeroSection = () => {
         href="https://www.instagram.com/rotemizko_/"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        className="text-foreground/80 hover:text-primary transition-colors"
         aria-label="Instagram"
       >
         <Instagram className="w-5 h-5" />
@@ -116,7 +116,7 @@ const HeroSection = () => {
         href="https://www.youtube.com/@RoTeMIZKo"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        className="text-foreground/80 hover:text-primary transition-colors"
         aria-label="YouTube"
       >
         <Youtube className="w-5 h-5" />
@@ -125,7 +125,7 @@ const HeroSection = () => {
         href="https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        className="text-foreground/80 hover:text-primary transition-colors"
         aria-label="TikTok"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -148,11 +148,7 @@ const HeroSection = () => {
               {t("hero.subtitle")}
             </p>
 
-            <HeroBlendHeadline
-              line1={t("hero.headline.line1")}
-              line2={t("hero.headline.line2")}
-              line2Accent={t("hero.headline.line2Accent")}
-            />
+            <HeroBlendHeadline />
 
             <div
               className={`mb-6 flex justify-center md:mb-8 ${
@@ -174,7 +170,7 @@ const HeroSection = () => {
               <Button
                 onClick={scrollToContact}
                 variant="outline"
-                className="btn-glass border-white/20 px-6 py-3 text-base"
+                className="btn-glass px-6 py-3 text-base"
               >
                 {t("contact.title")}
               </Button>
@@ -185,7 +181,7 @@ const HeroSection = () => {
           <div className="flex justify-center lg:items-start lg:justify-end">
             <div className={`relative ${SHOWREEL_WIDTH}`}>
               <div
-                className={`hero-showreel-frame relative aspect-[9/16] cursor-pointer bg-[hsl(330_100%_58%)] ${SHOWREEL_WIDTH}`}
+                className={`brand-video-frame hero-showreel-frame relative aspect-[9/16] cursor-pointer bg-black ${SHOWREEL_WIDTH}`}
                 onClick={handleVideoClick}
                 role="button"
                 tabIndex={0}

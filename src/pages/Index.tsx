@@ -21,10 +21,13 @@ const Index = () => {
           <TrustedBySection />
           <HeroSection />
           <ShortformShowcaseSection />
-          <ReviewsSection />
+          <div className="section-divider" aria-hidden />
           <AboutSection />
+          <div className="section-divider" aria-hidden />
           <ServicesSection />
           <PortfolioSection />
+          <div className="section-divider" aria-hidden />
+          <ReviewsSection />
           <PackagesSection />
           <ContactSection />
         </main>
