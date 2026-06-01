@@ -5,10 +5,11 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { flushSync } from "react-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePerformanceMonitor } from "@/hooks/use-performance-monitor";
-import { Play } from "lucide-react";
+import { Maximize2, Play } from "lucide-react";
 import {
   getCategories,
   getVideos,
@@ -17,6 +18,62 @@ import {
   isYouTubeUrl,
   getYouTubeEmbedUrl,
 } from "@/lib/portfolioService";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+type FullscreenCapableElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+};
+
+type FullscreenCapableDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+};
+
+type FullscreenCapableVideo = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void;
+  webkitDisplayingFullscreen?: boolean;
+};
+
+type WebkitFullscreenVideoEventMap = {
+  webkitbeginfullscreen: Event;
+  webkitendfullscreen: Event;
+};
+
+const requestFullscreenForElement = (
+  element: HTMLElement | HTMLVideoElement | HTMLIFrameElement | null
+) => {
+  if (!element) return;
+
+  const fullscreenElement = element as FullscreenCapableElement;
+  const fullscreenVideo = element as FullscreenCapableVideo;
+
+  if (typeof element.requestFullscreen === "function") {
+    void element.requestFullscreen().catch(() => {
+      // Ignore browser-specific fullscreen failures.
+    });
+    return;
+  }
+
+  if (typeof fullscreenElement.webkitRequestFullscreen === "function") {
+    try {
+      void fullscreenElement.webkitRequestFullscreen();
+    } catch {
+      // Ignore browser-specific fullscreen failures.
+    }
+    return;
+  }
+
+  if (typeof fullscreenVideo.webkitEnterFullscreen === "function") {
+    try {
+      fullscreenVideo.webkitEnterFullscreen();
+    } catch {
+      // Ignore browser-specific fullscreen failures.
+    }
+  }
+};
 
 const hasThumbnail = (video: PortfolioVideo) =>
   !!(video.thumbnailUrl && video.thumbnailUrl.trim() !== "");
@@ -40,6 +97,154 @@ const PortfolioSection = () => {
   );
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const [lightboxVideo, setLightboxVideo] = useState<PortfolioVideo | null>(
+    null
+  );
+  const lightboxVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lightboxIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const hadLightboxFullscreenRef = useRef(false);
+  const closeLightbox = useCallback(() => {
+    hadLightboxFullscreenRef.current = false;
+    setLightboxVideo(null);
+  }, []);
+
+  const openVideoLightbox = useCallback((video: PortfolioVideo) => {
+    Object.values(videoRefs.current).forEach((v) => {
+      if (v) {
+        try {
+          v.pause();
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+    setPlayingVideoId(null);
+    flushSync(() => {
+      setLightboxVideo(video);
+    });
+
+    const requestFullscreen = () => {
+      const fullscreenTarget = isYouTubeUrl(video.videoUrl)
+        ? lightboxIframeRef.current
+        : lightboxVideoRef.current;
+
+      if (!fullscreenTarget) {
+        return false;
+      }
+
+      requestFullscreenForElement(fullscreenTarget);
+      return true;
+    };
+
+    if (!requestFullscreen()) {
+      requestAnimationFrame(() => {
+        requestFullscreen();
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreenDocument = document as FullscreenCapableDocument;
+      const fullscreenElement =
+        document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement;
+      const isLightboxFullscreen =
+        fullscreenElement === lightboxVideoRef.current ||
+        fullscreenElement === lightboxIframeRef.current;
+
+      if (isLightboxFullscreen) {
+        hadLightboxFullscreenRef.current = true;
+        return;
+      }
+
+      if (!fullscreenElement && hadLightboxFullscreenRef.current) {
+        closeLightbox();
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener(
+      "webkitfullscreenchange",
+      handleFullscreenChange as EventListener
+    );
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange as EventListener
+      );
+    };
+  }, [closeLightbox]);
+
+  useEffect(() => {
+    const videoElement = lightboxVideoRef.current as
+      | (HTMLVideoElement & {
+          addEventListener<K extends keyof WebkitFullscreenVideoEventMap>(
+            type: K,
+            listener: (this: HTMLVideoElement, ev: WebkitFullscreenVideoEventMap[K]) => void
+          ): void;
+          removeEventListener<K extends keyof WebkitFullscreenVideoEventMap>(
+            type: K,
+            listener: (this: HTMLVideoElement, ev: WebkitFullscreenVideoEventMap[K]) => void
+          ): void;
+        })
+      | null;
+
+    if (!videoElement) return;
+
+    const handleBeginFullscreen = () => {
+      hadLightboxFullscreenRef.current = true;
+    };
+
+    const handleEndFullscreen = () => {
+      closeLightbox();
+    };
+
+    videoElement.addEventListener(
+      "webkitbeginfullscreen",
+      handleBeginFullscreen
+    );
+    videoElement.addEventListener("webkitendfullscreen", handleEndFullscreen);
+
+    return () => {
+      videoElement.removeEventListener(
+        "webkitbeginfullscreen",
+        handleBeginFullscreen
+      );
+      videoElement.removeEventListener(
+        "webkitendfullscreen",
+        handleEndFullscreen
+      );
+    };
+  }, [lightboxVideo, closeLightbox]);
+
+  useEffect(() => {
+    if (!lightboxVideo || isYouTubeUrl(lightboxVideo.videoUrl)) return;
+
+    const checkFullscreenState = () => {
+      const fullscreenDocument = document as FullscreenCapableDocument;
+      const videoElement = lightboxVideoRef.current as FullscreenCapableVideo | null;
+      const isDocumentFullscreen =
+        document.fullscreenElement === videoElement ||
+        fullscreenDocument.webkitFullscreenElement === videoElement;
+      const isNativeVideoFullscreen = !!videoElement?.webkitDisplayingFullscreen;
+      const isAnyFullscreen = isDocumentFullscreen || isNativeVideoFullscreen;
+
+      if (isAnyFullscreen) {
+        hadLightboxFullscreenRef.current = true;
+      } else if (hadLightboxFullscreenRef.current) {
+        closeLightbox();
+      }
+    };
+
+    const intervalId = window.setInterval(checkFullscreenState, 250);
+    checkFullscreenState();
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [lightboxVideo, closeLightbox]);
 
   // Filter videos based on active category
   const filteredVideos = useMemo(() => {
@@ -262,6 +467,8 @@ const PortfolioSection = () => {
                               onVideoRef={(ref) => registerVideoRef(video.id, ref)}
                               shouldStartPlaying={pendingPlayVideoId === video.id}
                               isYouTube={true}
+                              expandLabel={t("portfolio.expandVideo")}
+                              onOpenBigScreen={() => openVideoLightbox(video)}
                             />
                           </div>
                         </div>
@@ -310,6 +517,8 @@ const PortfolioSection = () => {
                                 onVideoRef={(ref) => registerVideoRef(v.id, ref)}
                                 shouldStartPlaying={pendingPlayVideoId === v.id}
                                 isYouTube={false}
+                                expandLabel={t("portfolio.expandVideo")}
+                                onOpenBigScreen={() => openVideoLightbox(v)}
                               />
                             ))}
                           </div>
@@ -324,6 +533,72 @@ const PortfolioSection = () => {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={!!lightboxVideo}
+        onOpenChange={(open) => {
+          if (!open) closeLightbox();
+        }}
+      >
+        <DialogContent className="max-h-[95vh] w-[min(96vw,1400px)] max-w-[min(96vw,1400px)] gap-3 overflow-y-auto border-border/50 bg-zinc-950 p-3 sm:p-5">
+          {lightboxVideo ? (
+            <>
+              <DialogTitle className="sr-only">
+                {language === "he"
+                  ? lightboxVideo.titleHe
+                  : lightboxVideo.title}
+              </DialogTitle>
+              {isYouTubeUrl(lightboxVideo.videoUrl) ? (
+                <div
+                  className="relative w-full overflow-hidden rounded-md"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <iframe
+                    key={lightboxVideo.id}
+                    ref={lightboxIframeRef}
+                    src={
+                      getYouTubeEmbedUrl(
+                        lightboxVideo.videoUrl,
+                        true,
+                        false
+                      ) ?? undefined
+                    }
+                    className="absolute inset-0 h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    title={
+                      language === "he"
+                        ? lightboxVideo.titleHe
+                        : lightboxVideo.title
+                    }
+                  />
+                </div>
+              ) : (
+                <video
+                  key={lightboxVideo.id}
+                  ref={lightboxVideoRef}
+                  className="max-h-[min(85vh,80vw)] w-full rounded-md bg-black object-contain"
+                  controls
+                  playsInline
+                  autoPlay
+                  src={lightboxVideo.videoUrl}
+                >
+                  <source
+                    src={lightboxVideo.videoUrl}
+                    type="video/mp4; codecs=avc1.42E01E, mp4a.40.2"
+                  />
+                  <source src={lightboxVideo.videoUrl} type="video/mp4" />
+                </video>
+              )}
+              <p className="truncate text-center text-sm text-muted-foreground">
+                {language === "he"
+                  ? lightboxVideo.titleHe
+                  : lightboxVideo.title}
+              </p>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
@@ -341,6 +616,8 @@ const SimpleVideoItem = React.memo(
     onVideoRef,
     shouldStartPlaying,
     isYouTube = false,
+    expandLabel,
+    onOpenBigScreen,
   }: {
     video: PortfolioVideo;
     index: number;
@@ -352,6 +629,8 @@ const SimpleVideoItem = React.memo(
     onVideoRef: (ref: HTMLVideoElement | null) => void;
     shouldStartPlaying: boolean;
     isYouTube?: boolean;
+    expandLabel: string;
+    onOpenBigScreen: () => void;
   }) => {
     const itemRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -449,6 +728,18 @@ const SimpleVideoItem = React.memo(
             ? "aspect-video rounded-lg" // YouTube videos use 16:9 aspect ratio, larger and centered
             : "aspect-video h-[35vh] sm:h-[60vh]" // Regular videos use mobile aspect ratio
         }`}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenBigScreen();
+            }}
+            className="absolute end-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-md bg-black/55 text-white shadow-md backdrop-blur-sm transition hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black/40"
+            aria-label={expandLabel}
+            title={expandLabel}
+          >
+            <Maximize2 className="h-4 w-4" aria-hidden />
+          </button>
           {/* YouTube Video Embed */}
           {isYouTubeVideo && youtubeEmbedUrl ? (
             <div 

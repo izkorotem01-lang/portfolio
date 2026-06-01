@@ -82,6 +82,7 @@ const translations = {
     "portfolio.construction": "Construction Industry",
     "portfolio.brand": "Brand Identity Videos",
     "portfolio.podcast": "Podcast Production",
+    "portfolio.expandVideo": "Large view",
 
     // Contact
     "contact.title": "Let's Work Together",
@@ -186,6 +187,7 @@ const translations = {
     "portfolio.construction": "תעשיית הבנייה",
     "portfolio.brand": "סרטוני זהות מותגית",
     "portfolio.podcast": "הפקת פודקאסטים",
+    "portfolio.expandVideo": "תצוגה גדולה",
 
     // Contact
     "contact.title": "בואו נעבוד יחד",
