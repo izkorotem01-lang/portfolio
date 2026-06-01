@@ -51,7 +51,7 @@
 @layer base {
   :root {
     /* Brand Colors - Red-Orange to Dark Blue Gradients */
-    --background: 220 25% 8%;
+    --background: 265 40% 5%;
     --foreground: 0 0% 100%;
 
     --card: 220 25% 10%;
@@ -102,6 +102,13 @@
       hsl(220 50% 15%) 50%,
       hsl(4 79% 59%) 100%
     );
+    --gradient-site: linear-gradient(
+      180deg,
+      hsl(265 50% 6%) 0%,
+      hsl(270 45% 4%) 50%,
+      hsl(280 40% 5%) 100%
+    );
+    --site-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --gradient-glass: linear-gradient(
       135deg,
       hsla(220 25% 15% / 0.2),
@@ -229,6 +236,598 @@
     background: var(--gradient-hero);
   }
 
+  /* Neon-morphic scroll-parallax background */
+  .site-background {
+    background-color: hsl(265 45% 4%);
+  }
+
+  .site-background__track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 300vh;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
+  .site-background__mesh,
+  .site-background__blobs,
+  .site-background__snake {
+    position: absolute;
+    top: 0;
+    left: -15%;
+    width: 130%;
+    height: 100%;
+  }
+
+  .site-background__mesh {
+    background:
+      var(--gradient-site),
+      radial-gradient(
+        ellipse at center,
+        transparent 30%,
+        hsl(265 50% 2% / 0.75) 100%
+      );
+  }
+
+  .site-background__blobs {
+    filter: blur(72px);
+    background:
+      radial-gradient(
+        ellipse 95% 75% at 88% 4%,
+        hsl(320 100% 58% / 0.48) 0%,
+        transparent 68%
+      ),
+      radial-gradient(
+        ellipse 70% 55% at 96% 22%,
+        hsl(300 100% 62% / 0.34) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        ellipse 80% 70% at 10% 78%,
+        hsl(195 100% 50% / 0.2) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        ellipse 55% 45% at 20% 48%,
+        hsl(210 100% 45% / 0.12) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 90% 80% at 50% 95%,
+        hsl(275 55% 20% / 0.4) 0%,
+        transparent 68%
+      );
+  }
+
+  .site-background__snake-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .site-background__snake {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    mix-blend-mode: screen;
+    opacity: 0.82;
+    filter: blur(6px) saturate(120%);
+  }
+
+  .site-background__snake--lite {
+    opacity: 0.75;
+    filter: blur(14px) saturate(115%);
+  }
+
+  @media (max-width: 1023px) {
+    .site-background__blobs {
+      filter: blur(48px);
+    }
+
+    .site-background__snake-wrap {
+      transform: translateZ(0);
+    }
+  }
+
+  .site-background__grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.06;
+    background-image: var(--site-grain);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+
+  /* Hero — brutalist showreel frame */
+  .hero-showreel-frame {
+    box-shadow: 0 24px 80px hsl(330 100% 50% / 0.25);
+  }
+
+  .hero-showreel-frame::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 3px solid hsl(330 100% 58%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .hero-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 1px solid hsl(0 0% 20%);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .hero-handle-tl {
+    top: -5px;
+    left: -5px;
+  }
+
+  .hero-handle-tr {
+    top: -5px;
+    right: -5px;
+  }
+
+  .hero-handle-bl {
+    bottom: -5px;
+    left: -5px;
+  }
+
+  .hero-handle-br {
+    bottom: -5px;
+    right: -5px;
+  }
+
+  .hero-handle-t {
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hero-handle-b {
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hero-headline-primary {
+    color: hsl(72 100% 50%);
+  }
+
+  .showcase-glow-title {
+    margin: 0;
+    width: 100%;
+    font-size: clamp(2.25rem, 7.5vw, 4.25rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    background: linear-gradient(
+      105deg,
+      hsl(72 100% 52%) 0%,
+      hsl(0 0% 100%) 42%,
+      hsl(186 100% 52%) 78%,
+      hsl(330 100% 62%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px hsl(330 100% 58% / 0.85))
+      drop-shadow(0 0 22px hsl(72 100% 50% / 0.5));
+    animation: showcase-title-glow 3.2s ease-in-out infinite,
+      showcase-title-shimmer 8s linear infinite;
+  }
+
+  @keyframes showcase-title-glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 8px hsl(330 100% 58% / 0.75))
+        drop-shadow(0 0 18px hsl(72 100% 50% / 0.45));
+    }
+    50% {
+      filter: drop-shadow(0 0 14px hsl(330 100% 58% / 1))
+        drop-shadow(0 0 28px hsl(186 100% 50% / 0.65))
+        drop-shadow(0 0 42px hsl(72 100% 50% / 0.4));
+    }
+  }
+
+  @keyframes showcase-title-shimmer {
+    0% {
+      background-position: 0% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.85rem, 3.25vw, 1.85rem);
+  }
+
+  /* Headline + moving blend boxes (clipped per name line) */
+  .hero-headline-stage {
+    display: inline-block;
+    max-width: 100%;
+    font-size: clamp(3.25rem, 14vw, 9.5rem);
+    line-height: 1;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-text-column {
+      container-type: inline-size;
+      container-name: hero;
+      min-width: 0;
+      padding-inline-end: 0;
+      overflow: visible;
+    }
+
+    .hero-subtitle {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      /* Fit one line inside column: ~29em width for EN subtitle + tracking */
+      font-size: clamp(
+        0.65rem,
+        min(3.65cqi, calc((100cqi - 1.5rem) / 29)),
+        1.65rem
+      );
+      white-space: nowrap;
+      text-align: start;
+      padding-inline-end: 1.5rem;
+      box-sizing: border-box;
+      letter-spacing: -0.03em;
+    }
+
+    @container hero (max-width: 34rem) {
+      .hero-subtitle {
+        font-size: clamp(
+          0.6rem,
+          min(3.35cqi, calc((100cqi - 1.75rem) / 29)),
+          1.45rem
+        );
+        padding-inline-end: 1.75rem;
+        letter-spacing: -0.04em;
+      }
+    }
+
+    @container hero (max-width: 28rem) {
+      .hero-subtitle {
+        font-size: clamp(
+          0.55rem,
+          min(3.1cqi, calc((100cqi - 2rem) / 29)),
+          1.28rem
+        );
+        padding-inline-end: 2rem;
+      }
+    }
+
+    .hero-headline-stage {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(3.75rem, 27.5cqi, 12.5rem);
+      letter-spacing: -0.025em;
+      overflow: visible;
+    }
+
+    .hero-headline-text {
+      width: 100%;
+    }
+
+    .hero-headline-line--first {
+      width: 100%;
+    }
+
+    .hero-headline-line--first .hero-headline-line-text {
+      display: inline-block;
+    }
+
+    .hero-headline-line--second .hero-headline-line-text {
+      display: inline-block;
+    }
+  }
+
+  .hero-headline-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: hsl(72 100% 50%);
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .hero-headline-line {
+    position: relative;
+    display: block;
+    isolation: isolate;
+    overflow: hidden;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .hero-headline-line--second {
+    margin-top: clamp(0.05rem, 0.5vw, 0.35rem);
+    margin-inline-start: clamp(4.5rem, 40vw, 15rem);
+  }
+
+  /* After .hero-headline-line so width/overflow aren’t reset (was blocking IZKO nudge) */
+  @media (min-width: 1024px) {
+    .hero-headline-text {
+      align-items: stretch;
+    }
+
+    .hero-headline-line.hero-headline-line--second {
+      margin-inline-start: auto;
+      margin-inline-end: 5.75rem;
+      width: fit-content;
+      max-width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      overflow: visible;
+      padding-inline-end: 0.12em;
+      box-sizing: border-box;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .hero-subtitle {
+      margin-inline: auto;
+      text-align: center;
+      white-space: normal;
+    }
+
+    .hero-headline-stage {
+      margin-inline: auto;
+    }
+
+    .hero-headline-text {
+      align-items: center;
+    }
+
+    .hero-headline-line--second {
+      margin-inline-start: 0;
+    }
+  }
+
+  .hero-headline-line-text {
+    display: block;
+  }
+
+  .hero-blend-box {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    will-change: left, top, width, height, filter;
+  }
+
+  .hero-blend-box--small {
+    background: hsl(72 100% 50%);
+    animation: hero-blend-small 9.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .hero-blend-box--large {
+    background: hsl(330 100% 58%);
+    border: 2px solid hsl(0 0% 100% / 0.95);
+    animation: hero-blend-large 11.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    animation-delay: -3.5s;
+  }
+
+  .hero-blend-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border: 1px solid hsl(0 0% 15%);
+    z-index: 1;
+  }
+
+  .hero-blend-handle-tl {
+    top: -4px;
+    left: -4px;
+  }
+
+  .hero-blend-handle-tr {
+    top: -4px;
+    right: -4px;
+  }
+
+  .hero-blend-handle-bl {
+    bottom: -4px;
+    left: -4px;
+  }
+
+  .hero-blend-handle-br {
+    bottom: -4px;
+    right: -4px;
+  }
+
+  .hero-blend-handle-t {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hero-blend-handle-b {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .hero-blend-handle-l {
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .hero-blend-handle-r {
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Small box — moves only over “ROTEM” line */
+  @keyframes hero-blend-small {
+    0% {
+      left: 4%;
+      top: 12%;
+      width: 28%;
+      height: 72%;
+      filter: hue-rotate(0deg);
+    }
+    14% {
+      left: 38%;
+      top: 8%;
+      width: 22%;
+      height: 80%;
+      filter: hue-rotate(50deg);
+    }
+    28% {
+      left: 58%;
+      top: 18%;
+      width: 32%;
+      height: 65%;
+      filter: hue-rotate(100deg);
+    }
+    42% {
+      left: 22%;
+      top: 22%;
+      width: 40%;
+      height: 70%;
+      filter: hue-rotate(155deg);
+    }
+    57% {
+      left: 48%;
+      top: 10%;
+      width: 26%;
+      height: 78%;
+      filter: hue-rotate(210deg);
+    }
+    71% {
+      left: 8%;
+      top: 16%;
+      width: 34%;
+      height: 68%;
+      filter: hue-rotate(265deg);
+    }
+    85% {
+      left: 62%;
+      top: 14%;
+      width: 30%;
+      height: 74%;
+      filter: hue-rotate(320deg);
+    }
+    100% {
+      left: 4%;
+      top: 12%;
+      width: 28%;
+      height: 72%;
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  /* Large box — moves only over “IZKO” line */
+  @keyframes hero-blend-large {
+    0% {
+      left: 42%;
+      top: 10%;
+      width: 52%;
+      height: 78%;
+      filter: hue-rotate(0deg);
+    }
+    14% {
+      left: 6%;
+      top: 18%;
+      width: 58%;
+      height: 68%;
+      filter: hue-rotate(48deg);
+    }
+    28% {
+      left: 55%;
+      top: 8%;
+      width: 40%;
+      height: 82%;
+      filter: hue-rotate(98deg);
+    }
+    42% {
+      left: 24%;
+      top: 14%;
+      width: 48%;
+      height: 72%;
+      filter: hue-rotate(148deg);
+    }
+    57% {
+      left: 68%;
+      top: 12%;
+      width: 28%;
+      height: 80%;
+      filter: hue-rotate(198deg);
+    }
+    71% {
+      left: 12%;
+      top: 8%;
+      width: 62%;
+      height: 76%;
+      filter: hue-rotate(248deg);
+    }
+    85% {
+      left: 36%;
+      top: 20%;
+      width: 44%;
+      height: 66%;
+      filter: hue-rotate(308deg);
+    }
+    100% {
+      left: 42%;
+      top: 10%;
+      width: 52%;
+      height: 78%;
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-blend-box--small,
+    .hero-blend-box--large {
+      animation: none;
+    }
+
+    .hero-blend-box--small {
+      left: 12%;
+      top: 14%;
+      width: 30%;
+      height: 70%;
+    }
+
+    .hero-blend-box--large {
+      left: 28%;
+      top: 12%;
+      width: 48%;
+      height: 74%;
+    }
+  }
+
   /* Glow Effects */
   .glow {
     box-shadow: var(--shadow-glow);
@@ -252,14 +851,43 @@
 
   /* Mobile-optimized animations - DISABLE ALL ANIMATIONS ON MOBILE */
   @media (max-width: 768px) {
-    /* GLOBAL: Disable ALL animations and transitions on mobile (except marquee) */
-    *:not(#trusted-by *),
-    *:not(#trusted-by *)::before,
-    *:not(#trusted-by *)::after {
+    /* GLOBAL: Disable animations on mobile (except trusted-by, hero blend, showcase title) */
+    *:not(#trusted-by *):not(#hero *):not(#shortform-showcase *),
+    *:not(#trusted-by *):not(#hero *):not(#shortform-showcase *)::before,
+    *:not(#trusted-by *):not(#hero *):not(#shortform-showcase *)::after {
       animation-duration: 0s !important;
       animation-delay: 0s !important;
       transition-duration: 0s !important;
       transition-delay: 0s !important;
+    }
+
+    /* Hero blend boxes — keep color-invert animation visible on mobile */
+    #hero .hero-headline-line {
+      isolation: isolate;
+      transform: translateZ(0);
+    }
+
+    #hero .hero-blend-box {
+      mix-blend-mode: difference;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    #hero .hero-blend-box--small,
+    #hero .hero-blend-box--large {
+      animation-duration: 9.5s !important;
+      animation-delay: 0s !important;
+    }
+
+    #hero .hero-blend-box--large {
+      animation-duration: 11.5s !important;
+      animation-delay: -3.5s !important;
+    }
+
+    #shortform-showcase .showcase-glow-title {
+      animation-duration: 3.2s, 8s !important;
+      animation-delay: 0s !important;
     }
 
     /* Disable ALL animation classes */

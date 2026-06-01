@@ -24,11 +24,15 @@ const translations = {
     // Hero Section
     "hero.name": "ROTEM IZKO",
     "hero.subtitle": "PROFESSIONAL VIDEO EDITOR & MOTION GRAPHIC DESIGNER",
+    "hero.headline.line1": "ROTEM",
+    "hero.headline.line2": "IZK",
+    "hero.headline.line2Accent": "O",
     "hero.cta": "View My Work",
     "trusted.title": "Trusted By",
     "trusted.subtitle": "Brands and creators I have helped with sharp, high-converting content.",
     "trusted.visit": "Visit site",
     "trusted.client": "Client partner",
+    "showcase.title": "HIGHLIGHTS",
 
     // About Section
     "about.title": "Who Am I & What I Offer",
@@ -128,11 +132,15 @@ const translations = {
     // Hero Section
     "hero.name": "רותם איצקוביץ",
     "hero.subtitle": "עורך וידאו מקצועי ומעצב גרפיקה בתנועה",
+    "hero.headline.line1": "רותם",
+    "hero.headline.line2": "איצקובי",
+    "hero.headline.line2Accent": "ץ",
     "hero.cta": "צפה בעבודות שלי",
     "trusted.title": "סומכים עליי",
     "trusted.subtitle": "מותגים ויוצרים שליוויתי עם תוכן חד, מקצועי וממיר.",
     "trusted.visit": "לאתר",
     "trusted.client": "לקוח פעיל",
+    "showcase.title": "HIGHLIGHTS",
 
     // About Section
     "about.title": "מי אני ומה אני מציע",

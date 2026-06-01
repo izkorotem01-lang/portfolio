@@ -3,6 +3,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/sections/HeroSection";
 import TrustedBySection from "@/components/sections/TrustedBySection";
+import ShortformShowcaseSection from "@/components/sections/ShortformShowcaseSection";
 import AboutSection from "@/components/sections/AboutSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PackagesSection from "@/components/sections/PackagesSection";
@@ -10,16 +11,16 @@ import PortfolioSection from "@/components/sections/PortfolioSection";
 import ReviewsSection from "@/components/sections/ReviewsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import Footer from "@/components/Footer";
-import ScrollProgressIndicator from "@/components/ScrollProgressIndicator";
 
 const Index = () => {
   return (
     <LanguageProvider>
-      <div className="min-h-screen bg-background">
+      <div className="relative z-10 min-h-screen bg-transparent">
         {/* <Header /> */}
         <main>
-          <HeroSection />
           <TrustedBySection />
+          <HeroSection />
+          <ShortformShowcaseSection />
           <ReviewsSection />
           <AboutSection />
           <ServicesSection />
@@ -28,9 +29,6 @@ const Index = () => {
           <ContactSection />
         </main>
         <Footer />
-
-        {/* Scroll Progress Indicator - Only on desktop */}
-        <ScrollProgressIndicator />
       </div>
     </LanguageProvider>
   );

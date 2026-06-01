@@ -1,28 +1,21 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import {
-  Play,
-  Volume2,
-  VolumeX,
-  Instagram,
-  Youtube,
-  Linkedin,
-} from "lucide-react";
+import { Play, Volume2, VolumeX, Instagram, Youtube } from "lucide-react";
 import showreelVideo from "@/assets/Showreel.mp4";
-import showreelVideoYT from "@/assets/Showreel_YT.mp4";
 import iconNoBg from "@/assets/icon-nobg.png";
+import HeroBlendHeadline from "@/components/HeroBlendHeadline";
+
+const SHOWREEL_WIDTH =
+  "w-[min(88vw,20rem)] sm:w-72 md:w-80 lg:w-[22rem] xl:w-96";
 
 const HeroSection = () => {
-  const { t, language } = useLanguage();
+  const { t, language, dir } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [showOverlays, setShowOverlays] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
-  const [useFallbackVideo, setUseFallbackVideo] = useState(false);
-  const [customDomainRetry, setCustomDomainRetry] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const scrollToPortfolio = () => {
@@ -35,403 +28,280 @@ const HeroSection = () => {
     document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Handle video loading on component mount
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      // Check if we're on the custom domain and adjust loading strategy
-      const isCustomDomain = window.location.hostname === "rotemizko.com";
-      console.log("Custom domain detected:", isCustomDomain);
+    if (!video) return;
 
-      if (isCustomDomain) {
-        // For custom domain, try a different approach
-        video.crossOrigin = "anonymous";
-
-        // Add a small delay for custom domain
-        setTimeout(() => {
-          video.load();
-        }, 100);
-      } else {
-        // For Cloudflare Pages subdomain, load immediately
-        video.load();
-      }
-
-      // Set up additional error handling
-      const handleError = () => {
-        console.error("Video failed to load, retrying...");
-        setVideoError(true);
-        setTimeout(() => {
-          video.load();
-          setVideoError(false);
-        }, 3000);
-      };
-
-      video.addEventListener("error", handleError);
-
-      return () => {
-        video.removeEventListener("error", handleError);
-      };
+    const isCustomDomain = window.location.hostname === "rotemizko.com";
+    if (isCustomDomain) {
+      video.crossOrigin = "anonymous";
+      setTimeout(() => video.load(), 100);
+    } else {
+      video.load();
     }
+
+    const handleError = () => {
+      setVideoError(true);
+      setTimeout(() => {
+        video.load();
+        setVideoError(false);
+      }, 3000);
+    };
+
+    video.addEventListener("error", handleError);
+    return () => video.removeEventListener("error", handleError);
   }, []);
 
   const handleVideoClick = async () => {
-    // Get the active video element (YT version for large screens, normal version for small screens)
-    const activeVideo =
-      window.innerWidth >= 768 ? videoRef.current : mobileVideoRef.current;
+    const video = videoRef.current;
+    if (!video) return;
 
-    if (activeVideo) {
-      // If video is playing, pause it from current position
-      if (!activeVideo.paused) {
-        activeVideo.pause();
-        setIsPlaying(false);
-        setShowOverlays(true);
-      } else {
-        // If video is paused, play it from current position
-        try {
-          await activeVideo.play();
-          setIsPlaying(true);
-          // Hide overlays when playing starts
-          setShowOverlays(false);
-        } catch (error) {
-          console.error("Error playing video:", error);
-        }
+    if (!video.paused) {
+      video.pause();
+      setIsPlaying(false);
+      setShowOverlays(true);
+    } else {
+      try {
+        await video.play();
+        setIsPlaying(true);
+        setShowOverlays(false);
+      } catch (error) {
+        console.error("Error playing video:", error);
       }
-
-      // Toggle volume
-      if (isMuted) {
-        activeVideo.muted = false;
-        activeVideo.volume = 0.7;
-        setIsMuted(false);
-      } else {
-        activeVideo.muted = true;
-        setIsMuted(true);
-      }
-
-      // Scroll to video - center between top of screen and progress bar
-      setTimeout(() => {
-        const videoElement = activeVideo;
-        if (!videoElement) return;
-
-        const videoRect = videoElement.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        const progressBarHeight = 80; // Approximate height of progress bar
-        const availableHeight = windowHeight - progressBarHeight;
-
-        // Calculate where the video should be positioned (center of available space)
-        const targetTop = (availableHeight - videoRect.height) / 2;
-
-        // Get current scroll position and video's current position
-        const currentScrollTop =
-          window.pageYOffset || document.documentElement.scrollTop;
-        const videoCurrentTop = videoRect.top + currentScrollTop;
-
-        // Calculate the scroll position needed to center the video
-        const targetScrollTop = videoCurrentTop - targetTop;
-
-        window.scrollTo({
-          top: Math.max(0, targetScrollTop),
-          behavior: "smooth",
-        });
-      }, 100); // Small delay to ensure video is ready
     }
+
+    if (isMuted) {
+      video.muted = false;
+      video.volume = 0.7;
+      setIsMuted(false);
+    } else {
+      video.muted = true;
+      setIsMuted(true);
+    }
+
+    setTimeout(() => {
+      const videoRect = video.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const progressBarHeight = 80;
+      const availableHeight = windowHeight - progressBarHeight;
+      const targetTop = (availableHeight - videoRect.height) / 2;
+      const currentScrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+      const videoCurrentTop = videoRect.top + currentScrollTop;
+      const targetScrollTop = videoCurrentTop - targetTop;
+
+      window.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: "smooth",
+      });
+    }, 100);
   };
 
+  const socialLinks = (
+    <div
+      className={`flex gap-5 ${
+        language === "he" ? "flex-row-reverse justify-end" : ""
+      }`}
+    >
+      <a
+        href="https://www.instagram.com/rotemizko_/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        aria-label="Instagram"
+      >
+        <Instagram className="w-5 h-5" />
+      </a>
+      <a
+        href="https://www.youtube.com/@RoTeMIZKo"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        aria-label="YouTube"
+      >
+        <Youtube className="w-5 h-5" />
+      </a>
+      <a
+        href="https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-foreground/80 hover:text-[hsl(72_100%_50%)] transition-colors"
+        aria-label="TikTok"
+      >
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.392-2.085-1.392-3.338h-3.067v14.829c0 1.673-1.357 3.029-3.029 3.029s-3.029-1.357-3.029-3.029 1.357-3.029 3.029-3.029c.314 0 .617.048.9.138V9.851c-.282-.04-.57-.061-.862-.061C5.46 9.79 2 13.25 2 17.581S5.46 25.371 9.791 25.371s7.791-3.46 7.791-7.791V9.094a9.965 9.965 0 005.233 1.442V7.469c-.884 0-1.723-.203-2.494-.537z" />
+        </svg>
+      </a>
+    </div>
+  );
+
   return (
-    <section id="hero" className="min-h-screen relative overflow-hidden z-10">
-      <div className="container mx-auto px-4 relative z-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center min-h-screen pt-24 md:pt-20 lg:pt-24 pb-20">
-            {/* Content Section - Top */}
-            <div className="text-center mb-8 md:mb-12">
-              {/* Main Title */}
-              <h1
-                className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 bg-gradient-primary bg-clip-text text-transparent animate-fade-up"
-                style={{
-                  animationDelay: "0.2s",
-                  filter: "drop-shadow(0 4px 5px rgba(0, 0, 0, 0.6))",
-                }}
-              >
-                {t("hero.name")}
-              </h1>
+    <section
+      id="hero"
+      className="relative z-10 min-h-screen overflow-x-clip overflow-y-visible pt-2 pb-16 md:pt-5 md:pb-20 lg:overflow-x-visible"
+    >
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6 xl:gap-5">
+          {/* Typography + CTAs */}
+          <div className="hero-text-column relative z-20 flex flex-col items-center text-center lg:items-start lg:text-start">
+            <p className="hero-subtitle mb-6 w-full max-w-[95vw] text-center font-semibold uppercase leading-snug tracking-wide text-foreground/90 sm:max-w-full md:mb-8 lg:mt-0 lg:text-start">
+              {t("hero.subtitle")}
+            </p>
 
-              {/* Subtitle */}
-              <p
-                className="text-2xl md:text-3xl lg:text-4xl text-foreground/95 mb-6 leading-relaxed animate-fade-up drop-shadow-md"
-                style={{ animationDelay: "0.4s" }}
-              >
-                {t("hero.subtitle")}
-              </p>
+            <HeroBlendHeadline
+              line1={t("hero.headline.line1")}
+              line2={t("hero.headline.line2")}
+              line2Accent={t("hero.headline.line2Accent")}
+            />
 
-              {/* Social Links */}
-              <div
-                className={`flex justify-center mb-8 animate-fade-up ${
-                  language === "he" ? "space-x-reverse space-x-6" : "space-x-6"
-                }`}
-                style={{ animationDelay: "0.5s" }}
-              >
-                <a
-                  href="https://www.instagram.com/rotemizko_/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://www.youtube.com/@RoTeMIZKo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
-                  aria-label="YouTube"
-                >
-                  <Youtube className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://www.tiktok.com/@rotem.izko?_t=ZS-904z3ZuyO0d&_r=1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground/70 hover:text-primary transition-colors duration-300 hover:scale-110 transform"
-                  aria-label="TikTok"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.392-2.085-1.392-3.338h-3.067v14.829c0 1.673-1.357 3.029-3.029 3.029s-3.029-1.357-3.029-3.029 1.357-3.029 3.029-3.029c.314 0 .617.048.9.138V9.851c-.282-.04-.57-.061-.862-.061C5.46 9.79 2 13.25 2 17.581S5.46 25.371 9.791 25.371s7.791-3.46 7.791-7.791V9.094a9.965 9.965 0 005.233 1.442V7.469c-.884 0-1.723-.203-2.494-.537z" />
-                  </svg>
-                </a>
-              </div>
-
-              {/* CTA Buttons */}
-              <div
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-up"
-                style={{ animationDelay: "0.6s" }}
-              >
-                <Button onClick={scrollToPortfolio} className="btn-hero group">
-                  <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                  {t("hero.cta")}
-                </Button>
-
-                <Button
-                  onClick={scrollToContact}
-                  variant="outline"
-                  className="btn-glass text-lg px-8 py-4 backdrop-blur-md"
-                >
-                  {t("contact.title")}
-                </Button>
-              </div>
+            <div
+              className={`mb-6 flex justify-center md:mb-8 ${
+                dir === "rtl" ? "md:justify-end" : "md:justify-start"
+              }`}
+            >
+              {socialLinks}
             </div>
 
-            {/* Video Section - Bottom */}
-            <div className="flex justify-center w-full max-w-7xl animate-fade-up">
-              <div className="relative">
-                {/* Video container */}
-                <div className="rounded-3xl mx-auto bg-black/20 border border-white/10 backdrop-blur-xl w-full">
-                  <div
-                    className="relative group cursor-pointer"
-                    onClick={handleVideoClick}
-                  >
-                    {/* Large screens: YT version (16:9) */}
-                    <video
-                      ref={videoRef}
-                      src={useFallbackVideo ? showreelVideo : showreelVideoYT}
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      crossOrigin="anonymous"
-                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[85vh] aspect-video hidden md:block"
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
-                      onError={(e) => {
-                        console.error("Video loading error:", e);
-                        console.error("Error details:", e.nativeEvent);
-                        console.error(
-                          "Current domain:",
-                          window.location.hostname
-                        );
-                        setVideoError(true);
-                        setVideoLoading(false);
+            <div
+              className={`hidden flex-wrap gap-3 md:flex md:justify-start ${
+                dir === "rtl" ? "md:justify-end" : ""
+              }`}
+            >
+              <Button onClick={scrollToPortfolio} className="btn-hero group">
+                <Play className="h-5 w-5 group-hover:scale-110 transition-transform ltr:mr-2 rtl:ml-2" />
+                {t("hero.cta")}
+              </Button>
+              <Button
+                onClick={scrollToContact}
+                variant="outline"
+                className="btn-glass border-white/20 px-6 py-3 text-base"
+              >
+                {t("contact.title")}
+              </Button>
+            </div>
+          </div>
 
-                        // Check if it's a blocked resource error
-                        if (e.nativeEvent?.type === "error") {
-                          console.log(
-                            "Attempting fallback to regular video..."
-                          );
-                          setUseFallbackVideo(true);
-                        }
+          {/* Portrait showreel — same 9:16 format on all breakpoints */}
+          <div className="flex justify-center lg:items-start lg:justify-end">
+            <div className={`relative ${SHOWREEL_WIDTH}`}>
+              <div
+                className={`hero-showreel-frame relative aspect-[9/16] cursor-pointer bg-[hsl(330_100%_58%)] ${SHOWREEL_WIDTH}`}
+                onClick={handleVideoClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleVideoClick();
+                  }
+                }}
+                aria-label={
+                  language === "he" ? "לחץ כדי לצפות בשואוריל" : "Play showreel"
+                }
+              >
+                <span className="hero-handle hero-handle-tl" />
+                <span className="hero-handle hero-handle-tr" />
+                <span className="hero-handle hero-handle-bl" />
+                <span className="hero-handle hero-handle-br" />
+                <span className="hero-handle hero-handle-t" />
+                <span className="hero-handle hero-handle-b" />
 
-                        // For custom domain, try different loading approach
-                        if (window.location.hostname === "rotemizko.com") {
-                          console.log(
-                            "Custom domain error - trying alternative loading..."
-                          );
-                          setCustomDomainRetry((prev) => prev + 1);
+                <div className="absolute inset-[3px] overflow-hidden bg-black">
+                  <video
+                    ref={videoRef}
+                    src={showreelVideo}
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    crossOrigin="anonymous"
+                    className="h-full w-full object-cover"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onError={() => {
+                      setVideoError(true);
+                      setVideoLoading(false);
+                    }}
+                    onLoadStart={() => {
+                      setVideoLoading(true);
+                      setVideoError(false);
+                    }}
+                    onCanPlay={() => {
+                      setVideoLoading(false);
+                      setVideoError(false);
+                    }}
+                    onLoadedData={() => setVideoLoading(false)}
+                  />
 
-                          if (customDomainRetry < 3) {
-                            setTimeout(() => {
-                              const video = e.target as HTMLVideoElement;
-                              // Try different loading strategies
-                              if (customDomainRetry === 0) {
-                                // First retry: change attributes
-                                video.crossOrigin = "use-credentials";
-                              } else if (customDomainRetry === 1) {
-                                // Second retry: remove and recreate element
-                                const parent = video.parentNode;
-                                const newVideo = video.cloneNode(
-                                  true
-                                ) as HTMLVideoElement;
-                                newVideo.crossOrigin = "anonymous";
-                                parent?.replaceChild(newVideo, video);
-                              } else {
-                                // Third retry: try fallback video
-                                setUseFallbackVideo(true);
-                              }
-                              video.load();
-                            }, 1000 + customDomainRetry * 500);
-                          } else {
-                            // After 3 retries, show error with manual retry option
-                            console.log("Custom domain: Max retries reached");
-                          }
-                        } else {
-                          // Standard retry for subdomain
-                          setTimeout(() => {
-                            const video = e.target as HTMLVideoElement;
-                            video.load();
-                          }, 2000);
-                        }
-                      }}
-                      onLoadStart={() => {
-                        console.log("Video loading started");
-                        console.log("Video source URL:", showreelVideoYT);
-                        console.log(
-                          "Current domain:",
-                          window.location.hostname
-                        );
-                        setVideoLoading(true);
-                        setVideoError(false);
-                      }}
-                      onCanPlay={() => {
-                        console.log("Video can play");
-                        setVideoLoading(false);
-                        setVideoError(false);
-                      }}
-                      onLoadedData={() => {
-                        console.log("Video data loaded");
-                        setVideoLoading(false);
-                      }}
-                    />
-                    {/* Small screens: Normal version (9:16) */}
-                    <video
-                      ref={mobileVideoRef}
-                      src={showreelVideo}
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      className="w-full rounded-2xl shadow-2xl object-cover group-hover:scale-105 transition-transform duration-300 h-[80vh] max-h-[calc(100vh-150px)] aspect-[9/16] block md:hidden max-w-[480px] mx-auto"
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
-                    />
-
-                    {/* Centered logo overlay with click to play text - only show when video is paused */}
-                    {!isPlaying && (
-                      <>
-                        {/* Dark blue fog/glow behind logo */}
+                  {!isPlaying && (
+                    <>
+                      <div
+                        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                        aria-hidden
+                      >
                         <div
-                          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                          aria-hidden
-                        >
-                          <div
-                            className="w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] rounded-full blur-xl opacity-100"
-                            style={{
-                              background:
-                                "radial-gradient(circle at center, rgba(10,20,60,0.9) 0%, rgba(10,20,60,0.6) 40%, rgba(10,20,60,0.2) 75%, rgba(10,20,60,0) 100%)",
-                            }}
-                          />
-                        </div>
-
-                        {/* Centered logo with click to play text */}
-                        <div className="absolute inset-0 flex flex-col-reverse md:flex-col items-center justify-center pointer-events-none">
-                          <img
-                            src={iconNoBg}
-                            alt="Brand mark"
-                            className="select-none w-full h-full md:w-60 md:h-auto lg:w-80 opacity-95 md:opacity-100 transform transition-transform duration-300 group-hover:scale-110 object-contain"
-                            style={{
-                              filter:
-                                "drop-shadow(0 10px 18px rgba(10,20,60,0.65))",
-                            }}
-                          />
-                          {/* Click to Play text - above on mobile, below on desktop */}
-                          <p className="mb-8 md:mb-0 md:mt-8 text-white text-sm md:text-base lg:text-lg font-semibold drop-shadow-2xl">
-                            {language === "he" ? "לחץ כדי לצפות" : "Click to Play"}
-                          </p>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Volume indicator overlay */}
-                    <div
-                      className={`absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2 transition-opacity ${
-                        showOverlays
-                          ? "group-hover:opacity-100 opacity-0 md:opacity-0"
-                          : "opacity-0"
-                      }`}
-                    >
-                      {isMuted ? (
-                        <VolumeX className="w-4 h-4 text-white" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-
-                    {/* Loading indicator */}
-                    {videoLoading && (
-                      <div className="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                        </div>
+                          className="h-48 w-48 rounded-full opacity-90 blur-xl"
+                          style={{
+                            background:
+                              "radial-gradient(circle, rgba(10,20,60,0.85) 0%, transparent 70%)",
+                          }}
+                        />
                       </div>
-                    )}
-
-                    {/* Error state */}
-                    {videoError && (
-                      <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <div className="text-4xl mb-2">⚠️</div>
-                          <p className="text-sm mb-4">Video loading failed</p>
-                          <button
-                            onClick={() => {
-                              setVideoError(false);
-                              setVideoLoading(true);
-                              setUseFallbackVideo(!useFallbackVideo);
-                              const video = videoRef.current;
-                              if (video) {
-                                video.load();
-                              }
-                            }}
-                            className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm hover:bg-white/30 transition-colors"
-                          >
-                            {useFallbackVideo
-                              ? "Try YT Version"
-                              : "Try Regular Version"}
-                          </button>
-                        </div>
+                      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                        <img
+                          src={iconNoBg}
+                          alt=""
+                          className="mb-4 h-28 w-auto object-contain opacity-95"
+                          style={{
+                            filter:
+                              "drop-shadow(0 10px 18px rgba(10,20,60,0.65))",
+                          }}
+                        />
+                        <p className="text-sm font-semibold text-white drop-shadow-lg">
+                          {language === "he"
+                            ? "לחץ כדי לצפות"
+                            : "Click to Play"}
+                        </p>
                       </div>
-                    )}
+                    </>
+                  )}
 
-                    {/* Click overlay removed per request: no play icon overlay */}
+                  <div
+                    className={`absolute right-3 top-3 rounded-full bg-black/50 p-2 backdrop-blur-sm transition-opacity ${
+                      showOverlays ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="h-4 w-4 text-white" />
+                    ) : (
+                      <Volume2 className="h-4 w-4 text-white" />
+                    )}
                   </div>
-                </div>
 
-                {/* Floating elements around video */}
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-primary/30 rounded-full animate-float backdrop-blur-sm" />
-                <div
-                  className="absolute -bottom-4 -left-4 w-12 h-12 bg-primary-glow/40 rounded-full animate-float backdrop-blur-sm"
-                  style={{ animationDelay: "2s" }}
-                />
+                  {videoLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    </div>
+                  )}
+
+                  {videoError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 p-4 text-center text-white">
+                      <p className="mb-3 text-sm">Video loading failed</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setVideoError(false);
+                          setVideoLoading(true);
+                          videoRef.current?.load();
+                        }}
+                        className="rounded-full bg-white/20 px-4 py-2 text-sm hover:bg-white/30"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

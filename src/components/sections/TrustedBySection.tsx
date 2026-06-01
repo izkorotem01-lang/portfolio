@@ -4,7 +4,6 @@ import _Marquee from "react-fast-marquee";
 /** CJS/ESM interop: some bundlers expose the component as `.default`. */
 const Marquee =
   (_Marquee as unknown as { default?: typeof _Marquee }).default ?? _Marquee;
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import trustedByClients from "@/data/trusted-by.json";
 import timelapseIcon from "@/assets/client-icons/timelapse.png";
@@ -38,8 +37,7 @@ type TrustedClient = {
 };
 
 const TrustedBySection = () => {
-  const { t } = useLanguage();
-  const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const { ref: sectionRef } = useScrollAnimation({ threshold: 0.2 });
   const mobileScrollerRef = React.useRef<HTMLDivElement | null>(null);
   const mobileInteractionTimeoutRef = React.useRef<number | null>(null);
   const isMobileInteractingRef = React.useRef(false);
@@ -116,7 +114,7 @@ const TrustedBySection = () => {
       <img
         src={client.iconSrc}
         alt={client.name}
-        className="h-20 md:h-24 w-auto object-contain opacity-80 transition-all duration-300 hover:opacity-100"
+        className="h-12 md:h-14 w-auto object-contain opacity-80 transition-all duration-300 hover:opacity-100"
       />
     );
 
@@ -150,18 +148,8 @@ const TrustedBySection = () => {
     <section
       ref={sectionRef}
       id="trusted-by"
-      className="py-12 md:py-16 relative z-10 overflow-hidden"
+      className="relative z-10 overflow-hidden pt-4 pb-3 md:pt-5 md:pb-4"
     >
-      <div className="container mx-auto px-4">
-        <div
-          className={`text-center mb-8 ${isVisible ? "animate-fade-in-up" : ""}`}
-        >
-          <h2 className="text-2xl md:text-4xl font-bold text-foreground">
-            {t("trusted.title")}
-          </h2>
-        </div>
-      </div>
-
       <div
         ref={mobileScrollerRef}
         dir="ltr"
@@ -173,7 +161,7 @@ const TrustedBySection = () => {
         onMouseUp={resumeMobileAutoScroll}
         onMouseLeave={resumeMobileAutoScroll}
       >
-        <div className="flex w-max min-w-full items-center gap-8 touch-pan-x pr-8">
+        <div className="flex w-max min-w-full items-center gap-5 touch-pan-x pr-6">
           {[...clients, ...clients].map((client, index) => (
             <div key={`${client.name}-${index}`}>
               {renderClient(client)}
@@ -185,7 +173,7 @@ const TrustedBySection = () => {
       <div dir="ltr" className="hidden md:block">
         <Marquee speed={40} autoFill pauseOnHover={false}>
           {clients.map((client) => (
-            <div key={client.name} className="mx-8 md:mx-12">
+            <div key={client.name} className="mx-5 md:mx-8">
               {renderClient(client)}
             </div>
           ))}
