@@ -114,7 +114,7 @@ const TrustedBySection = () => {
       <img
         src={client.iconSrc}
         alt={client.name}
-        className="h-12 md:h-14 w-auto object-contain opacity-70 transition-all duration-300 hover:opacity-100"
+        className="trusted-by-logo h-12 md:h-14 w-auto object-contain transition-all duration-300"
       />
     );
 

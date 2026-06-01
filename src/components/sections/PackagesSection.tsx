@@ -145,7 +145,9 @@ const PackagesSection = () => {
                   <div
                     key={pkg.id}
                     className={`package-card relative flex flex-col h-full transition-all duration-1000 ease-out ${
-                      pkg.popular ? "border-brand-orange/50" : ""
+                      pkg.popular
+                        ? "package-card--popular border-brand-orange/50"
+                        : ""
                     }`}
                     style={{
                       transform: transform,
@@ -161,7 +163,7 @@ const PackagesSection = () => {
                     {/* Popular Badge */}
                     {pkg.popular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <div className="border border-brand-orange text-brand-orange px-4 py-1 rounded-full text-xs font-semibold">
+                        <div className="packages-popular-badge border border-brand-orange text-brand-orange px-4 py-1 rounded-full text-xs font-semibold">
                           {t("packages.badge")}
                         </div>
                       </div>

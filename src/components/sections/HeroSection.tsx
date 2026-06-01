@@ -181,7 +181,7 @@ const HeroSection = () => {
           <div className="flex justify-center lg:items-start lg:justify-end">
             <div className={`relative ${SHOWREEL_WIDTH}`}>
               <div
-                className={`brand-video-frame hero-showreel-frame relative aspect-[9/16] cursor-pointer bg-black ${SHOWREEL_WIDTH}`}
+                className={`brand-video-frame hero-showreel-frame relative aspect-[9/16] cursor-pointer overflow-hidden bg-black ${SHOWREEL_WIDTH}`}
                 onClick={handleVideoClick}
                 role="button"
                 tabIndex={0}
@@ -195,14 +195,7 @@ const HeroSection = () => {
                   language === "he" ? "לחץ כדי לצפות בשואוריל" : "Play showreel"
                 }
               >
-                <span className="hero-handle hero-handle-tl" />
-                <span className="hero-handle hero-handle-tr" />
-                <span className="hero-handle hero-handle-bl" />
-                <span className="hero-handle hero-handle-br" />
-                <span className="hero-handle hero-handle-t" />
-                <span className="hero-handle hero-handle-b" />
-
-                <div className="absolute inset-[3px] overflow-hidden bg-black">
+                <div className="brand-video-frame__media">
                   <video
                     ref={videoRef}
                     src={showreelVideo}

@@ -352,12 +352,12 @@ const ScrollProgressBar: React.FC = () => {
         >
           {/* Pin Line - Cyan vertical line that follows scroll progress */}
           <div
-            className="absolute -top-2 bottom-0 w-1 bg-brand-cyan z-10 pointer-events-none shadow-lg shadow-brand-cyan/50"
+            className="absolute -top-2 bottom-0 w-1 bg-brand-cyan z-10 pointer-events-none shadow-lg shadow-brand-cyan/50 shadow-[0_0_14px_hsl(16_100%_55%/0.55)]"
             style={{ left: `${scrollProgress}%` }}
           >
             {/* House-shaped Pin Marker with pointy head pointing up */}
             <div
-              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-brand-cyan shadow-lg shadow-brand-cyan/50"
+              className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-brand-cyan shadow-lg shadow-brand-cyan/50 shadow-[0_0_12px_hsl(16_100%_55%/0.65)]"
               style={{
                 clipPath: "polygon(0% 0%, 100% 0%, 100% 40%, 50% 100%, 0% 40%)",
               }}
@@ -366,7 +366,7 @@ const ScrollProgressBar: React.FC = () => {
           {/* Single slim progress track — cyan fill to the playhead */}
           <div className="h-2.5 bg-gray-700/30 relative overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-cyan/40 to-brand-cyan/20 pointer-events-none"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-cyan/40 via-brand-orange/25 to-brand-orange/15 pointer-events-none"
               style={{ width: `${scrollProgress}%` }}
             />
             {/* Subtle grid markers */}

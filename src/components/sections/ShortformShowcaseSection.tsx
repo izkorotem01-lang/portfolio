@@ -97,12 +97,7 @@ const ShortformVideoCard = ({
         className="brand-video-frame hero-showreel-frame relative block w-full aspect-[9/16] cursor-pointer overflow-hidden bg-black text-left"
         aria-label={title}
       >
-        <span className="hero-handle hero-handle-tl" aria-hidden />
-        <span className="hero-handle hero-handle-tr" aria-hidden />
-        <span className="hero-handle hero-handle-bl" aria-hidden />
-        <span className="hero-handle hero-handle-br" aria-hidden />
-
-        <div className="absolute inset-[3px] overflow-hidden bg-black">
+        <div className="brand-video-frame__media">
           {isLoaded ? (
             <video
               ref={videoRef}
