@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIntroHighlights } from "@/contexts/IntroHighlightsContext";
+import { useIntroHighlightsScrollContext } from "@/contexts/IntroHighlightsScrollContext";
 import { useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
-import ReviewsCarousel from "@/components/ReviewsCarousel";
 
 const CARD_REVEAL_DELAYS = [
   "animate-delay-100",
@@ -15,6 +15,7 @@ const CARD_REVEAL_DELAYS = [
 const ShortformShowcaseSection = () => {
   const { t, language } = useLanguage();
   const { videos, isLoading } = useIntroHighlights();
+  const { morphEnabled } = useIntroHighlightsScrollContext();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const { ref: sectionRef, visibleItems, isVisible } = useStaggeredAnimation(
@@ -34,6 +35,10 @@ const ShortformShowcaseSection = () => {
     return null;
   }
 
+  if (morphEnabled) {
+    return null;
+  }
+
   return (
     <section
       ref={sectionRef}
@@ -42,55 +47,51 @@ const ShortformShowcaseSection = () => {
     >
       <div className="container mx-auto px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <header
-            className={`mb-6 md:mb-10 transition-opacity duration-700 ${
-              isVisible ? "animate-fade-in-up" : "opacity-0"
-            }`}
-          >
-            <h2 className="showcase-productions-title">
-              {t("showcase.title")}
-            </h2>
-            <div
-              className={`showcase-productions-ticks ${isVisible ? "intro-ticks-active" : ""}`}
-              aria-hidden
-            />
-          </header>
-
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-              {videos.map((video, index) => (
+          {!morphEnabled && (
+            <>
+              <header
+                className={`mb-6 md:mb-10 transition-opacity duration-700 ${
+                  isVisible ? "animate-fade-in-up" : "opacity-0"
+                }`}
+              >
+                <h2 className="showcase-productions-title">
+                  {t("showcase.title")}
+                </h2>
                 <div
-                  key={video.id}
-                  className={
-                    visibleItems.includes(index)
-                      ? `animate-scale-in-up ${CARD_REVEAL_DELAYS[index] ?? "animate-delay-400"}`
-                      : "opacity-0"
-                  }
-                >
-                  <HighlightVideoCard
-                    video={video}
-                    language={language}
-                    isActive={activeId === video.id}
-                    onActivate={() => setActiveId(video.id)}
-                    mode="grid"
-                  />
+                  className={`showcase-productions-ticks ${isVisible ? "intro-ticks-active" : ""}`}
+                  aria-hidden
+                />
+              </header>
+
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+                  {videos.map((video, index) => (
+                    <div
+                      key={video.id}
+                      className={
+                        visibleItems.includes(index)
+                          ? `animate-scale-in-up ${CARD_REVEAL_DELAYS[index] ?? "animate-delay-400"}`
+                          : "opacity-0"
+                      }
+                    >
+                      <HighlightVideoCard
+                        video={video}
+                        language={language}
+                        isActive={activeId === video.id}
+                        onActivate={() => setActiveId(video.id)}
+                        mode="grid"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          {!isLoading && (
-            <div
-              id="intro-reviews"
-              className="intro-reveal intro-reveal--delay-3 intro-reveal--soft mx-auto mt-10 max-w-3xl md:mt-14"
-            >
-              <ReviewsCarousel variant="section" className="w-full" />
-            </div>
-          )}
         </div>
       </div>
     </section>

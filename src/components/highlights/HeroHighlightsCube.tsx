@@ -14,9 +14,15 @@ function cubeTransform(rotateY: number, rotateX: number) {
 type HeroHighlightsCubeProps = {
   videos: PortfolioVideo[];
   activeIndex: number;
+  /** When false, holds on the current face (e.g. during scroll morph to grid). */
+  flipEnabled?: boolean;
 };
 
-const HeroHighlightsCube = ({ videos, activeIndex }: HeroHighlightsCubeProps) => {
+const HeroHighlightsCube = ({
+  videos,
+  activeIndex,
+  flipEnabled = true,
+}: HeroHighlightsCubeProps) => {
   const { language } = useLanguage();
   const stageRef = useRef<HTMLDivElement>(null);
   const cubeRef = useRef<HTMLDivElement>(null);
@@ -65,7 +71,7 @@ const HeroHighlightsCube = ({ videos, activeIndex }: HeroHighlightsCubeProps) =>
   }, [count, faceAngle, spinSign]);
 
   useEffect(() => {
-    if (count <= 1 || !ready) return;
+    if (count <= 1 || !ready || !flipEnabled) return;
 
     const cube = cubeRef.current;
     if (!cube) return;
@@ -133,7 +139,7 @@ const HeroHighlightsCube = ({ videos, activeIndex }: HeroHighlightsCubeProps) =>
     anim.oncancel = () => {
       animRef.current = null;
     };
-  }, [activeIndex, count, faceAngle, ready, spinSign]);
+  }, [activeIndex, count, faceAngle, flipEnabled, ready, spinSign]);
 
   useEffect(() => () => animRef.current?.cancel(), []);
 

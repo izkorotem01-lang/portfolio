@@ -3,9 +3,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import IntroZone from "@/components/IntroZone";
 import { IntroHighlightsProvider } from "@/contexts/IntroHighlightsContext";
-import HeroSection from "@/components/sections/HeroSection";
-import TrustedBySection from "@/components/sections/TrustedBySection";
-import ShortformShowcaseSection from "@/components/sections/ShortformShowcaseSection";
+import IntroHighlightsScrollLayout from "@/components/highlights/IntroHighlightsScrollLayout";
 import AboutSection from "@/components/sections/AboutSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PackagesSection from "@/components/sections/PackagesSection";
@@ -21,9 +19,7 @@ const Index = () => {
         <main>
           <IntroZone>
             <IntroHighlightsProvider>
-              <TrustedBySection />
-              <HeroSection />
-              <ShortformShowcaseSection />
+              <IntroHighlightsScrollLayout />
             </IntroHighlightsProvider>
           </IntroZone>
           <AboutSection />
