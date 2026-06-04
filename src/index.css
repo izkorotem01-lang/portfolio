@@ -318,6 +318,19 @@
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
+    background: var(--gradient-site);
+  }
+
+  /* Keep the same ambient canvas visible while scrolling the morph scene */
+  #intro-zone:has(.intro-highlights-scroll--morph) .intro-motion-bg {
+    position: sticky;
+    top: 0;
+    inset: auto;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    margin-bottom: -100vh;
+    margin-bottom: -100dvh;
   }
 
   .intro-motion-bg__mesh {
@@ -734,11 +747,16 @@
   }
 
   /* Scroll morph: sticky 3D reel → flat → highlights title + grid */
-  .intro-highlights-scroll__scene {
-    position: relative;
+  .intro-highlights-scroll--morph {
+    background: transparent;
   }
 
-  /* Sticky pin: reel stays on screen while hero copy + spacer scroll */
+  .intro-highlights-scroll__scene {
+    position: relative;
+    background: transparent;
+  }
+
+  /* Sticky pin: reel stays on screen while hero copy scrolls (morph only) */
   .intro-highlights-scroll__pin {
     position: sticky;
     top: 0;
@@ -751,9 +769,56 @@
     pointer-events: none;
   }
 
+  /* After reveal: normal section in document flow (scrolls away) */
+  .intro-highlights-scroll__scene--in-flow {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .intro-highlights-scroll__scene--in-flow #hero.hero--scroll-morph {
+    order: 1;
+    margin-bottom: clamp(-3rem, -6vh, -1.5rem);
+  }
+
+  .intro-highlights-scroll__scene--in-flow
+    #hero.hero--scroll-morph
+    .hero-container {
+    min-height: min(72vh, 40rem);
+    min-height: min(72dvh, 40rem);
+  }
+
+  .intro-highlights-scroll__scene--in-flow .intro-highlights-scroll__pin {
+    position: relative;
+    order: 2;
+    top: auto;
+    height: auto;
+    min-height: 0;
+    margin: clamp(-5rem, -9vh, -2.5rem) 0 clamp(0.25rem, 1vh, 0.75rem);
+    pointer-events: none;
+  }
+
+  .intro-highlights-scroll__scene--in-flow .intro-highlights-scroll-stage {
+    height: auto;
+    min-height: 0;
+  }
+
+  .intro-highlights-scroll__scene--in-flow
+    .intro-highlights-scroll-stage__inner {
+    height: auto;
+    min-height: 0;
+    padding-top: clamp(1.5rem, 4vh, 2.75rem);
+    padding-bottom: clamp(0.25rem, 1vh, 0.75rem);
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+  }
+
   #intro-zone:has(.intro-highlights-scroll--morph) {
     position: relative;
     z-index: 40;
+  }
+
+  /* Avoid a second gradient stack over the morph scene */
+  #intro-zone:has(.intro-highlights-scroll--morph) .intro-zone__fade {
+    display: none;
   }
 
   #intro-zone + #about {
@@ -762,11 +827,16 @@
     margin-top: clamp(6rem, 14vh, 10rem);
   }
 
+  #intro-zone:has(.intro-highlights-scroll__scene--in-flow) + #about {
+    margin-top: clamp(1.5rem, 4vh, 2.75rem);
+  }
+
   .intro-highlights-scroll-stage {
     position: relative;
     z-index: 0;
     width: 100%;
     height: 100%;
+    background: transparent;
     pointer-events: none;
     display: flex;
     align-items: center;
@@ -1086,13 +1156,27 @@
     }
   }
 
-  .intro-scroll-flank .brand-video-frame__media video,
-  .intro-scroll-flank .brand-video-frame__media img {
-    filter: brightness(1) saturate(1) contrast(1);
+  .intro-highlights-scroll-stage .intro-scroll-flank .brand-video-frame__media video,
+  .intro-highlights-scroll-stage .intro-scroll-flank .brand-video-frame__media img {
+    filter: brightness(calc(0.38 + 0.62 * var(--intro-vivid, 0)))
+      saturate(calc(0.62 + 0.38 * var(--intro-vivid, 0)))
+      contrast(calc(1.06 - 0.06 * var(--intro-vivid, 0)));
   }
 
-  .intro-scroll-flank .brand-video-frame__media::after {
-    opacity: 0;
+  .intro-highlights-scroll-stage .intro-scroll-flank .brand-video-frame__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      180deg,
+      hsl(220 35% 2% / 0.55) 0%,
+      hsl(220 35% 2% / 0.12) 28%,
+      hsl(220 35% 2% / 0.08) 55%,
+      hsl(220 35% 2% / 0.45) 100%
+    );
+    opacity: calc(1 - var(--intro-vivid, 0));
   }
 
   .intro-scroll-flank .brand-video-frame,
@@ -1185,8 +1269,8 @@
     transition: transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
     transform: translateY(
         calc(
-          clamp(7rem, 24vh, 13rem) * (1 - var(--intro-flatten, 0)) +
-            clamp(0rem, 2vh, 1.5rem) * var(--intro-flatten, 0)
+          clamp(6.5rem, 22vh, 12rem) * (1 - var(--intro-flatten, 0)) +
+            clamp(0rem, 1.25vh, 1.25rem) * var(--intro-flatten, 0)
         )
       )
       scale(1);
@@ -1196,8 +1280,8 @@
     .hero-highlights-shell--scroll {
     transform: translateY(
         calc(
-          clamp(7rem, 24vh, 13rem) * (1 - var(--intro-flatten, 0)) +
-            clamp(0rem, 2vh, 1.5rem) * var(--intro-flatten, 0)
+          clamp(6.5rem, 22vh, 12rem) * (1 - var(--intro-flatten, 0)) +
+            clamp(0rem, 1.25vh, 1.25rem) * var(--intro-flatten, 0)
         )
       )
       scale(var(--intro-cube-reveal-scale));

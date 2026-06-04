@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   INTRO_HIGHLIGHTS_RESET_BELOW,
   INTRO_HIGHLIGHTS_TICKS_DELAY_MS,
@@ -8,21 +8,74 @@ import {
   type IntroScrollPhases,
 } from "@/hooks/useIntroHighlightsScroll";
 
-export function useIntroHighlightsReveal(phases: IntroScrollPhases) {
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+type FrozenScrollMetrics = {
+  trackTop: number;
+  scrollable: number;
+};
+
+function progressFromMetrics(scrollY: number, metrics: FrozenScrollMetrics) {
+  return clamp((scrollY - metrics.trackTop) / metrics.scrollable, 0, 1);
+}
+
+export function useIntroHighlightsReveal(
+  phases: IntroScrollPhases,
+  sceneRef: RefObject<HTMLElement | null>,
+) {
   const [titleActive, setTitleActive] = useState(false);
   const [titleExiting, setTitleExiting] = useState(false);
   const [ticksActive, setTicksActive] = useState(false);
   const [ticksExiting, setTicksExiting] = useState(false);
+  const [inFlowLatched, setInFlowLatched] = useState(false);
+  const [mayReenter, setMayReenter] = useState(true);
+  const [latchedMorph, setLatchedMorph] = useState<{
+    flatten: number;
+    vivid: number;
+  } | null>(null);
   const ticksEnterRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const frozenScrollRef = useRef<FrozenScrollMetrics | null>(null);
 
-  const belowReset = phases.progress < INTRO_HIGHLIGHTS_RESET_BELOW;
+  const captureFrozenScroll = () => {
+    const track = sceneRef.current;
+    if (!track) return;
+    const rect = track.getBoundingClientRect();
+    frozenScrollRef.current = {
+      trackTop: window.scrollY + rect.top,
+      scrollable: Math.max(track.offsetHeight - window.innerHeight, 1),
+    };
+  };
+
+  const revealProgress =
+    inFlowLatched && frozenScrollRef.current
+      ? progressFromMetrics(window.scrollY, frozenScrollRef.current)
+      : phases.progress;
+
+  const belowReset = revealProgress < INTRO_HIGHLIGHTS_RESET_BELOW;
   const canEnter =
+    mayReenter &&
+    !inFlowLatched &&
     !belowReset &&
     !titleExiting &&
     !ticksExiting &&
     phases.progress >= INTRO_HIGHLIGHTS_TITLE_TRIGGER;
 
-  /* Latched: stays revealed while scrolling down through the hold zone; exits only above RESET */
+  const clearInFlowLatch = () => {
+    frozenScrollRef.current = null;
+    setLatchedMorph(null);
+    setInFlowLatched(false);
+    setMayReenter(false);
+  };
+
+  useEffect(() => {
+    if (!inFlowLatched && phases.progress < INTRO_HIGHLIGHTS_RESET_BELOW) {
+      setMayReenter(true);
+    }
+  }, [phases.progress, inFlowLatched]);
+
+  /* Latched: in-flow layout uses frozen scroll metrics so height changes do not re-trigger */
   useEffect(() => {
     if (belowReset) {
       if (ticksEnterRef.current) {
@@ -41,19 +94,36 @@ export function useIntroHighlightsReveal(phases: IntroScrollPhases) {
     }
 
     if (canEnter && !titleActive && !titleExiting) {
+      captureFrozenScroll();
+      setLatchedMorph({
+        flatten: phases.flatten,
+        vivid: phases.vivid,
+      });
+      setMayReenter(false);
+      setInFlowLatched(true);
       setTitleExiting(false);
       setTitleActive(true);
     }
   }, [
     belowReset,
     canEnter,
+    mayReenter,
     phases.progress,
-    phases.flatten,
     titleActive,
     titleExiting,
     ticksActive,
     ticksExiting,
+    inFlowLatched,
   ]);
+
+  const titleVisible = titleActive || titleExiting;
+  const ticksVisible = ticksActive || ticksExiting;
+
+  useEffect(() => {
+    if (inFlowLatched && belowReset && !titleVisible && !ticksVisible) {
+      clearInFlowLatch();
+    }
+  }, [inFlowLatched, belowReset, titleVisible, ticksVisible]);
 
   useEffect(() => {
     if (!titleExiting) return;
@@ -87,9 +157,7 @@ export function useIntroHighlightsReveal(phases: IntroScrollPhases) {
     };
   }, [belowReset, titleActive, ticksActive, ticksExiting]);
 
-  const titleVisible = titleActive || titleExiting;
   const highlightsReveal = titleVisible;
-  const ticksVisible = ticksActive || ticksExiting;
 
   return {
     titleActive,
@@ -99,5 +167,7 @@ export function useIntroHighlightsReveal(phases: IntroScrollPhases) {
     titleVisible,
     ticksVisible,
     highlightsReveal,
+    inFlowLatched,
+    latchedMorph,
   };
 }

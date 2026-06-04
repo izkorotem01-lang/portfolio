@@ -18,7 +18,7 @@ export type IntroScrollPhases = {
  */
 export const INTRO_HIGHLIGHTS_TITLE_TRIGGER = 0.93;
 /** Scroll back above this (within the scene) to run exit animations */
-export const INTRO_HIGHLIGHTS_RESET_BELOW = 0.9;
+export const INTRO_HIGHLIGHTS_RESET_BELOW = 0.86;
 export const INTRO_HIGHLIGHTS_TICKS_DELAY_MS = 450;
 export const INTRO_HIGHLIGHTS_TITLE_EXIT_MS = 180;
 export const INTRO_HIGHLIGHTS_TICKS_EXIT_MS = 140;

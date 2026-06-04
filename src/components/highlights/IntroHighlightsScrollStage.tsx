@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIntroHighlights } from "@/contexts/IntroHighlightsContext";
 import { useIntroHighlightsScrollContext } from "@/contexts/IntroHighlightsScrollContext";
-import { useIntroHighlightsReveal } from "@/hooks/useIntroHighlightsReveal";
 import HeroHighlightsCube from "@/components/highlights/HeroHighlightsCube";
 import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
 import { PortfolioVideo } from "@/lib/portfolioService";
@@ -30,7 +29,7 @@ const flankRevealClass = (active: boolean, exiting: boolean) =>
 const IntroHighlightsScrollStage = () => {
   const { language, t } = useLanguage();
   const { videos, isLoading, activeHeroIndex } = useIntroHighlights();
-  const { phases } = useIntroHighlightsScrollContext();
+  const { phases, reveal } = useIntroHighlightsScrollContext();
   const {
     titleActive,
     titleExiting,
@@ -38,10 +37,12 @@ const IntroHighlightsScrollStage = () => {
     ticksExiting,
     titleVisible,
     highlightsReveal,
-  } = useIntroHighlightsReveal(phases);
+    inFlowLatched,
+    latchedMorph,
+  } = reveal;
 
-  const introFlatten = highlightsReveal ? 1 : phases.flatten;
-  const introVivid = highlightsReveal ? 1 : phases.vivid;
+  const introFlatten = latchedMorph ? latchedMorph.flatten : phases.flatten;
+  const introVivid = latchedMorph ? latchedMorph.vivid : phases.vivid;
 
   const { left: leftVideo, right: rightVideo } = useMemo(
     () => pickFlankVideos(videos, activeHeroIndex),
@@ -50,11 +51,13 @@ const IntroHighlightsScrollStage = () => {
 
   return (
     <div
-      className="intro-highlights-scroll-stage hero-highlights--backdrop"
+      className={`intro-highlights-scroll-stage hero-highlights--backdrop${
+        highlightsReveal ? " is-highlights-reveal" : ""
+      }`}
       aria-hidden={!titleVisible}
       style={
         {
-          "--intro-p": phases.progress,
+          "--intro-p": inFlowLatched ? 1 : phases.progress,
           "--intro-flatten": introFlatten,
           "--intro-vivid": introVivid,
         } as React.CSSProperties

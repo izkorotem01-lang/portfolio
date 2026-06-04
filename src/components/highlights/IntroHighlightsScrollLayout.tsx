@@ -4,6 +4,7 @@ import {
   useIntroHighlightsScroll,
   useIntroScrollMorphEnabled,
 } from "@/hooks/useIntroHighlightsScroll";
+import { useIntroHighlightsReveal } from "@/hooks/useIntroHighlightsReveal";
 import IntroHighlightsScrollStage from "@/components/highlights/IntroHighlightsScrollStage";
 import TrustedBySection from "@/components/sections/TrustedBySection";
 import HeroSection from "@/components/sections/HeroSection";
@@ -13,10 +14,14 @@ const IntroHighlightsScrollLayout = () => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const morphEnabled = useIntroScrollMorphEnabled();
   const phases = useIntroHighlightsScroll(sceneRef);
+  const reveal = useIntroHighlightsReveal(phases, sceneRef);
+  const highlightsInFlow = morphEnabled && reveal.inFlowLatched;
+
   return (
     <IntroHighlightsScrollProvider
       morphEnabled={morphEnabled}
       phases={phases}
+      reveal={reveal}
     >
       <div
         className={
@@ -27,19 +32,26 @@ const IntroHighlightsScrollLayout = () => {
       >
         <TrustedBySection />
 
-        <div ref={sceneRef} className="intro-highlights-scroll__scene">
+        <div
+          ref={sceneRef}
+          className={
+            highlightsInFlow
+              ? "intro-highlights-scroll__scene intro-highlights-scroll__scene--in-flow"
+              : "intro-highlights-scroll__scene"
+          }
+        >
           {morphEnabled && (
             <div className="intro-highlights-scroll__pin">
               <IntroHighlightsScrollStage />
             </div>
           )}
           <HeroSection />
-          {morphEnabled && (
+          {morphEnabled && !highlightsInFlow && (
             <div className="intro-highlights-scroll__hold" aria-hidden />
           )}
         </div>
 
-        {morphEnabled && (
+        {morphEnabled && !highlightsInFlow && (
           <div className="intro-highlights-scroll__release" aria-hidden />
         )}
 
