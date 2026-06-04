@@ -1,6 +1,8 @@
 import React from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
+import IntroZone from "@/components/IntroZone";
+import { IntroHighlightsProvider } from "@/contexts/IntroHighlightsContext";
 import HeroSection from "@/components/sections/HeroSection";
 import TrustedBySection from "@/components/sections/TrustedBySection";
 import ShortformShowcaseSection from "@/components/sections/ShortformShowcaseSection";
@@ -8,7 +10,6 @@ import AboutSection from "@/components/sections/AboutSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PackagesSection from "@/components/sections/PackagesSection";
 import PortfolioSection from "@/components/sections/PortfolioSection";
-import ReviewsSection from "@/components/sections/ReviewsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import Footer from "@/components/Footer";
 
@@ -18,13 +19,16 @@ const Index = () => {
       <div className="relative z-10 min-h-screen bg-transparent">
         {/* <Header /> */}
         <main>
-          <TrustedBySection />
-          <HeroSection />
-          <ShortformShowcaseSection />
+          <IntroZone>
+            <IntroHighlightsProvider>
+              <TrustedBySection />
+              <HeroSection />
+              <ShortformShowcaseSection />
+            </IntroHighlightsProvider>
+          </IntroZone>
           <AboutSection />
           <ServicesSection />
           <PortfolioSection />
-          <ReviewsSection />
           <PackagesSection />
           <ContactSection />
         </main>

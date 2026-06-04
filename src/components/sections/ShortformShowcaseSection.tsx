@@ -1,196 +1,34 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Play, Volume2, VolumeX } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useScrollAnimation } from "@/hooks/use-scroll-animation";
-import {
-  getCategories,
-  getVideos,
-  PortfolioVideo,
-} from "@/lib/portfolioService";
-import { pickRandomShortformVideos } from "@/lib/pickRandomShortformVideos";
+import { useIntroHighlights } from "@/contexts/IntroHighlightsContext";
+import { useStaggeredAnimation } from "@/hooks/use-scroll-animation";
+import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
+import ReviewsCarousel from "@/components/ReviewsCarousel";
 
-const hasThumbnail = (video: PortfolioVideo) =>
-  !!(video.thumbnailUrl && video.thumbnailUrl.trim() !== "");
-
-const ShortformVideoCard = ({
-  video,
-  language,
-  isActive,
-  onActivate,
-}: {
-  video: PortfolioVideo;
-  language: string;
-  isActive: boolean;
-  onActivate: () => void;
-}) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isInView, setIsInView] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-
-  const title = language === "he" ? video.titleHe : video.title;
-
-  useEffect(() => {
-    const node = cardRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInView(entry.isIntersecting),
-      { threshold: 0.35, rootMargin: "80px" }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el || !isLoaded) return;
-
-    if (isActive && isInView) {
-      el.muted = isMuted;
-      el.play().catch(() => {});
-      return;
-    }
-
-    el.pause();
-    if (!isActive) {
-      el.muted = true;
-      setIsMuted(true);
-    }
-  }, [isActive, isInView, isLoaded, isMuted]);
-
-  const handleClick = useCallback(() => {
-    if (!isLoaded) {
-      setIsLoaded(true);
-      onActivate();
-      return;
-    }
-
-    onActivate();
-
-    const el = videoRef.current;
-    if (!el) return;
-
-    if (isActive && isMuted) {
-      setIsMuted(false);
-      el.muted = false;
-      el.play().catch(() => {});
-      return;
-    }
-
-    if (isActive && !isMuted) {
-      setIsMuted(true);
-      el.muted = true;
-      return;
-    }
-  }, [isActive, isLoaded, isMuted, onActivate]);
-
-  return (
-    <div
-      ref={cardRef}
-      className="shortform-showcase__card group relative"
-    >
-      <button
-        type="button"
-        onClick={handleClick}
-        className="brand-video-frame hero-showreel-frame relative block w-full aspect-[9/16] cursor-pointer overflow-hidden bg-black text-left"
-        aria-label={title}
-      >
-        <div className="brand-video-frame__media">
-          {isLoaded ? (
-            <video
-              ref={videoRef}
-              src={video.videoUrl}
-              className="h-full w-full object-cover"
-              playsInline
-              loop
-              muted
-              preload="metadata"
-              onLoadedData={() => {
-                const el = videoRef.current;
-                if (el && isActive) {
-                  el.play().catch(() => {});
-                }
-              }}
-            />
-          ) : hasThumbnail(video) ? (
-            <img
-              src={video.thumbnailUrl}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <video
-              src={video.videoUrl}
-              className="h-full w-full object-cover"
-              muted
-              playsInline
-              preload="metadata"
-            />
-          )}
-
-          <div
-            className={`absolute inset-0 flex items-center justify-center bg-black/25 transition-opacity duration-300 ${
-              isActive && !isMuted
-                ? "opacity-0 pointer-events-none"
-                : "opacity-100 group-hover:bg-black/35"
-            }`}
-          >
-            {isActive && isLoaded && !isMuted ? (
-              <Volume2 className="h-8 w-8 text-white/90" />
-            ) : isActive && isLoaded && isMuted ? (
-              <VolumeX className="h-8 w-8 text-white/90" />
-            ) : (
-              <div className="play-button-overlay rounded-full p-3 transition-transform group-hover:scale-110">
-                <Play className="h-7 w-7 fill-white text-white" />
-              </div>
-            )}
-          </div>
-        </div>
-      </button>
-
-      {(video.title || video.titleHe) && (
-        <p className="mt-2 line-clamp-2 text-center text-xs font-medium uppercase tracking-wide text-foreground/75 sm:text-sm">
-          {title}
-        </p>
-      )}
-    </div>
-  );
-};
+const CARD_REVEAL_DELAYS = [
+  "animate-delay-100",
+  "animate-delay-200",
+  "animate-delay-300",
+  "animate-delay-400",
+] as const;
 
 const ShortformShowcaseSection = () => {
   const { t, language } = useLanguage();
-  const { ref: sectionRef } = useScrollAnimation({ threshold: 0.15 });
-  const [videos, setVideos] = useState<PortfolioVideo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { videos, isLoading } = useIntroHighlights();
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  const { ref: sectionRef, visibleItems, isVisible } = useStaggeredAnimation(
+    videos.length,
+    140,
+    {
+      threshold: 0.12,
+      rootMargin: "0px 0px -8% 0px",
+    }
+  );
+
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const [allVideos, categories] = await Promise.all([
-          getVideos(),
-          getCategories(),
-        ]);
-        if (!cancelled) {
-          setVideos(pickRandomShortformVideos(allVideos, categories, 4));
-        }
-      } catch (error) {
-        console.error("Shortform showcase load failed:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (videos[0]) setActiveId(videos[0].id);
+  }, [videos]);
 
   if (!isLoading && videos.length === 0) {
     return null;
@@ -204,11 +42,18 @@ const ShortformShowcaseSection = () => {
     >
       <div className="container mx-auto px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <header className="mb-6 md:mb-10">
-            <h2 className="showcase-glow-title riz-neon-title riz-neon-text">
+          <header
+            className={`mb-6 md:mb-10 transition-opacity duration-700 ${
+              isVisible ? "animate-fade-in-up" : "opacity-0"
+            }`}
+          >
+            <h2 className="showcase-productions-title">
               {t("showcase.title")}
             </h2>
-            <div className="riz-timeline-ticks" aria-hidden />
+            <div
+              className={`showcase-productions-ticks ${isVisible ? "intro-ticks-active" : ""}`}
+              aria-hidden
+            />
           </header>
 
           {isLoading ? (
@@ -217,15 +62,33 @@ const ShortformShowcaseSection = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-              {videos.map((video) => (
-                <ShortformVideoCard
+              {videos.map((video, index) => (
+                <div
                   key={video.id}
-                  video={video}
-                  language={language}
-                  isActive={activeId === video.id}
-                  onActivate={() => setActiveId(video.id)}
-                />
+                  className={
+                    visibleItems.includes(index)
+                      ? `animate-scale-in-up ${CARD_REVEAL_DELAYS[index] ?? "animate-delay-400"}`
+                      : "opacity-0"
+                  }
+                >
+                  <HighlightVideoCard
+                    video={video}
+                    language={language}
+                    isActive={activeId === video.id}
+                    onActivate={() => setActiveId(video.id)}
+                    mode="grid"
+                  />
+                </div>
               ))}
+            </div>
+          )}
+
+          {!isLoading && (
+            <div
+              id="intro-reviews"
+              className="intro-reveal intro-reveal--delay-3 intro-reveal--soft mx-auto mt-10 max-w-3xl md:mt-14"
+            >
+              <ReviewsCarousel variant="section" className="w-full" />
             </div>
           )}
         </div>

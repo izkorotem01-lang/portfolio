@@ -3,7 +3,7 @@ import titleWordmark from "@/assets/title.png";
 
 const HeroBlendHeadline = () => {
   return (
-    <div className="hero-headline-stage mb-6 w-full">
+    <div className="hero-headline-stage intro-reveal intro-reveal--scale mb-3 w-full md:mb-4">
       <h1 className="hero-headline-wordmark m-0 w-full">
         <img
           src={titleWordmark}

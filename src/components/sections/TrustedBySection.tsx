@@ -153,7 +153,8 @@ const TrustedBySection = () => {
       <div
         ref={mobileScrollerRef}
         dir="ltr"
-        className="md:hidden overflow-x-auto scrollbar-hide px-4"
+        className="md:hidden overflow-x-auto scrollbar-hide"
+        tabIndex={-1}
         onTouchStart={pauseMobileAutoScroll}
         onTouchEnd={resumeMobileAutoScroll}
         onTouchCancel={resumeMobileAutoScroll}

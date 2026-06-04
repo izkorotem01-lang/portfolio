@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
-import ScrollProgressBar from "./components/ScrollProgressBar";
 import GlobalBackground from "./components/GlobalBackground";
+import ScrollToTop from "./components/ScrollToTop";
 import { VideoControlProvider } from "@/contexts/VideoControlContext";
 
 const queryClient = new QueryClient();
@@ -27,7 +27,6 @@ const AppContent = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!isAdminPage && <ScrollProgressBar />}
     </>
   );
 };
@@ -37,6 +36,7 @@ const App = () => (
     <TooltipProvider>
       <VideoControlProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AppContent />
         </BrowserRouter>
       </VideoControlProvider>

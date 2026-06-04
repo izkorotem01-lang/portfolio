@@ -1,6 +1,6 @@
 import React from "react";
 
-/** Quiet premium canvas — deep navy + soft cyan ambient (no scroll snake). */
+/** Static site-wide canvas — motion lives only in #intro-zone. */
 const GlobalBackground = () => (
   <div
     className="site-background fixed inset-0 z-0 overflow-hidden pointer-events-none"

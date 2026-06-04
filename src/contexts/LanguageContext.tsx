@@ -23,7 +23,8 @@ const translations = {
 
     // Hero Section
     "hero.name": "ROTEM IZKO",
-    "hero.subtitle": "PROFESSIONAL VIDEO EDITOR & MOTION GRAPHIC DESIGNER",
+    "hero.subtitle":
+      "A content and creative agency specializing in building digital presence for businesses, content creators, and personal brands.",
     "hero.headline.line1": "ROTEM",
     "hero.headline.line2": "IZK",
     "hero.headline.line2Accent": "O",
@@ -132,7 +133,8 @@ const translations = {
 
     // Hero Section
     "hero.name": "רותם איצקוביץ",
-    "hero.subtitle": "עורך וידאו מקצועי ומעצב גרפיקה בתנועה",
+    "hero.subtitle":
+      "סוכנות תוכן וקריאייטיב המתמחה בבניית נוכחות דיגיטלית עבור עסקים, יוצרי תוכן ומותגים אישיים.",
     "hero.headline.line1": "רותם",
     "hero.headline.line2": "איצקובי",
     "hero.headline.line2Accent": "ץ",
