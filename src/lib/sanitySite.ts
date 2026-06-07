@@ -4,6 +4,7 @@ import {
   fetchReviewsFromSanity,
   type ContentReview,
 } from "@/lib/sanityReviews";
+import { loadBakedSiteContent } from "@/lib/cmsContent";
 
 export type { ContentReview };
 
@@ -321,7 +322,7 @@ const buildSiteSettings = (sections: SectionsQueryResult): SiteSettingsContent |
   };
 };
 
-export const fetchSiteContent = async (): Promise<SiteContent> => {
+export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
   const [sections, trustedRaw, highlightsRaw, reviews] = await Promise.all([
     sanityClient.fetch<SectionsQueryResult>(SECTIONS_QUERY),
     sanityClient.fetch<SanityTrustedClient[]>(TRUSTED_CLIENTS_QUERY),
@@ -354,6 +355,24 @@ export const fetchSiteContent = async (): Promise<SiteContent> => {
       })),
     reviews,
   };
+};
+
+export const fetchSiteContent = async (): Promise<SiteContent> => {
+  if (import.meta.env.PROD) {
+    const baked = await loadBakedSiteContent();
+    if (baked) return baked;
+  }
+
+  try {
+    return await fetchSiteContentFromSanity();
+  } catch (error) {
+    const baked = await loadBakedSiteContent();
+    if (baked) {
+      console.warn("Sanity fetch failed; using baked CMS content.", error);
+      return baked;
+    }
+    throw error;
+  }
 };
 
 export const getYouTubeThumbnail = (url: string): string | undefined => {
