@@ -1,9 +1,10 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Heart, Mail, Phone, Globe } from "lucide-react";
+import { Mail, Phone, Globe } from "lucide-react";
 
 const Footer = () => {
   const { t, language, setLanguage } = useLanguage();
+  const year = new Date().getFullYear();
 
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "he" : "en");
@@ -17,10 +18,14 @@ const Footer = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             {/* Brand */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 text-foreground">
-                {t("hero.name")}
+              <h3 className="text-2xl font-bold mb-4 text-foreground tracking-wide">
+                RIZZ Productions
               </h3>
-              <p className="text-foreground/70 mb-4">{t("hero.subtitle")}</p>
+              <p className="text-foreground/70 mb-4">
+                {language === "he"
+                  ? "סוכנות תוכן וקריאייטיב לבניית נוכחות דיגיטלית לעסקים, יוצרים ומותגים אישיים."
+                  : "Content and creative systems for businesses, creators, and personal brands."}
+              </p>
               <div className="flex space-x-4">
                 <a
                   href="mailto:contact@rotemizko.com"
@@ -39,13 +44,13 @@ const Footer = () => {
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-bold mb-4 text-foreground">Quick Links</h4>
+              <h4 className="font-bold mb-4 text-foreground">
+                {language === "he" ? "ניווט" : "Navigation"}
+              </h4>
               <div className="space-y-2">
                 {[
                   { label: t("nav.about"), href: "#about" },
-                  { label: t("nav.services"), href: "#services" },
                   { label: t("nav.portfolio"), href: "#portfolio" },
-                  { label: t("nav.packages"), href: "#packages" },
                   { label: t("nav.contact"), href: "#contact" },
                 ].map((link) => (
                   <button
@@ -65,7 +70,9 @@ const Footer = () => {
 
             {/* Social Media & Language */}
             <div>
-              <h4 className="font-bold mb-4 text-foreground">Follow Me</h4>
+              <h4 className="font-bold mb-4 text-foreground">
+                {language === "he" ? "עקבו אחרינו" : "Follow Us"}
+              </h4>
               <div className="space-y-2 mb-6">
                 <a
                   href="https://www.instagram.com/rotemizko_/"
@@ -95,7 +102,9 @@ const Footer = () => {
 
               {/* Language Switcher */}
               <div>
-                <h4 className="font-bold mb-3 text-foreground">Language</h4>
+                <h4 className="font-bold mb-3 text-foreground">
+                  {language === "he" ? "שפה" : "Language"}
+                </h4>
                 <button
                   onClick={toggleLanguage}
                   className="flex items-center space-x-2 text-foreground/70 hover:text-primary transition-smooth"
@@ -108,13 +117,9 @@ const Footer = () => {
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-border/30 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-foreground/60 text-sm mb-4 md:mb-0">
-              © 2024 {t("hero.name")}. All rights reserved.
-            </p>
-            <p className="text-foreground/60 text-sm flex items-center">
-              Made with <Heart className="w-4 h-4 mx-1 text-primary" /> for
-              amazing creators
+          <div className="border-t border-border/30 pt-8 flex justify-center text-center">
+            <p className="text-foreground/60 text-sm">
+              © {year} RIZZ Productions. {language === "he" ? "כל הזכויות שמורות." : "All rights reserved."}
             </p>
           </div>
         </div>

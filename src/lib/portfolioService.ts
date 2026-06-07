@@ -11,6 +11,11 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import {
+  fetchCategoriesFromSanity,
+  fetchVideosByCategoryFromSanity,
+  fetchVideosFromSanity,
+} from "./sanityPortfolio";
 
 export interface PortfolioCategory {
   id: string;
@@ -33,9 +38,29 @@ export interface PortfolioVideo {
   autoplayInBackground?: boolean;
   order: number;
   allWorkOrder?: number;
+  videoWidth?: number;
+  videoHeight?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+export const isUploadedPortfolioVideo = (url: string): boolean =>
+  !!url && !isYouTubeUrl(url);
+
+export const isVerticalReelDimensions = (
+  width: number,
+  height: number
+): boolean => height > width && width > 0;
+
+export const isUploadedReelVideo = (
+  video: Pick<PortfolioVideo, "videoUrl" | "videoWidth" | "videoHeight">
+): boolean => {
+  if (!isUploadedPortfolioVideo(video.videoUrl)) return false;
+  if (video.videoWidth && video.videoHeight) {
+    return isVerticalReelDimensions(video.videoWidth, video.videoHeight);
+  }
+  return false;
+};
 
 // Helper function to check if a URL is a YouTube URL
 export const isYouTubeUrl = (url: string): boolean => {
@@ -52,6 +77,7 @@ export const getYouTubeVideoId = (url: string): string | null => {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
     /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#/]+)/,
   ];
   
   for (const pattern of patterns) {
@@ -64,11 +90,21 @@ export const getYouTubeVideoId = (url: string): string | null => {
   return null;
 };
 
+export const getYouTubeThumbnail = (url: string): string | undefined => {
+  const videoId = getYouTubeVideoId(url);
+  return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : undefined;
+};
+
 // Helper function to get YouTube embed URL
-export const getYouTubeEmbedUrl = (url: string, autoplay: boolean = false, muted: boolean = false): string | null => {
+export const getYouTubeEmbedUrl = (
+  url: string,
+  autoplay: boolean = false,
+  muted: boolean = false,
+  controls: boolean = true
+): string | null => {
   const videoId = getYouTubeVideoId(url);
   if (!videoId) return null;
-  return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0&enablejsapi=1`;
+  return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&controls=${controls ? 1 : 0}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&cc_load_policy=0&enablejsapi=1`;
 };
 
 // Categories CRUD
@@ -85,15 +121,7 @@ export const createCategory = async (
 };
 
 export const getCategories = async (): Promise<PortfolioCategory[]> => {
-  const q = query(collection(db, "categories"), orderBy("order", "asc"));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(
-    (doc) =>
-      ({
-        id: doc.id,
-        ...doc.data(),
-      } as PortfolioCategory)
-  );
+  return fetchCategoriesFromSanity();
 };
 
 export const updateCategory = async (
@@ -126,47 +154,15 @@ export const createVideo = async (
 };
 
 export const getVideos = async (
-  isMobile: boolean = false
+  _isMobile: boolean = false
 ): Promise<PortfolioVideo[]> => {
-  // Get videos and sort by allWorkOrder first, then by order as fallback
-  const q = query(collection(db, "videos"));
-  const querySnapshot = await getDocs(q);
-
-  const videos = querySnapshot.docs.map(
-    (doc) =>
-      ({
-        id: doc.id,
-        ...doc.data(),
-      } as PortfolioVideo)
-  );
-
-  // Sort by allWorkOrder if it exists, otherwise by order
-  const sortedVideos = videos.sort((a, b) => {
-    // Use allWorkOrder if it exists (even if only one has it)
-    const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
-    const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
-    return aOrder - bOrder;
-  });
-
-  return sortedVideos;
+  return fetchVideosFromSanity();
 };
 
 export const getVideosByCategory = async (
   categoryId: string
 ): Promise<PortfolioVideo[]> => {
-  const q = query(
-    collection(db, "videos"),
-    where("categoryId", "==", categoryId),
-    orderBy("order", "asc")
-  );
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(
-    (doc) =>
-      ({
-        id: doc.id,
-        ...doc.data(),
-      } as PortfolioVideo)
-  );
+  return fetchVideosByCategoryFromSanity(categoryId);
 };
 
 export const updateVideo = async (

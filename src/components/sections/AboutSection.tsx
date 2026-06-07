@@ -1,164 +1,177 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { User, Award, Video, Zap } from "lucide-react";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import {
+  Share2,
+  Sparkles,
+  Target,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
 import rotemImage from "@/assets/rotem.webp";
+import shakedImage from "@/assets/shaked.webp";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
-const AboutSection = () => {
-  const { t, language } = useLanguage();
-  const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.2 });
+const founderFallbackImages = [rotemImage, shakedImage];
 
-  const stats = [
-    {
-      icon: Video,
-      number: "100+",
-      label: language === "he" ? "סרטונים" : "Videos Edited",
-    },
-    {
-      icon: User,
-      number: "20+",
-      label: language === "he" ? "לקוחות מרוצים" : "Happy Clients",
-    },
-    {
-      icon: Award,
-      number: "8+",
-      label: language === "he" ? "שנות ניסיון" : "Years Experience",
-    },
-    { icon: Zap, number: "24/7", label: "Support" },
-  ];
+const capabilityIconMap: Record<string, LucideIcon> = {
+  video: Video,
+  sparkles: Sparkles,
+  target: Target,
+  share: Share2,
+};
+
+const defaultCapabilities = [
+  { icon: Video, label: "Video Editing (AE + AI)" },
+  { icon: Sparkles, label: "Motion Graphics" },
+  { icon: Target, label: "Content Strategy" },
+  { icon: Share2, label: "Social Media Content" },
+];
+
+const AboutSection = () => {
+  const { t } = useLanguage();
+  const { homePage, pick } = useSiteContent();
+  const { ref: sectionRef, isVisible } = useScrollAnimation({
+    threshold: 0.08,
+    rootMargin: "0px 0px -5% 0px",
+  });
+
+  const about = homePage?.about;
+  const founders = about?.founders?.length
+    ? [...about.founders].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    : null;
+
+  const capabilities = about?.capabilities?.length
+    ? about.capabilities.map((item) => ({
+        icon: capabilityIconMap[item.icon ?? "video"] ?? Video,
+        label: pick(item.title),
+      }))
+    : defaultCapabilities;
+
+  const headline =
+    pick(about?.headline) ||
+    "We help brands & creators look undeniable on video";
+  const subline =
+    pick(about?.subline) || "More authority. More attention. More clients.";
+  const audience =
+    pick(about?.audience) ||
+    "personal brands, mentors, and creators who want to turn content into a client-acquisition system.";
 
   return (
     <section
       ref={sectionRef}
       id="about"
-      className="section-band py-24 md:py-28 relative overflow-hidden z-10"
+      className="section-band py-24 md:py-28 relative z-10"
     >
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
-          {/* Large Card Container - Mobile Optimized */}
           <div className="bg-background/80 backdrop-blur-sm md:backdrop-blur-xl p-6 md:p-12 rounded-2xl md:rounded-3xl border border-border/30 md:border-white/30">
-            {/* Section Title */}
+            <header className="intro-scroll-showcase-header mx-auto mb-10">
+              <h2
+                className={`showcase-productions-title intro-scroll-showcase-title${
+                  isVisible ? " is-active" : ""
+                }`}
+              >
+                {pick(about?.title) || t("about.title")}
+              </h2>
+              <div
+                className={`showcase-productions-ticks${
+                  isVisible ? " intro-ticks-active" : ""
+                }`}
+                aria-hidden
+              />
+            </header>
+
             <div
-              className={`text-center mb-16 ${
-                isVisible ? "animate-fade-in-up" : ""
+              className={`mx-auto mb-14 max-w-4xl text-center ${
+                isVisible ? "animate-fade-in-up animate-delay-100" : ""
               }`}
             >
-              <h2 className="section-title">
-                {language === "he" ? (
-                  <>
-                    <div>מי אני</div>
-                    <div className="mt-2">מה אני מציע</div>
-                  </>
-                ) : (
-                  <>
-                    <div>Who Am I</div>
-                    <div className="mt-2">What I Offer</div>
-                  </>
-                )}
-              </h2>
+              <h3 className="text-2xl md:text-4xl font-bold leading-tight text-primary mb-4">
+                {headline}
+              </h3>
+              <p className="text-lg md:text-2xl font-semibold text-foreground/90">
+                {subline}
+              </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Content */}
-              <div
-                className={`${
-                  isVisible ? "animate-fade-in-left animate-delay-200" : ""
-                }`}
-              >
-                <p className="text-lg leading-relaxed text-foreground/90 mb-6">
-                  {t("about.content")}
-                </p>
+            <div className="mb-16 flex flex-col gap-16 md:gap-20">
+              {(founders ?? []).map((founder, index) => {
+                const glow =
+                  founder.glowColor ?? (index % 2 === 0 ? "cyan" : "orange");
+                const photo =
+                  founder.photoUrl ||
+                  founderFallbackImages[index] ||
+                  shakedImage;
 
-                <p className="text-lg leading-relaxed text-primary font-semibold mb-6">
-                  {t("about.leadsImpact")}
-                </p>
-
-                {/* Digital Presence Highlight */}
-                <div className="bg-brand-cyan/8 border border-brand-cyan/20 rounded-2xl p-6 mb-8">
-                  <h3 className="text-2xl font-bold text-primary mb-4">
-                    {language === "he" ? "המטרה שלי" : "My Mission"}
-                  </h3>
-                  <p className="text-lg text-foreground/90 leading-relaxed">
-                    {t("about.digitalPresence")}
-                  </p>
-                </div>
-
-                {/* Stats Grid - Hidden on mobile for performance */}
-                <div className="hidden md:grid grid-cols-4 gap-6">
-                  {stats.map((stat, index) => (
-                    <div
-                      key={index}
-                      className={`text-center ${
-                        isVisible ? "animate-scale-in-up" : ""
-                      }`}
-                      style={{ animationDelay: `${0.4 + index * 0.1}s` }}
-                    >
-                      <div className="glass-card p-4 rounded-2xl mb-3 hover:scale-105 transition-smooth">
-                        <stat.icon className="w-8 h-8 mx-auto text-primary" />
+                return (
+                  <div
+                    key={founder._key}
+                    className={`grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5 xl:gap-6 ${
+                      isVisible
+                        ? index === 0
+                          ? "animate-fade-in-left animate-delay-200"
+                          : "animate-fade-in-right animate-delay-200"
+                        : ""
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <h3 className="text-3xl md:text-4xl font-bold text-primary mb-3">
+                        {pick(founder.name)}
+                      </h3>
+                      <p className="text-xl md:text-2xl font-semibold text-foreground/90 mb-4">
+                        {pick(founder.role)}
+                      </p>
+                      <p className="text-xl md:text-2xl leading-relaxed text-foreground/90">
+                        {pick(founder.bio)}
+                      </p>
+                    </div>
+                    <div className="flex justify-center lg:justify-start">
+                      <div
+                        className={`about-portrait-neon about-portrait-neon--${glow} w-full max-w-[9.5rem] shrink-0 sm:max-w-[10.5rem] md:max-w-xs`}
+                      >
+                        <div className="about-portrait-neon__ring">
+                          <img
+                            src={photo}
+                            alt={pick(founder.photoAlt) || pick(founder.name)}
+                            className="about-portrait-neon__photo aspect-[4/5] max-h-56 w-full object-cover md:max-h-64"
+                            loading="lazy"
+                          />
+                        </div>
                       </div>
-                      <div className="text-2xl font-bold text-primary mb-1">
-                        {stat.number}
-                      </div>
-                      <div className="text-sm text-foreground/70">
-                        {stat.label}
-                      </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                {/* Mobile Stats - 2x2 grid, smaller text */}
-                <div className="md:hidden grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      100+
+            <div
+              className={`max-w-4xl mx-auto text-center bg-brand-cyan/8 border border-brand-cyan/20 rounded-2xl p-6 md:p-8 mb-12 ${
+                isVisible ? "animate-fade-in-up animate-delay-400" : ""
+              }`}
+            >
+              <p className="text-xl md:text-2xl text-foreground/90 leading-relaxed">
+                {audience}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
+              {capabilities.map((capability, index) => (
+                <div
+                  key={`${capability.label}-${index}`}
+                  className={`text-center ${isVisible ? "animate-scale-in-up" : ""}`}
+                  style={{ animationDelay: `${0.45 + index * 0.08}s` }}
+                >
+                  <div className="glass-card p-4 md:p-5 rounded-2xl mb-3 hover:scale-105 transition-smooth h-full flex flex-col items-center justify-center gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-cyan/12 border border-brand-cyan/30 flex items-center justify-center">
+                      <capability.icon className="w-5 h-5 md:w-6 md:h-6 text-brand-cyan" />
                     </div>
-                    <div className="text-xs text-foreground/70">
-                      Videos Edited
+                    <div className="text-sm md:text-base font-semibold text-foreground/90 leading-snug">
+                      {capability.label}
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      20+
-                    </div>
-                    <div className="text-xs text-foreground/70">
-                      Happy Clients
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      8+
-                    </div>
-                    <div className="text-xs text-foreground/70">
-                      Years Experience
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      24/7
-                    </div>
-                    <div className="text-xs text-foreground/70">Support</div>
                   </div>
                 </div>
-              </div>
-
-              {/* Rotem Image - Mobile Optimized */}
-              <div
-                className={`relative ${
-                  isVisible ? "animate-fade-in-right animate-delay-400" : ""
-                }`}
-              >
-                <div className="bg-background/40 md:bg-background/60 p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/10 md:border-white/20">
-                  <div className="rounded-lg md:rounded-2xl overflow-hidden">
-                    <img
-                      src={rotemImage}
-                      alt="Rotem Izko - Professional Video Editor"
-                      className="about-portrait w-full h-auto object-cover rounded-lg md:rounded-2xl shadow-md md:shadow-2xl"
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
-
-              </div>
+              ))}
             </div>
           </div>
         </div>

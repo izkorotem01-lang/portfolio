@@ -30,19 +30,27 @@ const translations = {
     "hero.headline.line2Accent": "O",
     "hero.cta": "View My Work",
     "trusted.title": "Trusted By",
-    "trusted.subtitle": "Brands and creators I have helped with sharp, high-converting content.",
+    "trusted.subtitle":
+      "Brands and creators I have helped with sharp, high-converting content.",
     "trusted.visit": "Visit site",
     "trusted.client": "Client partner",
     "showcase.title": "HIGHLIGHTS",
 
     // About Section
-    "about.title": "Who Am I & What I Offer",
-    "about.content":
-      "I'm a 23-year-old professional video editor specializing in creating immersive content for social media platforms including YouTube, Instagram, TikTok and more. I edit short/long form videos, podcasts, and upgrade each project to the highest level using leading software like Premiere Pro and After Effects. I don't just come to edit a video. I come to help your business grow.",
-    "about.leadsImpact":
-      "My videos generate hundreds — and even thousands — of leads for businesses.",
-    "about.digitalPresence":
-      "I build digital presence for everyone - whether you're a small business owner, large corporation, content creator, YouTuber, freelancer, or anyone who needs a strong digital presence on social networks. I'm your go-to solution for all digital presence needs.",
+    "about.title": "Who Are We",
+    "about.rotem.title": "Rotem Itzkovich",
+    "about.rotem.role": "Co-founder of RIZZ Productions.",
+    "about.rotem.content":
+      "Responsible for content strategy, content system development, and production processes. Specializes in building digital presence for businesses, brands, and creators through marketing thinking, viewing psychology, and content that serves business goals.",
+    "about.shaked.title": "Shaked Siroa",
+    "about.shaked.role": "Co-founder of RIZZ Productions.",
+    "about.shaked.content":
+      "Content creator and creative specializing in storytelling, concept development, and content creation. Responsible for developing ideas, creative direction, and turning messages into content that connects people to brands.",
+    "about.riz.title": "RIZZ Productions",
+    "about.riz.content":
+      "is a content and creative agency specializing in building digital presence for businesses, content creators, and personal brands. We combine strategy, creative, filming, editing, and marketing thinking to create content that doesn't just look good — but also serves a real business purpose.",
+    "about.riz.mission":
+      "Our goal is to turn content into an asset that generates authority, attention, and growth over time.",
 
     // Services
     "services.title": "What I Do",
@@ -76,7 +84,8 @@ const translations = {
     "packages.full.price": "₪12,000 - ₪15,000",
 
     // Portfolio
-    "portfolio.title": "My Work",
+    "portfolio.title": "Our Work",
+    "portfolio.allWork": "All Work",
     "portfolio.social": "Social Media Content",
     "portfolio.business": "Business Advertisements",
     "portfolio.creator": "Content Creator Collaborations",
@@ -146,12 +155,20 @@ const translations = {
     "showcase.title": "HIGHLIGHTS",
 
     // About Section
-    "about.title": "מי אני ומה אני מציע",
-    "about.content":
-      "אני רותם איצקוביץ, עורך וידאו מקצועי בן 23. מתמחה ביצירת תוכן סוחף לרשתות החברתיות – יוטיוב, אינסטגרם, טיקטוק ועוד. אני עורך סרטונים קצרים וארוכים, פודקאסטים, ומשדרג כל פרויקט לרמה הגבוהה ביותר עם תוכנות מובילות כמו Premiere Pro ו-After Effects. אני לא מגיע רק כדי לערוך סרטון. אני מגיע כדי לעזור לעסק שלך לגדול.",
-    "about.leadsImpact": "הסרטונים שאני יוצר מביאים מאות ואלפי לידים לעסקים.",
-    "about.digitalPresence":
-      "אני בונה נוכחות דיגיטלית לכולם - בין אם אתה בעל עסק קטן, תאגיד גדול, יוצר תוכן, יוטיובר, פרילנסר, או כל מי שצריך נוכחות דיגיטלית חזקה ברשתות החברתיות. אני הכתובת שלך לכל צרכי הנוכחות הדיגיטלית.",
+    "about.title": "מי אנחנו",
+    "about.rotem.title": "על רותם איצקוביץ",
+    "about.rotem.role": "מייסד שותף ב־RIZZ Productions.",
+    "about.rotem.content":
+      "אחראי על אסטרטגיית התוכן, פיתוח מערכות תוכן ותהליכי הפקה. מתמחה בבניית נוכחות דיגיטלית לעסקים, מותגים ויוצרים באמצעות חשיבה שיווקית, פסיכולוגיית צפייה ותוכן שמשרת מטרות עסקיות.",
+    "about.shaked.title": "על שקד סירואה",
+    "about.shaked.role": "מייסד שותף ב־RIZZ Productions.",
+    "about.shaked.content":
+      "יוצר תוכן ואיש קריאייטיב המתמחה ב־Storytelling, פיתוח קונספטים ויצירת תוכן. אחראי על פיתוח הרעיונות, הקריאייטיב והפיכת מסרים לתוכן שמחבר אנשים למותגים.",
+    "about.riz.title": "RIZZ Productions",
+    "about.riz.content":
+      "היא סוכנות תוכן וקריאייטיב המתמחה בבניית נוכחות דיגיטלית עבור עסקים, יוצרי תוכן ומותגים אישיים. אנחנו משלבים אסטרטגיה, קריאייטיב, צילום, עריכה וחשיבה שיווקית כדי ליצור תוכן שלא רק נראה טוב — אלא גם משרת מטרה עסקית אמיתית.",
+    "about.riz.mission":
+      "המטרה שלנו היא להפוך תוכן לנכס שמייצר סמכות, תשומת לב וצמיחה לאורך זמן.",
 
     // Services
     "services.title": "מה אני עושה",
@@ -168,7 +185,8 @@ const translations = {
 
     // Packages
     "packages.title": "מערכות תוכן",
-    "packages.statement": "אני לא מוכר סרטונים — אני בונה מערכת תוכן שמביאה תוצאות",
+    "packages.statement":
+      "אני לא מוכר סרטונים — אני בונה מערכת תוכן שמביאה תוצאות",
     "packages.badge": "החבילה המרכזית",
     "packages.cta": "בואו נבנה את המערכת שלכם",
     "packages.core.title": "Content System",
@@ -182,7 +200,8 @@ const translations = {
     "packages.full.price": "₪12,000 - ₪15,000",
 
     // Portfolio
-    "portfolio.title": "העבודות שלי",
+    "portfolio.title": "העבודות שלנו",
+    "portfolio.allWork": "כל העבודות",
     "portfolio.social": "תוכן לרשתות חברתיות",
     "portfolio.business": "פרסומות עסקיות",
     "portfolio.creator": "שיתופי פעולה עם יוצרי תוכן",
@@ -230,7 +249,7 @@ const translations = {
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({

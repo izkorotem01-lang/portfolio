@@ -7,17 +7,22 @@ import React, {
 } from "react";
 import { flushSync } from "react-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePerformanceMonitor } from "@/hooks/use-performance-monitor";
-import { Maximize2, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import {
   getCategories,
   getVideos,
   PortfolioCategory,
   PortfolioVideo,
   isYouTubeUrl,
+  isUploadedReelVideo,
+  isVerticalReelDimensions,
   getYouTubeEmbedUrl,
+  getYouTubeThumbnail,
 } from "@/lib/portfolioService";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 import {
   Dialog,
   DialogContent,
@@ -81,8 +86,21 @@ const hasThumbnail = (video: PortfolioVideo) =>
 const shouldUseThumbnailPreview = (video: PortfolioVideo) =>
   !video.autoplayInBackground;
 
+const portfolioMediaFitClass = (isReel: boolean) =>
+  isReel ? "object-contain" : "object-cover";
+
+const portfolioContainerClass = (isReel: boolean) =>
+  `relative aspect-video w-full overflow-hidden rounded-lg shadow-lg ${
+    isReel ? "bg-black" : "bg-gradient-secondary/20"
+  }`;
+
 const PortfolioSection = () => {
   const { t, language } = useLanguage();
+  const { homePage, pick } = useSiteContent();
+  const { ref: sectionRef, isVisible } = useScrollAnimation({
+    threshold: 0.08,
+    rootMargin: "0px 0px -5% 0px",
+  });
   const isMobile = useIsMobile();
   const { shouldOptimize } = usePerformanceMonitor();
 
@@ -102,9 +120,11 @@ const PortfolioSection = () => {
   );
   const lightboxVideoRef = useRef<HTMLVideoElement | null>(null);
   const lightboxIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [lightboxIsReel, setLightboxIsReel] = useState(false);
   const hadLightboxFullscreenRef = useRef(false);
   const closeLightbox = useCallback(() => {
     hadLightboxFullscreenRef.current = false;
+    setLightboxIsReel(false);
     setLightboxVideo(null);
   }, []);
 
@@ -119,6 +139,7 @@ const PortfolioSection = () => {
       }
     });
     setPlayingVideoId(null);
+    setLightboxIsReel(isUploadedReelVideo(video));
     flushSync(() => {
       setLightboxVideo(video);
     });
@@ -369,6 +390,13 @@ const PortfolioSection = () => {
         ]);
         setCategories(categoriesData);
         setVideos(videosData);
+
+        videosData.forEach((video) => {
+          const thumbnailUrl = video.thumbnailUrl || getYouTubeThumbnail(video.videoUrl);
+          if (!thumbnailUrl) return;
+          const image = new Image();
+          image.src = thumbnailUrl;
+        });
       } catch (error) {
         console.error("Error loading portfolio data:", error);
       } finally {
@@ -381,7 +409,7 @@ const PortfolioSection = () => {
 
   // Create display categories with "All Work" option
   const displayCategories = [
-    { id: "all", label: "All Work" },
+    { id: "all", label: pick(homePage?.portfolioSection?.allWorkLabel) || t("portfolio.allWork") },
     ...categories.map((cat) => ({
       id: cat.id,
       label: language === "he" ? cat.nameHe : cat.name,
@@ -391,25 +419,37 @@ const PortfolioSection = () => {
   // Display all videos - no artificial limits
   const displayVideos = filteredVideos;
 
-  // When category changes, reset loaded state to show thumbnails again
+  // Keep cached thumbnails/loaded videos across category switches; only stop active playback state.
   useEffect(() => {
-    setLoadedVideoIds(new Set());
     setPlayingVideoId(null);
     setPendingPlayVideoId(null);
   }, [activeCategory]);
 
   return (
-    <section id="portfolio" className="section-band py-24 md:py-28 relative z-10">
+    <section
+      ref={sectionRef}
+      id="portfolio"
+      className="section-band py-24 md:py-28 relative z-10"
+    >
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container */}
           <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-border/50 shadow-2xl">
-            {/* Header */}
-            <div className="text-center mb-12">
-              <h2 className="section-title mb-4">
-                {t("portfolio.title")}
+            <header className="intro-scroll-showcase-header mx-auto mb-12">
+              <h2
+                className={`showcase-productions-title intro-scroll-showcase-title${
+                  isVisible ? " is-active" : ""
+                }`}
+              >
+                {pick(homePage?.portfolioSection?.title) || t("portfolio.title")}
               </h2>
-            </div>
+              <div
+                className={`showcase-productions-ticks${
+                  isVisible ? " intro-ticks-active" : ""
+                }`}
+                aria-hidden
+              />
+            </header>
 
             {/* Category Filter */}
             <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
@@ -440,95 +480,33 @@ const PortfolioSection = () => {
                 </p>
               </div>
             ) : (
-              <>
-                {/* Display videos in order, YouTube videos larger and centered */}
-                <div className="space-y-8">
-                  {sortedVideos.map((video, index) => {
-                    const isYouTube = isYouTubeUrl(video.videoUrl);
-                    
-                    if (isYouTube) {
-                      // YouTube videos - large and centered
-                      return (
-                        <div key={video.id} className="flex justify-center">
-                          <div className="w-full max-w-4xl md:max-w-6xl lg:max-w-7xl">
-                            <SimpleVideoItem
-                              video={video}
-                              index={index}
-                              language={language}
-                                isPlaying={playingVideoId === video.id}
-                                isLoaded={loadedVideoIds.has(video.id)}
-                              onVideoClick={() =>
-                                handleVideoClick(
-                                  video.id,
-                                  shouldUseThumbnailPreview(video)
-                                )
-                              }
-                              onVideoReady={() => handleVideoReady(video.id)}
-                              onVideoRef={(ref) => registerVideoRef(video.id, ref)}
-                              shouldStartPlaying={pendingPlayVideoId === video.id}
-                              isYouTube={true}
-                              expandLabel={t("portfolio.expandVideo")}
-                              onOpenBigScreen={() => openVideoLightbox(video)}
-                            />
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      // Regular videos - in grid
-                      // Check if this is the first regular video or if previous was YouTube
-                      const prevVideo = index > 0 ? sortedVideos[index - 1] : null;
-                      const isFirstRegular = !prevVideo || isYouTubeUrl(prevVideo.videoUrl);
-                      const nextVideo = index < sortedVideos.length - 1 ? sortedVideos[index + 1] : null;
-                      const isLastRegular = !nextVideo || isYouTubeUrl(nextVideo.videoUrl);
-                      
-                      // Group consecutive regular videos together
-                      if (isFirstRegular) {
-                        // Find all consecutive regular videos
-                        const regularGroup: PortfolioVideo[] = [];
-                        for (let i = index; i < sortedVideos.length; i++) {
-                          if (!isYouTubeUrl(sortedVideos[i].videoUrl)) {
-                            regularGroup.push(sortedVideos[i]);
-                          } else {
-                            break;
-                          }
-                        }
-                        
-                        return (
-                          <div
-                            key={`group-${video.id}`}
-                            ref={index === 0 ? containerRef : undefined}
-                            className="grid grid-cols-2 lg:grid-cols-4 gap-3"
-                          >
-                            {regularGroup.map((v) => (
-                              <SimpleVideoItem
-                                key={v.id}
-                                video={v}
-                                index={sortedVideos.findIndex(vid => vid.id === v.id)}
-                                language={language}
-                                isPlaying={playingVideoId === v.id}
-                                isLoaded={loadedVideoIds.has(v.id)}
-                                onVideoClick={() =>
-                                  handleVideoClick(
-                                    v.id,
-                                    shouldUseThumbnailPreview(v)
-                                  )
-                                }
-                                onVideoReady={() => handleVideoReady(v.id)}
-                                onVideoRef={(ref) => registerVideoRef(v.id, ref)}
-                                shouldStartPlaying={pendingPlayVideoId === v.id}
-                                isYouTube={false}
-                                expandLabel={t("portfolio.expandVideo")}
-                                onOpenBigScreen={() => openVideoLightbox(v)}
-                              />
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null; // Already rendered in group
+              <div
+                ref={containerRef}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {sortedVideos.map((video, index) => (
+                  <SimpleVideoItem
+                    key={video.id}
+                    video={video}
+                    index={index}
+                    language={language}
+                    isPlaying={playingVideoId === video.id}
+                    isLoaded={loadedVideoIds.has(video.id)}
+                    onVideoClick={() =>
+                      handleVideoClick(
+                        video.id,
+                        shouldUseThumbnailPreview(video)
+                      )
                     }
-                  })}
-                </div>
-              </>
+                    onVideoReady={() => handleVideoReady(video.id)}
+                    onVideoRef={(ref) => registerVideoRef(video.id, ref)}
+                    shouldStartPlaying={pendingPlayVideoId === video.id}
+                    isYouTube={isYouTubeUrl(video.videoUrl)}
+                    expandLabel={pick(homePage?.portfolioSection?.expandVideoLabel) || t("portfolio.expandVideo")}
+                    onOpenBigScreen={() => openVideoLightbox(video)}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -574,21 +552,32 @@ const PortfolioSection = () => {
                   />
                 </div>
               ) : (
-                <video
-                  key={lightboxVideo.id}
-                  ref={lightboxVideoRef}
-                  className="max-h-[min(85vh,80vw)] w-full rounded-md bg-black object-contain"
-                  controls
-                  playsInline
-                  autoPlay
-                  src={lightboxVideo.videoUrl}
+                <div
+                  className="relative w-full overflow-hidden rounded-md bg-black"
+                  style={{ aspectRatio: "16/9" }}
                 >
-                  <source
+                  <video
+                    key={lightboxVideo.id}
+                    ref={lightboxVideoRef}
+                    className={`absolute inset-0 h-full w-full rounded-md bg-black ${portfolioMediaFitClass(lightboxIsReel)}`}
+                    controls
+                    playsInline
+                    autoPlay
                     src={lightboxVideo.videoUrl}
-                    type="video/mp4; codecs=avc1.42E01E, mp4a.40.2"
-                  />
-                  <source src={lightboxVideo.videoUrl} type="video/mp4" />
-                </video>
+                    onLoadedMetadata={(event) => {
+                      const el = event.currentTarget;
+                      setLightboxIsReel(
+                        isVerticalReelDimensions(el.videoWidth, el.videoHeight)
+                      );
+                    }}
+                  >
+                    <source
+                      src={lightboxVideo.videoUrl}
+                      type="video/mp4; codecs=avc1.42E01E, mp4a.40.2"
+                    />
+                    <source src={lightboxVideo.videoUrl} type="video/mp4" />
+                  </video>
+                </div>
               )}
               <p className="truncate text-center text-sm text-muted-foreground">
                 {language === "he"
@@ -643,9 +632,25 @@ const SimpleVideoItem = React.memo(
     const isMobile = useIsMobile();
     // Use the isYouTube prop if provided, otherwise check from video URL
     const isYouTubeVideo = isYouTube !== undefined ? isYouTube : isYouTubeUrl(video.videoUrl);
+    const [isReel, setIsReel] = useState(() => isUploadedReelVideo(video));
     const [youtubePlaying, setYoutubePlaying] = useState(false);
     // YouTube videos start unmuted (volume enabled by default)
-    const youtubeEmbedUrl = isYouTubeVideo ? getYouTubeEmbedUrl(video.videoUrl, youtubePlaying, false) : null;
+    const youtubeThumbnailUrl = isYouTubeVideo
+      ? video.thumbnailUrl || getYouTubeThumbnail(video.videoUrl)
+      : undefined;
+    const youtubeEmbedUrl = isYouTubeVideo && youtubePlaying
+      ? getYouTubeEmbedUrl(video.videoUrl, true, false)
+      : null;
+    const mediaFitClass = portfolioMediaFitClass(isReel);
+
+    useEffect(() => {
+      setIsReel(isUploadedReelVideo(video));
+    }, [video.id, video.videoUrl, video.videoWidth, video.videoHeight]);
+
+    const syncReelFromVideo = useCallback((el: HTMLVideoElement) => {
+      if (isYouTubeVideo || !el.videoWidth || !el.videoHeight) return;
+      setIsReel(isVerticalReelDimensions(el.videoWidth, el.videoHeight));
+    }, [isYouTubeVideo]);
 
     // Simple intersection observer to detect when video is in view
     useEffect(() => {
@@ -717,43 +722,33 @@ const SimpleVideoItem = React.memo(
     return (
       <div
         ref={itemRef}
-        className={`portfolio-item group relative ${
-          isYouTubeVideo ? "w-full" : ""
-        }`}
+        className="portfolio-item group relative w-full"
         data-video-id={video.id}
       >
         {/* Simple Video Container */}
-        <div className={`relative bg-gradient-secondary/20 overflow-hidden w-full shadow-lg ${
-          isYouTubeVideo 
-            ? "aspect-video rounded-lg" // YouTube videos use 16:9 aspect ratio, larger and centered
-            : "aspect-video h-[35vh] sm:h-[60vh]" // Regular videos use mobile aspect ratio
-        }`}>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenBigScreen();
-            }}
-            className="absolute end-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-md bg-black/55 text-white shadow-md backdrop-blur-sm transition hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-black/40"
-            aria-label={expandLabel}
-            title={expandLabel}
-          >
-            <Maximize2 className="h-4 w-4" aria-hidden />
-          </button>
+        <div className={portfolioContainerClass(isReel)}>
           {/* YouTube Video Embed */}
-          {isYouTubeVideo && youtubeEmbedUrl ? (
-            <div 
-              className="relative w-full" 
-              style={{ aspectRatio: "16/9" }}
-            >
-              <iframe
-                key={youtubePlaying ? "playing-unmuted" : "paused-unmuted"}
-                src={youtubeEmbedUrl}
-                className="absolute top-0 left-0 w-full h-full rounded-lg"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={language === "he" ? video.titleHe : video.title}
-              />
+          {isYouTubeVideo ? (
+            <div className="relative h-full w-full">
+              {youtubeEmbedUrl ? (
+                <iframe
+                  src={youtubeEmbedUrl}
+                  className="absolute left-0 top-0 h-full w-full rounded-lg"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={language === "he" ? video.titleHe : video.title}
+                />
+              ) : youtubeThumbnailUrl ? (
+                <img
+                  src={youtubeThumbnailUrl}
+                  alt={language === "he" ? video.titleHe : video.title}
+                  className="absolute left-0 top-0 h-full w-full rounded-lg object-cover"
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : (
+                <div className="absolute inset-0 rounded-lg bg-black" />
+              )}
               <div 
                 className={`absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-all duration-300 rounded-lg z-10 cursor-pointer ${
                   youtubePlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -762,14 +757,13 @@ const SimpleVideoItem = React.memo(
                   setYoutubePlaying(true);
                 }}
               >
-                <div className="play-button-overlay rounded-full p-4 md:p-6 group-hover:scale-110 transition-all shadow-lg">
-                  <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
+                <div className="play-button-overlay rounded-full p-3 md:p-4 group-hover:scale-110 transition-all shadow-lg">
+                  <Play className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
                 </div>
               </div>
             </div>
           ) : (
-            // Show video (either no thumbnail or already loaded)
-            <>
+            <div className="relative h-full w-full">
               {isInView && !videoError ? (
                 <video
                   key={`video-${video.id}`}
@@ -780,7 +774,7 @@ const SimpleVideoItem = React.memo(
                     }
                   }}
                   poster={video.thumbnailUrl || undefined}
-                  className={`w-full h-full object-cover transition-opacity duration-200 ${
+                  className={`absolute inset-0 h-full w-full transition-opacity duration-200 ${mediaFitClass} ${
                     usesThumbnailPreview && !isLoaded
                       ? "opacity-0 pointer-events-none"
                       : "opacity-100 cursor-pointer"
@@ -807,8 +801,9 @@ const SimpleVideoItem = React.memo(
                   onLoadStart={() => {
                     console.log("Video load started:", video.id, video.videoUrl);
                   }}
-                  onLoadedMetadata={() => {
+                  onLoadedMetadata={(event) => {
                     console.log("Video metadata loaded:", video.id);
+                    syncReelFromVideo(event.currentTarget);
                   }}
                   onLoadedData={() => {
                     console.log("Video loaded:", video.id);
@@ -842,7 +837,7 @@ const SimpleVideoItem = React.memo(
                           break;
                         case 4:
                           console.error("Source not supported - check video format/URL");
-                          console.error("Note: If Firebase Storage returns 402, check billing/quota");
+                          console.error("Note: Check video hosting quota and CORS settings");
                           break;
                       }
                     }
@@ -857,7 +852,7 @@ const SimpleVideoItem = React.memo(
                 </video>
               ) : (
                 // Placeholder until video comes into view or on error
-                <div className="w-full h-full bg-black flex items-center justify-center">
+                <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black">
                   {videoError ? (
                     <div className="text-center p-4">
                       <Play className="h-12 w-12 text-white/50 mx-auto mb-2" />
@@ -867,7 +862,7 @@ const SimpleVideoItem = React.memo(
                     <img
                       src={video.thumbnailUrl}
                       alt={language === "he" ? video.titleHe : video.title}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${mediaFitClass}`}
                       loading="lazy"
                     />
                   ) : (
@@ -885,7 +880,7 @@ const SimpleVideoItem = React.memo(
                     <img
                       src={video.thumbnailUrl}
                       alt={language === "he" ? video.titleHe : video.title}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${mediaFitClass}`}
                       loading="lazy"
                       decoding="async"
                     />
@@ -893,12 +888,15 @@ const SimpleVideoItem = React.memo(
                     <video
                       ref={previewVideoRef}
                       src={video.videoUrl}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${mediaFitClass}`}
                       muted
                       playsInline
                       preload="metadata"
                       controls={false}
-                      onLoadedMetadata={seekPreviewVideo}
+                      onLoadedMetadata={(event) => {
+                        syncReelFromVideo(event.currentTarget);
+                        seekPreviewVideo();
+                      }}
                       onLoadedData={(e) => {
                         e.currentTarget.pause();
                         seekPreviewVideo();
@@ -910,13 +908,13 @@ const SimpleVideoItem = React.memo(
                   )}
 
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                    <div className="play-button-overlay rounded-full p-4 md:p-6 group-hover:scale-110 transition-all shadow-lg">
-                      <Play className="w-8 h-8 md:w-12 md:h-12 text-white fill-white" />
+                    <div className="play-button-overlay rounded-full p-3 md:p-4 group-hover:scale-110 transition-all shadow-lg">
+                      <Play className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
                     </div>
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

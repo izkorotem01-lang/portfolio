@@ -1,13 +1,20 @@
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Instagram, Youtube, Send } from "lucide-react";
+import { Lightbulb, Mail, MessageCircle, PenTool, Rocket, Instagram, Youtube, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
   const { t, language } = useLanguage();
+  const { homePage, siteSettings, pick } = useSiteContent();
+  const { ref: sectionRef, isVisible } = useScrollAnimation({
+    threshold: 0.08,
+    rootMargin: "0px 0px -5% 0px",
+  });
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -34,19 +41,53 @@ const ContactSection = () => {
     }));
   };
 
+  const email = siteSettings?.contactEmail || t("contact.email");
+  const whatsappUrl = siteSettings?.whatsappUrl || "https://wa.me/972549702996";
+  const processSteps =
+    homePage?.contactSection?.processSteps?.length
+      ? homePage.contactSection.processSteps
+      : [
+          {
+            _key: "discovery",
+            title: { en: "Discovery", he: "היכרות" },
+            description: {
+              en: "We understand your business, audience, goals, and current content situation.",
+              he: "מבינים את העסק, הקהל, המטרות והמצב הנוכחי של התוכן.",
+            },
+          },
+          {
+            _key: "plan",
+            title: { en: "Personalized Plan", he: "תוכנית אישית" },
+            description: {
+              en: "We build a custom content plan that fits your needs, budget, and growth direction.",
+              he: "בונים תוכנית תוכן אישית שמתאימה לצרכים, לתקציב ולכיוון הצמיחה שלכם.",
+            },
+          },
+          {
+            _key: "production",
+            title: { en: "Create & Improve", he: "יוצרים ומשפרים" },
+            description: {
+              en: "We produce the content, publish consistently, and improve it based on results.",
+              he: "מפיקים את התוכן, מפרסמים בצורה עקבית ומשפרים לפי התוצאות.",
+            },
+          },
+        ];
+
+  const processIcons = [Lightbulb, PenTool, Rocket];
+
   const contactMethods = [
     {
       icon: Mail,
       title: "Email",
-      value: t("contact.email"),
-      action: () => window.open("mailto:contact@rotemizko.com"),
+      value: email,
+      action: () => window.open(`mailto:${email}`),
       color: "bg-brand-cyan/12 border border-brand-cyan/30 text-brand-cyan",
     },
     {
       icon: MessageCircle,
-      title: t("contact.whatsapp"),
-      value: "Quick Response",
-      action: () => window.open("https://wa.me/972549702996"),
+      title: pick(siteSettings?.whatsappLabel) || "WhatsApp",
+      value: language === "he" ? "מענה מהיר" : "Quick Response",
+      action: () => window.open(whatsappUrl),
       color: "bg-brand-orange/12 border border-brand-orange/30 text-brand-orange",
     },
   ];
@@ -78,48 +119,85 @@ const ContactSection = () => {
 
   return (
     <section id="contact" className="py-24 md:py-28 relative overflow-hidden z-10">
-      <div className="container mx-auto px-4 relative z-10">
+      <div ref={sectionRef} className="container mx-auto px-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Large Card Container */}
-          <div className="glass-card p-12 rounded-3xl backdrop-blur-xl bg-black/70 border border-white/30">
+          <div className="glass-card rounded-3xl border border-white/30 bg-black/75 p-7 backdrop-blur-xl md:p-12 lg:p-16">
             {/* Section Title */}
-            <div className="text-center mb-16">
-              <h2 className="section-title">
-                {t("contact.title")}
+            <header className="intro-scroll-showcase-header mx-auto mb-10 md:mb-14">
+              <h2
+                className={`showcase-productions-title intro-scroll-showcase-title${
+                  isVisible ? " is-active" : ""
+                }`}
+              >
+                {pick(homePage?.contactSection?.title) || t("contact.title")}
               </h2>
-              <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
-                {t("contact.subtitle")}
+              <div
+                className={`showcase-productions-ticks${
+                  isVisible ? " intro-ticks-active" : ""
+                }`}
+                aria-hidden
+              />
+              <p className="mt-6 text-xl text-foreground/80 max-w-2xl mx-auto text-center">
+                {pick(homePage?.contactSection?.subtitle) || t("contact.subtitle")}
               </p>
+            </header>
+
+            <div className="relative mb-14 grid gap-5 md:grid-cols-3 md:gap-6">
+              {processSteps.map((step, index) => (
+                <div key={step._key ?? index} className="relative">
+                  <div
+                    className={`group relative min-h-[15rem] overflow-hidden rounded-3xl border border-brand-cyan/25 bg-gradient-to-br from-background/80 via-background/45 to-brand-cyan/10 p-6 text-center shadow-2xl transition duration-500 hover:-translate-y-2 hover:border-brand-orange/45 hover:shadow-[0_18px_55px_hsl(var(--brand-cyan)/0.18)] ${
+                      isVisible ? `animate-scale-in-up animate-delay-${(index + 1) * 100}` : "opacity-0"
+                    }`}
+                  >
+                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-brand-cyan/10 blur-2xl transition group-hover:bg-brand-orange/15" />
+                    <div className="absolute -bottom-12 left-1/2 h-24 w-32 -translate-x-1/2 rounded-full bg-brand-orange/10 blur-3xl" />
+                    <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand-cyan/40 bg-black/45 text-brand-cyan shadow-[0_0_28px_hsl(var(--brand-cyan)/0.22)] transition group-hover:scale-110 group-hover:text-brand-orange">
+                      {React.createElement(processIcons[index] ?? Rocket, { className: "h-7 w-7" })}
+                    </div>
+                    <div className="relative mx-auto mb-4 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-foreground/55">
+                      {language === "he" ? `שלב ${index + 1}` : `Step ${index + 1}`}
+                    </div>
+                    <h3 className="relative mb-3 text-xl font-bold text-foreground md:text-2xl">
+                      {pick(step.title)}
+                    </h3>
+                    <p className="relative text-sm leading-relaxed text-foreground/72 md:text-base">
+                      {pick(step.description)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Contact Information - Centered */}
             <div className="flex justify-center">
-              <div className="max-w-2xl w-full space-y-8">
+              <div className="w-full max-w-4xl space-y-9">
                 {/* Contact Methods */}
-                <div className="space-y-6">
+                <div className="grid gap-5 md:grid-cols-2">
                   {contactMethods.map((method, index) => (
                     <div
                       key={index}
                       onClick={method.action}
-                      className="glass-card p-6 rounded-2xl hover:scale-105 transition-smooth cursor-pointer group"
+                      className="glass-card group cursor-pointer rounded-3xl border border-white/15 bg-background/45 p-7 transition-smooth hover:scale-[1.03] hover:border-brand-cyan/45 md:p-8"
                     >
                       <div
                         className={`flex items-center ${
                           language === "he"
-                            ? "space-x-reverse space-x-4"
-                            : "space-x-4"
+                            ? "space-x-reverse space-x-5"
+                            : "space-x-5"
                         }`}
                       >
                         <div
-                          className={`w-12 h-12 rounded-xl ${method.color} flex items-center justify-center`}
+                          className={`h-16 w-16 rounded-2xl ${method.color} flex shrink-0 items-center justify-center`}
                         >
-                          <method.icon className="w-6 h-6" />
+                          <method.icon className="h-8 w-8" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-smooth">
+                          <h3 className="text-xl font-semibold text-foreground transition-smooth group-hover:text-primary">
                             {method.title}
                           </h3>
-                          <p className="text-foreground/70">{method.value}</p>
+                          <p className="text-base text-foreground/70">{method.value}</p>
                         </div>
                       </div>
                     </div>
@@ -129,7 +207,7 @@ const ContactSection = () => {
                 {/* Social Links */}
                 <div className="text-center">
                   <h3 className="text-xl font-bold mb-4 text-foreground">
-                    Follow My Work
+                    {language === "he" ? "עקבו אחרי העבודות שלנו" : "Follow Our Work"}
                   </h3>
                   <div
                     className={`flex justify-center ${

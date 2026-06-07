@@ -1,20 +1,22 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIntroHighlights } from "@/contexts/IntroHighlightsContext";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 import { useIntroHighlightsScrollContext } from "@/contexts/IntroHighlightsScrollContext";
 import HeroHighlightsCube from "@/components/highlights/HeroHighlightsCube";
 import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
-import { PortfolioVideo } from "@/lib/portfolioService";
+import type { DisplayVideo } from "@/lib/videoTypes";
 
-function pickFlankVideos(videos: PortfolioVideo[], activeIndex: number) {
+function pickFlankVideos(videos: DisplayVideo[], activeIndex: number) {
   if (videos.length === 0) {
-    return { left: null as PortfolioVideo | null, right: null as PortfolioVideo | null };
+    return { left: null as DisplayVideo | null, right: null as DisplayVideo | null };
   }
   if (videos.length === 1) {
     return { left: videos[0], right: videos[0] };
   }
   if (videos.length === 2) {
-    return { left: videos[0], right: videos[1] };
+    const other = videos[activeIndex === 0 ? 1 : 0] ?? videos[0];
+    return { left: other, right: other };
   }
   const others = videos.filter((_, index) => index !== activeIndex);
   return {
@@ -28,7 +30,9 @@ const flankRevealClass = (active: boolean, exiting: boolean) =>
 
 const IntroHighlightsScrollStage = () => {
   const { language, t } = useLanguage();
-  const { videos, isLoading, activeHeroIndex } = useIntroHighlights();
+  const { homePage, pick } = useSiteContent();
+  const { videos, isLoading, activeHeroIndex, setHeroRotationPaused } =
+    useIntroHighlights();
   const { phases, reveal } = useIntroHighlightsScrollContext();
   const {
     titleActive,
@@ -44,9 +48,26 @@ const IntroHighlightsScrollStage = () => {
   const introFlatten = latchedMorph ? latchedMorph.flatten : phases.flatten;
   const introVivid = latchedMorph ? latchedMorph.vivid : phases.vivid;
 
+  const highlightsFrozen = titleActive && !titleExiting;
+  const [frozenCubeIndex, setFrozenCubeIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!highlightsFrozen) {
+      setFrozenCubeIndex(null);
+      return;
+    }
+    setFrozenCubeIndex((prev) => (prev === null ? activeHeroIndex : prev));
+  }, [highlightsFrozen, activeHeroIndex]);
+
+  const cubeIndex = frozenCubeIndex ?? activeHeroIndex;
+
+  useEffect(() => {
+    setHeroRotationPaused(highlightsFrozen);
+  }, [highlightsFrozen, setHeroRotationPaused]);
+
   const { left: leftVideo, right: rightVideo } = useMemo(
-    () => pickFlankVideos(videos, activeHeroIndex),
-    [videos, activeHeroIndex]
+    () => pickFlankVideos(videos, cubeIndex),
+    [videos, cubeIndex]
   );
 
   return (
@@ -68,7 +89,7 @@ const IntroHighlightsScrollStage = () => {
           <h2
             className={`showcase-productions-title intro-scroll-showcase-title${flankRevealClass(titleActive, titleExiting)}`}
           >
-            {t("showcase.title")}
+            {pick(homePage?.showcaseTitle) || t("showcase.title")}
           </h2>
           <div
             className={`showcase-productions-ticks intro-scroll-showcase-ticks${flankRevealClass(ticksActive, ticksExiting)}`}
@@ -98,7 +119,6 @@ const IntroHighlightsScrollStage = () => {
                       isActive={titleActive}
                       onActivate={() => {}}
                       mode="grid"
-                      forceMuted
                       fillContainer
                     />
                   </div>
@@ -111,8 +131,8 @@ const IntroHighlightsScrollStage = () => {
                     {videos.length > 0 && (
                       <HeroHighlightsCube
                         videos={videos}
-                        activeIndex={activeHeroIndex}
-                        flipEnabled
+                        activeIndex={cubeIndex}
+                        flipEnabled={!highlightsFrozen}
                       />
                     )}
                   </div>
@@ -130,7 +150,6 @@ const IntroHighlightsScrollStage = () => {
                       isActive={titleActive}
                       onActivate={() => {}}
                       mode="grid"
-                      forceMuted
                       fillContainer
                     />
                   </div>

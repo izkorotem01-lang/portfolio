@@ -1,20 +1,26 @@
-import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Star, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import review3Video from "@/assets/reviews/review3_video.mp4";
 import review3Thumbnail from "@/assets/reviews/review3_tn.jpeg";
+import type { ReviewItem } from "@/lib/reviewTypes";
+import {
+  getYouTubeEmbedUrl,
+  getYouTubeThumbnail,
+} from "@/lib/portfolioService";
 
-export type ReviewItem = {
-  name: string;
-  company: string;
-  rating: number;
-  text: string;
-  video?: string;
-  thumbnail?: string;
-};
+export type { ReviewItem };
 
 /** Time each review stays visible before auto-advance */
 const REVIEW_AUTO_ADVANCE_MS = 10_000;
+const REVIEW_HERO_AUTO_ADVANCE_MS = 8_000;
 
 const reviewsContent = {
   hebrew: [
@@ -66,12 +72,16 @@ const reviewsContent = {
 type ReviewsCarouselProps = {
   variant?: "hero" | "section";
   className?: string;
+  reviews?: ReviewItem[];
+  autoOnly?: boolean;
+  startIndex?: number;
 };
 
 type ReviewSlideProps = {
   review: ReviewItem;
   isHero: boolean;
   language: string;
+  isActive?: boolean;
   videoRef?: React.RefObject<HTMLVideoElement | null>;
   isVideoPlaying?: boolean;
   onToggleVideo?: () => void;
@@ -85,6 +95,7 @@ const ReviewSlide = ({
   review,
   isHero,
   language,
+  isActive = false,
   videoRef,
   isVideoPlaying = false,
   onToggleVideo,
@@ -93,31 +104,66 @@ const ReviewSlide = ({
   onVideoEnded,
   forMeasure = false,
 }: ReviewSlideProps) => {
-  const hasVideo = Boolean(review.video && review.thumbnail);
+  const [youtubePlaying, setYoutubePlaying] = useState(false);
+  const hasNativeVideo = Boolean(review.video && !review.isYouTube);
+  const hasYouTube = Boolean(review.isYouTube && review.video);
+  const hasScreenshot = Boolean(review.screenshot);
+  const poster = review.thumbnail || review.screenshot;
+  const youtubeThumbnail =
+    (hasYouTube && review.video && getYouTubeThumbnail(review.video)) ||
+    poster;
+  const youtubeEmbedUrl =
+    hasYouTube && review.video && youtubePlaying
+      ? getYouTubeEmbedUrl(review.video, true, false, true)
+      : null;
+
+  useEffect(() => {
+    if (!isActive) {
+      setYoutubePlaying(false);
+    }
+  }, [isActive]);
+
+  const mediaFrameClass = `relative w-full overflow-hidden rounded-2xl border border-brand-cyan/35 shadow-[0_0_28px_hsl(var(--brand-cyan)/0.18)] ${
+    isHero ? "max-w-full" : "max-w-[8.25rem] md:max-w-[9.25rem]"
+  }`;
 
   return (
-    <div className="flex flex-col">
-      {hasVideo && (
+    <div className="flex h-full flex-col justify-center">
+      {hasScreenshot && !hasNativeVideo && !hasYouTube && (
         <div
-          className={`flex flex-shrink-0 justify-center ${isHero ? "mb-4" : "mb-8"}`}
+          className={`flex flex-shrink-0 justify-center ${isHero ? "mb-4" : "mb-3"}`}
         >
-          <div
-            className={`relative w-full overflow-hidden rounded-2xl border border-brand-cyan/35 shadow-[0_0_28px_hsl(var(--brand-cyan)/0.18)] ${
-              isHero ? "max-w-full" : "max-w-xs md:max-w-sm"
-            }`}
-          >
+          <div className={mediaFrameClass}>
+            <img
+              src={review.screenshot}
+              alt=""
+              className="h-auto w-full object-contain"
+            />
+          </div>
+        </div>
+      )}
+
+      {hasNativeVideo && (
+        <div
+          className={`flex flex-shrink-0 justify-center ${isHero ? "mb-4" : "mb-3"}`}
+        >
+          <div className={mediaFrameClass}>
             {forMeasure || !videoRef ? (
-              <img
-                src={review.thumbnail}
-                alt=""
-                className="h-auto w-full object-contain"
-              />
+              poster ? (
+                <img
+                  src={poster}
+                  alt=""
+                  className="h-auto w-full object-contain"
+                />
+              ) : (
+                <div className="aspect-video w-full bg-black/30" />
+              )
             ) : (
               <>
                 <video
                   ref={videoRef}
                   src={review.video}
-                  poster={review.thumbnail}
+                  poster={poster}
                   className="h-auto w-full object-contain"
                   controls={isVideoPlaying}
                   onPlay={onVideoPlay}
@@ -133,11 +179,11 @@ const ReviewSlide = ({
                   >
                     <div
                       className={`flex items-center justify-center rounded-full bg-brand-orange/85 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-brand-orange ${
-                        isHero ? "h-14 w-14" : "h-20 w-20 md:h-24 md:w-24"
+                        isHero ? "h-14 w-14" : "h-10 w-10 md:h-11 md:w-11"
                       }`}
                     >
                       <Play
-                        className={`text-white ${isHero ? "ml-0.5 h-6 w-6" : "ml-1 h-10 w-10 md:h-12 md:w-12"}`}
+                        className={`text-white ${isHero ? "ml-0.5 h-6 w-6" : "ml-0.5 h-4 w-4 md:h-5 md:w-5"}`}
                         fill="white"
                       />
                     </div>
@@ -149,23 +195,80 @@ const ReviewSlide = ({
         </div>
       )}
 
-      {!hasVideo && review.text && (
+      {hasYouTube && (
+        <div
+          className={`flex flex-shrink-0 justify-center ${isHero ? "mb-4" : "mb-3"}`}
+        >
+          <div className={`${mediaFrameClass} aspect-video bg-black/40`}>
+            {forMeasure ? (
+              youtubeThumbnail ? (
+                <img
+                  src={youtubeThumbnail}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : null
+            ) : youtubeEmbedUrl ? (
+              <iframe
+                src={youtubeEmbedUrl}
+                title={`${review.name} review`}
+                className="absolute inset-0 h-full w-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : youtubeThumbnail ? (
+              <>
+                <img
+                  src={youtubeThumbnail}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                {isActive && (
+                  <button
+                    type="button"
+                    onClick={() => setYoutubePlaying(true)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 transition-all duration-300 hover:bg-black/30"
+                    aria-label="Play video"
+                  >
+                    <div
+                      className={`flex items-center justify-center rounded-full bg-brand-orange/85 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-brand-orange ${
+                        isHero ? "h-14 w-14" : "h-10 w-10 md:h-11 md:w-11"
+                      }`}
+                    >
+                      <Play
+                        className={`text-white ${isHero ? "ml-0.5 h-6 w-6" : "ml-0.5 h-4 w-4 md:h-5 md:w-5"}`}
+                        fill="white"
+                      />
+                    </div>
+                  </button>
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {review.text && (
         <p
-          className={`leading-relaxed text-foreground/90 ${
-            isHero ? "mb-4 text-sm sm:text-base" : "mb-6 text-lg md:text-xl"
+          className={`review-text-clamp leading-relaxed text-foreground/90 ${
+            isHero ? "mb-4 text-sm sm:text-base" : "mb-4 text-sm md:text-base"
           } ${language === "he" ? "text-right" : "text-left"}`}
         >
           &ldquo;{review.text}&rdquo;
         </p>
       )}
 
-      <div className={`flex flex-col items-center ${hasVideo ? "mt-1" : ""}`}>
-        <div className={`flex justify-center ${isHero ? "mb-3" : "mb-5"}`}>
+      <div
+        className={`flex flex-col items-center ${
+          hasNativeVideo || hasYouTube || hasScreenshot ? "mt-1" : ""
+        }`}
+      >
+        <div className={`flex justify-center ${isHero ? "mb-3" : "mb-3"}`}>
           {[...Array(review.rating)].map((_, i) => (
             <Star
               key={i}
               className={`mx-0.5 fill-current text-yellow-400 ${
-                isHero ? "h-4 w-4" : "mx-1 h-6 w-6 md:h-7 md:w-7"
+                isHero ? "h-4 w-4" : "mx-0.5 h-4 w-4 md:h-5 md:w-5"
               }`}
             />
           ))}
@@ -173,18 +276,20 @@ const ReviewSlide = ({
         <div className="text-center">
           <h4
             className={`font-bold text-foreground ${
-              isHero ? "mb-1 text-base sm:text-lg" : "mb-2 text-xl md:text-2xl"
+              isHero ? "mb-1 text-base sm:text-lg" : "mb-1 text-base md:text-lg"
             }`}
           >
             {review.name}
           </h4>
-          <p
-            className={`text-foreground/60 ${
-              isHero ? "text-xs sm:text-sm" : "text-base md:text-lg"
-            }`}
-          >
-            {review.company}
-          </p>
+          {review.company && (
+            <p
+              className={`text-foreground/60 ${
+                isHero ? "text-xs sm:text-sm" : "text-sm md:text-base"
+              }`}
+            >
+              {review.company}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -194,10 +299,26 @@ const ReviewSlide = ({
 const ReviewsCarousel = ({
   variant = "section",
   className = "",
+  reviews: reviewsProp,
+  autoOnly = false,
+  startIndex = 0,
 }: ReviewsCarouselProps) => {
   const { language } = useLanguage();
   const isHero = variant === "hero";
-  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const fallbackReviews = useMemo(
+    () =>
+      language === "he" ? reviewsContent.hebrew : reviewsContent.english,
+    [language]
+  );
+  const reviews = reviewsProp?.length ? reviewsProp : fallbackReviews;
+  const slideKey = (review: ReviewItem, index: number) =>
+    review.id ?? `review-${index}`;
+  const initialIndex =
+    reviews.length > 0
+      ? ((startIndex % reviews.length) + reviews.length) % reviews.length
+      : 0;
+
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(initialIndex);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
@@ -207,9 +328,8 @@ const ReviewsCarousel = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const [measureWidth, setMeasureWidth] = useState<number | null>(null);
 
-  const reviews =
-    language === "he" ? reviewsContent.hebrew : reviewsContent.english;
-  const currentReview = reviews[currentReviewIndex];
+  const autoAdvanceMs =
+    isHero && autoOnly ? REVIEW_HERO_AUTO_ADVANCE_MS : REVIEW_AUTO_ADVANCE_MS;
 
   const measureSlides = useCallback(() => {
     if (cardRef.current) {
@@ -251,14 +371,14 @@ const ReviewsCarousel = ({
         setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
         setTimeout(() => setIsTransitioning(false), 50);
       }, 300);
-    }, REVIEW_AUTO_ADVANCE_MS);
+    }, autoAdvanceMs);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, reviews.length, isTransitioning]);
+  }, [isAutoPlaying, reviews.length, isTransitioning, autoAdvanceMs]);
 
   useEffect(() => {
-    setCurrentReviewIndex(0);
-  }, [language]);
+    setCurrentReviewIndex(initialIndex);
+  }, [language, initialIndex]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -310,28 +430,32 @@ const ReviewsCarousel = ({
   return (
     <div
       className={`relative ${className}`}
-      onMouseEnter={() => setIsAutoPlaying(false)}
-      onMouseLeave={() => setIsAutoPlaying(true)}
-      onFocusCapture={() => setIsAutoPlaying(false)}
-      onBlurCapture={() => setIsAutoPlaying(true)}
+      onMouseEnter={autoOnly ? undefined : () => setIsAutoPlaying(false)}
+      onMouseLeave={autoOnly ? undefined : () => setIsAutoPlaying(true)}
+      onFocusCapture={autoOnly ? undefined : () => setIsAutoPlaying(false)}
+      onBlurCapture={autoOnly ? undefined : () => setIsAutoPlaying(true)}
     >
       <div
         ref={cardRef}
-        className={`bg-transparent ${isHero ? "p-0" : "p-8 md:p-12"}`}
+        className={`bg-transparent ${isHero ? "p-0" : "p-3 md:p-4"}`}
       >
         <div className="relative flex flex-col text-center">
           <div
             className="relative w-full"
             style={
-              viewportHeight != null ? { height: viewportHeight } : undefined
+              isHero
+                ? viewportHeight != null
+                  ? { height: viewportHeight }
+                  : undefined
+                : { height: "19.5rem" }
             }
           >
             {reviews.map((review, index) => {
               const isActive = index === currentReviewIndex;
               return (
                 <div
-                  key={`slide-${index}`}
-                  className={`absolute inset-0 flex flex-col justify-center transition-opacity duration-300 ${
+                  key={slideKey(review, index)}
+                  className={`absolute inset-0 flex flex-col justify-center transition-opacity duration-500 ${
                     isActive && !isTransitioning
                       ? "z-10 opacity-100"
                       : "pointer-events-none z-0 opacity-0"
@@ -342,6 +466,7 @@ const ReviewsCarousel = ({
                     review={review}
                     isHero={isHero}
                     language={language}
+                    isActive={isActive}
                     videoRef={isActive ? videoRef : undefined}
                     isVideoPlaying={isActive ? isVideoPlaying : false}
                     onToggleVideo={isActive ? toggleVideo : undefined}
@@ -360,57 +485,60 @@ const ReviewsCarousel = ({
             })}
           </div>
 
-          <div
-            className={`relative z-20 mt-4 flex items-center justify-center gap-3 ${
-              isHero ? "" : "mt-8 gap-4"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={language === "he" ? nextReview : prevReview}
-              className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
-              aria-label={language === "he" ? "ביקורת הבאה" : "Previous review"}
+          {!autoOnly && (
+            <div
+              className={`relative z-20 mt-4 flex items-center justify-center gap-3 ${
+                isHero ? "" : "mt-4 gap-4"
+              }`}
             >
-              {language === "he" ? (
-                <ChevronRight className="h-4 w-4 text-foreground" />
-              ) : (
-                <ChevronLeft className="h-4 w-4 text-foreground" />
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={language === "he" ? nextReview : prevReview}
+                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
+                aria-label={
+                  language === "he" ? "ביקורת הבאה" : "Previous review"
+                }
+              >
+                {language === "he" ? (
+                  <ChevronRight className="h-4 w-4 text-foreground" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 text-foreground" />
+                )}
+              </button>
 
-            <div className="flex gap-2">
-              {reviews.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleReviewClick(index)}
-                  className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                    index === currentReviewIndex
-                      ? "bg-primary"
-                      : "bg-white/30 hover:bg-white/50"
-                  }`}
-                  aria-label={`${language === "he" ? "ביקורת" : "Review"} ${index + 1}`}
-                />
-              ))}
+              <div className="flex gap-2">
+                {reviews.map((review, index) => (
+                  <button
+                    key={slideKey(review, index)}
+                    type="button"
+                    onClick={() => handleReviewClick(index)}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                      index === currentReviewIndex
+                        ? "bg-primary"
+                        : "bg-white/30 hover:bg-white/50"
+                    }`}
+                    aria-label={`${language === "he" ? "ביקורת" : "Review"} ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={language === "he" ? prevReview : nextReview}
+                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
+                aria-label={language === "he" ? "ביקורת קודמת" : "Next review"}
+              >
+                {language === "he" ? (
+                  <ChevronLeft className="h-4 w-4 text-foreground" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-foreground" />
+                )}
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={language === "he" ? prevReview : nextReview}
-              className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
-              aria-label={language === "he" ? "ביקורת קודמת" : "Next review"}
-            >
-              {language === "he" ? (
-                <ChevronLeft className="h-4 w-4 text-foreground" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-foreground" />
-              )}
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Off-screen measurement — must not affect card layout height */}
       <div
         aria-hidden
         className="reviews-carousel-measure pointer-events-none fixed left-[-100vw] top-0 -z-50 opacity-0"
@@ -418,7 +546,7 @@ const ReviewsCarousel = ({
       >
         {reviews.map((review, index) => (
           <div
-            key={`measure-${index}`}
+            key={`measure-${slideKey(review, index)}`}
             ref={(el) => {
               measureRefs.current[index] = el;
             }}

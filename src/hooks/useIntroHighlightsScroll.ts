@@ -65,19 +65,19 @@ export function useIntroScrollMorphEnabled() {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    const mqWide = window.matchMedia("(min-width: 769px)");
     const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mqMobile = window.matchMedia("(max-width: 768px)");
 
     const sync = () => {
-      setEnabled(mqWide.matches && !mqMotion.matches);
+      setEnabled(!mqMotion.matches && !mqMobile.matches);
     };
 
     sync();
-    mqWide.addEventListener("change", sync);
     mqMotion.addEventListener("change", sync);
+    mqMobile.addEventListener("change", sync);
     return () => {
-      mqWide.removeEventListener("change", sync);
       mqMotion.removeEventListener("change", sync);
+      mqMobile.removeEventListener("change", sync);
     };
   }, []);
 

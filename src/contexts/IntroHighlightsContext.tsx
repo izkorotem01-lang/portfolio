@@ -5,19 +5,17 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import {
-  getCategories,
-  getVideos,
-  PortfolioVideo,
-} from "@/lib/portfolioService";
-import { pickRandomShortformVideos } from "@/lib/pickRandomShortformVideos";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import type { DisplayVideo } from "@/lib/videoTypes";
+import { resolveHighlightThumbnail } from "@/lib/sanitySite";
 
 export const HIGHLIGHT_HERO_ADVANCE_MS = 5_000;
 
 type IntroHighlightsContextValue = {
-  videos: PortfolioVideo[];
+  videos: DisplayVideo[];
   isLoading: boolean;
   activeHeroIndex: number;
+  setHeroRotationPaused: (paused: boolean) => void;
 };
 
 const IntroHighlightsContext = createContext<IntroHighlightsContextValue | null>(
@@ -29,49 +27,43 @@ export const IntroHighlightsProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [videos, setVideos] = useState<PortfolioVideo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { highlightVideos, isLoading: siteLoading } = useSiteContent();
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [heroRotationPaused, setHeroRotationPaused] = useState(false);
+
+  const videos = useMemo<DisplayVideo[]>(
+    () =>
+      highlightVideos.map((video) => ({
+        id: video.id,
+        title: video.title,
+        videoUrl: video.videoUrl,
+        thumbnailUrl: resolveHighlightThumbnail(video),
+      })),
+    [highlightVideos]
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [allVideos, categories] = await Promise.all([
-          getVideos(),
-          getCategories(),
-        ]);
-        if (!cancelled) {
-          setVideos(pickRandomShortformVideos(allVideos, categories, 4));
-        }
-      } catch (error) {
-        console.error("Intro highlights load failed:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (videos.length <= 1) return;
+    if (videos.length <= 1 || heroRotationPaused) return;
 
     const interval = setInterval(() => {
       setActiveHeroIndex((prev) => (prev + 1) % videos.length);
     }, HIGHLIGHT_HERO_ADVANCE_MS);
 
     return () => clearInterval(interval);
-  }, [videos.length]);
+  }, [videos.length, heroRotationPaused]);
 
   useEffect(() => {
     setActiveHeroIndex(0);
   }, [videos]);
 
   const value = useMemo(
-    () => ({ videos, isLoading, activeHeroIndex }),
-    [videos, isLoading, activeHeroIndex]
+    () => ({
+      videos,
+      isLoading: siteLoading,
+      activeHeroIndex,
+      setHeroRotationPaused,
+    }),
+    [videos, siteLoading, activeHeroIndex]
   );
 
   return (

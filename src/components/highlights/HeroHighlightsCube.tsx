@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PortfolioVideo } from "@/lib/portfolioService";
+import type { DisplayVideo } from "@/lib/videoTypes";
 import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
 
 const FLIP_MS = 1200;
@@ -12,7 +12,7 @@ function cubeTransform(rotateY: number, rotateX: number) {
 }
 
 type HeroHighlightsCubeProps = {
-  videos: PortfolioVideo[];
+  videos: DisplayVideo[];
   activeIndex: number;
   /** When false, holds on the current face (e.g. during scroll morph to grid). */
   flipEnabled?: boolean;
@@ -69,6 +69,27 @@ const HeroHighlightsCube = ({
       cube.style.transform = cubeTransform(rotationYRef.current, 0);
     }
   }, [count, faceAngle, spinSign]);
+
+  useEffect(() => {
+    if (flipEnabled) return;
+
+    const cube = cubeRef.current;
+    if (animRef.current) {
+      const running = animRef.current;
+      const duration =
+        (running.effect?.getComputedTiming().duration as number) || FLIP_MS;
+      const progress = Math.min(1, (running.currentTime ?? 0) / duration);
+      const interruptedY =
+        animFromYRef.current +
+        (animToYRef.current - animFromYRef.current) * progress;
+      rotationYRef.current = interruptedY;
+      running.cancel();
+      animRef.current = null;
+      if (cube) {
+        cube.style.transform = cubeTransform(interruptedY, 0);
+      }
+    }
+  }, [flipEnabled]);
 
   useEffect(() => {
     if (count <= 1 || !ready || !flipEnabled) return;
@@ -154,7 +175,6 @@ const HeroHighlightsCube = ({
           isActive
           onActivate={() => {}}
           mode="hero"
-          forceMuted
           fillContainer
         />
       </div>
@@ -193,7 +213,6 @@ const HeroHighlightsCube = ({
                     isActive={index === activeIndex}
                     onActivate={() => {}}
                     mode="hero"
-                    forceMuted
                     fillContainer
                   />
                 </div>
