@@ -118,6 +118,7 @@ export type RizzTranslations = {
 
 const NAV_HREFS = {
   results: "#proof",
+  howWeGetYouThere: "#how-we-get-you-there",
   work: "#work",
   testimonials: "#testimonials",
   about: "#about",
