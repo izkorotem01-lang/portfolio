@@ -270,7 +270,7 @@ const en: RizzTranslations = {
     titleBefore: "BUILT BY SOMEONE WHO",
     titleFilmed: "FILMED IT",
     titleEdited: "EDITED IT",
-    titleLived: "AND LIVED IT",
+    titleLived: "AND lIVED IT",
     titleAfter: "FIRST.",
     intro:
       "RIZZ Productions is led by founders who have been on both sides of the camera — building systems that scale content without sacrificing quality.",

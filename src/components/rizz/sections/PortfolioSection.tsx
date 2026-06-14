@@ -248,9 +248,6 @@ export const PortfolioSection = () => {
                   </video>
                 </div>
               )}
-              <p className="text-center text-sm font-semibold uppercase tracking-wide text-[#F5F7FA]">
-                {lightboxVideo.title}
-              </p>
             </>
           ) : null}
         </DialogContent>
