@@ -125,6 +125,7 @@ const workPatch = {
   title: {en: 'Our Work', he: 'העבודות שלנו'},
   allWorkLabel: {en: 'All Work', he: 'כל העבודות'},
   expandVideoLabel: {en: 'Large view', he: 'תצוגה גדולה'},
+  maxVideosDisplayed: 8,
 }
 
 const contactPatch = {

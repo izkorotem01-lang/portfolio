@@ -10,3 +10,8 @@ export const getYouTubeThumbnail = (url?: string) => {
   const id = getYouTubeId(url)
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined
 }
+
+export const getYouTubeEmbedUrl = (url?: string) => {
+  const id = getYouTubeId(url)
+  return id ? `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1` : undefined
+}

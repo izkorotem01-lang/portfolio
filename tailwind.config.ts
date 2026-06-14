@@ -20,6 +20,7 @@ export default {
     extend: {
       fontFamily: {
         assistant: ["Assistant", "sans-serif"],
+        sans: ["Inter", "Assistant", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -72,6 +73,16 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        rizz: {
+          bg: "#030712",
+          card: "#07111F",
+          border: "#1D2B3E",
+          orange: "#FF6A00",
+          blue: "#187BFF",
+          text: "#F5F7FA",
+          muted: "#A7B0C0",
+          dark: "#6F7A8C",
         },
       },
       borderRadius: {

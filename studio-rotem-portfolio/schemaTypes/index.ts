@@ -5,6 +5,10 @@ import {highlightsSection} from './documents/highlightsSection'
 import {introductionSection} from './documents/introductionSection'
 import {portfolioCategory} from './documents/portfolioCategory'
 import {portfolioVideo} from './documents/portfolioVideo'
+import {proofCard} from './documents/proofCard'
+import {proofCardMedia} from './objects/proofCardMedia'
+import {proofCardStatistic} from './objects/proofCardStatistic'
+import {proofCardTitleSegment} from './objects/proofCardTitleSegment'
 import {review} from './documents/review'
 import {reviewsSection} from './documents/reviewsSection'
 import {service} from './documents/service'
@@ -24,6 +28,9 @@ export const schemaTypes = [
   aboutFounder,
   aboutCapability,
   aboutStat,
+  proofCardStatistic,
+  proofCardMedia,
+  proofCardTitleSegment,
   introductionSection,
   highlightsSection,
   aboutSection,
@@ -33,6 +40,7 @@ export const schemaTypes = [
   contactSection,
   siteSettings,
   trustedByClient,
+  proofCard,
   highlightVideo,
   portfolioCategory,
   portfolioVideo,

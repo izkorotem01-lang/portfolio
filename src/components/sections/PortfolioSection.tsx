@@ -14,6 +14,8 @@ import { Play } from "lucide-react";
 import {
   getCategories,
   getVideos,
+  getPortfolioVideosForCategory,
+  DEFAULT_PORTFOLIO_VIDEO_LIMIT,
   PortfolioCategory,
   PortfolioVideo,
   isYouTubeUrl,
@@ -268,21 +270,15 @@ const PortfolioSection = () => {
   }, [lightboxVideo, closeLightbox]);
 
   // Filter videos based on active category
-  const filteredVideos = useMemo(() => {
-    return activeCategory === "all"
-      ? videos
-      : videos.filter((video) => video.categoryId === activeCategory);
-  }, [activeCategory, videos]);
+  const maxVideosDisplayed =
+    homePage?.portfolioSection?.maxVideosDisplayed ?? DEFAULT_PORTFOLIO_VIDEO_LIMIT;
 
-  // Sort videos by allWorkOrder maintaining the order, but keep track of which are YouTube
-  const sortedVideos = useMemo(() => {
-    // Sort filtered videos by allWorkOrder if it exists, otherwise by order
-    return [...filteredVideos].sort((a, b) => {
-      const aOrder = (a as any).allWorkOrder !== undefined ? (a as any).allWorkOrder : a.order;
-      const bOrder = (b as any).allWorkOrder !== undefined ? (b as any).allWorkOrder : b.order;
-      return aOrder - bOrder;
-    });
-  }, [filteredVideos]);
+  const sortedVideos = useMemo(
+    () => getPortfolioVideosForCategory(videos, activeCategory, maxVideosDisplayed),
+    [activeCategory, videos, maxVideosDisplayed],
+  );
+
+  const filteredVideos = sortedVideos;
 
   const usesThumbnailPreviewById = useCallback(
     (id: string): boolean => {

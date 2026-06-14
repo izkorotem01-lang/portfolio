@@ -67,6 +67,7 @@ export type HomePageContent = {
     title?: LocaleString;
     allWorkLabel?: LocaleString;
     expandVideoLabel?: LocaleString;
+    maxVideosDisplayed?: number;
   };
   contactSection?: {
     title?: LocaleString;
@@ -118,6 +119,41 @@ export type HighlightVideo = {
   order: number;
 };
 
+export type ProofCardMedia = {
+  id: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  posterUrl?: string;
+  alt?: string;
+  isMain?: boolean;
+  quote?: string;
+};
+
+export type ProofCardTitleSegment = {
+  id: string;
+  text: string;
+  accent: boolean;
+};
+
+export type ProofCardStatistic = {
+  id: string;
+  label: string;
+  value: string;
+};
+
+export type ProofCard = {
+  id: string;
+  cardNumber?: string;
+  clientName?: string;
+  clientRole?: string;
+  headerMedia?: ProofCardMedia;
+  titleSegments: ProofCardTitleSegment[];
+  checkpoints: string[];
+  bottomMedia: ProofCardMedia[];
+  statistics: ProofCardStatistic[];
+  order: number;
+};
+
 const SECTIONS_QUERY = `{
   "introduction": *[_type == "introductionSection"][0]{
     hero {
@@ -146,7 +182,7 @@ const SECTIONS_QUERY = `{
     audience,
     capabilities[]{ _key, title, icon }
   },
-  "work": *[_type == "workSection"][0]{ title, allWorkLabel, expandVideoLabel },
+  "work": *[_type == "workSection"][0]{ title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
   "services": *[_type == "servicesSection"][0]{ title, subtitle },
   "reviews": *[_type == "reviewsSection"][0]{
     title,
@@ -193,7 +229,7 @@ const SECTIONS_QUERY = `{
       agencyMission,
       stats[]{ _key, value, label }
     },
-    portfolioSection { title, allWorkLabel, expandVideoLabel },
+    portfolioSection { title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
     contactSection { title, subtitle, processSteps[]{ _key, title, description } },
     reviewsSection {
       title,
@@ -231,6 +267,43 @@ const HIGHLIGHT_VIDEOS_QUERY = `*[_type == "highlightVideo" && active != false] 
   "thumbnailUrl": coalesce(thumbnail.asset->url, null)
 }`;
 
+const PROOF_CARD_MEDIA_FIELDS = `{
+  _key,
+  alt,
+  isMain,
+  quote,
+  "imageUrl": image.asset->url,
+  "videoUrl": coalesce(videoFile.asset->url, youtubeUrl),
+  "posterUrl": poster.asset->url
+}`;
+
+const PROOF_CARDS_QUERY = `*[_type == "proofCard" && active != false] | order(order asc) {
+  _id,
+  cardNumber,
+  clientName,
+  clientRole,
+  order,
+  tag,
+  titleAccent,
+  titleRest,
+  subtext,
+  subSubtext,
+  titleSegments[]{
+    _key,
+    text,
+    accent
+  },
+  checkpoints,
+  "headerMedia": headerMedia ${PROOF_CARD_MEDIA_FIELDS},
+  bottomMedia[] ${PROOF_CARD_MEDIA_FIELDS},
+  mediaItems[] ${PROOF_CARD_MEDIA_FIELDS},
+  statistics[]{
+    _key,
+    label,
+    value
+  }
+}`;
+
 type SanityTrustedClient = {
   _id: string;
   name: string;
@@ -248,11 +321,47 @@ type SanityHighlightVideo = {
   thumbnailUrl?: string;
 };
 
+type SanityProofCardMedia = {
+  _key: string;
+  alt?: string;
+  isMain?: boolean;
+  quote?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  posterUrl?: string;
+};
+
+type SanityProofCardStatistic = {
+  _key: string;
+  label?: string;
+  value?: string;
+};
+
+type SanityProofCard = {
+  _id: string;
+  cardNumber?: string;
+  clientName?: string;
+  clientRole?: string;
+  tag?: string;
+  titleAccent?: string;
+  titleRest?: string;
+  subtext?: string;
+  subSubtext?: string;
+  order?: number;
+  titleSegments?: Array<{ _key: string; text?: string; accent?: boolean }>;
+  checkpoints?: string[];
+  headerMedia?: SanityProofCardMedia | null;
+  bottomMedia?: SanityProofCardMedia[];
+  mediaItems?: SanityProofCardMedia[];
+  statistics?: SanityProofCardStatistic[];
+};
+
 export type SiteContent = {
   homePage: HomePageContent | null;
   siteSettings: SiteSettingsContent | null;
   trustedClients: TrustedClient[];
   highlightVideos: HighlightVideo[];
+  proofCards: ProofCard[];
   reviews: ContentReview[];
 };
 
@@ -322,11 +431,78 @@ const buildSiteSettings = (sections: SectionsQueryResult): SiteSettingsContent |
   };
 };
 
+const mapProofCardMedia = (item?: SanityProofCardMedia | null): ProofCardMedia | undefined => {
+  const quote = item?.quote?.trim();
+  if (!item || (!item.imageUrl && !item.videoUrl && !quote)) return undefined;
+  return {
+    id: item._key || "media",
+    imageUrl: item.imageUrl || undefined,
+    videoUrl: item.videoUrl?.trim() || undefined,
+    posterUrl: item.posterUrl || undefined,
+    alt: item.alt?.trim() || undefined,
+    isMain: Boolean(item.isMain),
+    quote: quote || undefined,
+  };
+};
+
+const mapTitleSegments = (doc: SanityProofCard): ProofCardTitleSegment[] => {
+  if (doc.titleSegments?.length) {
+    return doc.titleSegments
+      .filter((segment) => segment.text?.trim())
+      .map((segment) => ({
+        id: segment._key,
+        text: segment.text!.trim(),
+        accent: Boolean(segment.accent),
+      }));
+  }
+
+  const legacy: ProofCardTitleSegment[] = [];
+  if (doc.titleAccent?.trim()) {
+    legacy.push({ id: "legacy-accent", text: doc.titleAccent.trim(), accent: true });
+  }
+  if (doc.titleRest?.trim()) {
+    legacy.push({ id: "legacy-rest", text: doc.titleRest.trim(), accent: false });
+  }
+  return legacy;
+};
+
+const mapProofCards = (docs: SanityProofCard[]): ProofCard[] =>
+  docs.map((doc) => {
+    const legacyMedia = (doc.mediaItems ?? [])
+      .map((item) => mapProofCardMedia(item))
+      .filter((item): item is ProofCardMedia => Boolean(item));
+
+    const mappedBottom = (doc.bottomMedia ?? [])
+      .map((item) => mapProofCardMedia(item))
+      .filter((item): item is ProofCardMedia => Boolean(item));
+
+    return {
+      id: doc._id,
+      cardNumber: doc.cardNumber?.trim() || undefined,
+      clientName: doc.clientName?.trim() || doc.subtext?.trim() || undefined,
+      clientRole:
+        doc.clientRole?.trim() || doc.subSubtext?.trim() || doc.tag?.trim() || undefined,
+      headerMedia: mapProofCardMedia(doc.headerMedia) ?? legacyMedia[0],
+      titleSegments: mapTitleSegments(doc),
+      checkpoints: (doc.checkpoints ?? []).map((point) => point.trim()).filter(Boolean),
+      bottomMedia: mappedBottom.length > 0 ? mappedBottom : legacyMedia.slice(1),
+      statistics: (doc.statistics ?? [])
+        .filter((stat) => stat.label?.trim() && stat.value?.trim())
+        .map((stat) => ({
+          id: stat._key,
+          label: stat.label!.trim(),
+          value: stat.value!.trim(),
+        })),
+      order: doc.order ?? 0,
+    };
+  });
+
 export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
-  const [sections, trustedRaw, highlightsRaw, reviews] = await Promise.all([
+  const [sections, trustedRaw, highlightsRaw, proofRaw, reviews] = await Promise.all([
     sanityClient.fetch<SectionsQueryResult>(SECTIONS_QUERY),
     sanityClient.fetch<SanityTrustedClient[]>(TRUSTED_CLIENTS_QUERY),
     sanityClient.fetch<SanityHighlightVideo[]>(HIGHLIGHT_VIDEOS_QUERY),
+    sanityClient.fetch<SanityProofCard[]>(PROOF_CARDS_QUERY),
     fetchReviewsFromSanity(sanityClient),
   ]);
 
@@ -353,6 +529,7 @@ export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
         thumbnailUrl: video.thumbnailUrl || undefined,
         order: video.order ?? 0,
       })),
+    proofCards: mapProofCards(proofRaw),
     reviews,
   };
 };
@@ -375,13 +552,55 @@ export const fetchSiteContent = async (): Promise<SiteContent> => {
   }
 };
 
-export const getYouTubeThumbnail = (url: string): string | undefined => {
+const getYouTubeVideoId = (url: string): string | undefined => {
   const match = url.match(
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#/]+)/
   );
-  if (!match?.[1]) return undefined;
-  return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+  return match?.[1];
 };
+
+export const getYouTubeThumbnail = (url: string): string | undefined => {
+  const videoId = getYouTubeVideoId(url);
+  return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : undefined;
+};
+
+export type YouTubeEmbedOptions = {
+  autoplay?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+  enableJsApi?: boolean;
+  origin?: string;
+};
+
+export const getYouTubeEmbedUrl = (
+  url: string,
+  options: YouTubeEmbedOptions = {}
+): string | undefined => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return undefined;
+
+  const params = new URLSearchParams({
+    rel: "0",
+    modestbranding: "1",
+    iv_load_policy: "3",
+    playsinline: "1",
+    controls: String(options.controls !== false ? 1 : 0),
+    autoplay: String(options.autoplay ? 1 : 0),
+    mute: String(options.muted ? 1 : 0),
+  });
+
+  if (options.enableJsApi) {
+    params.set("enablejsapi", "1");
+    if (options.origin) {
+      params.set("origin", options.origin);
+    }
+  }
+
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+};
+
+export const isYouTubeUrl = (url: string): boolean =>
+  /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i.test(url);
 
 export const resolveHighlightThumbnail = (video: HighlightVideo): string | undefined =>
   video.thumbnailUrl;

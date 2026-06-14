@@ -62,6 +62,32 @@ export const isUploadedReelVideo = (
   return false;
 };
 
+export const DEFAULT_PORTFOLIO_VIDEO_LIMIT = 8;
+
+export const getPortfolioVideosForCategory = (
+  videos: PortfolioVideo[],
+  activeCategory: string,
+  maxVideos: number = DEFAULT_PORTFOLIO_VIDEO_LIMIT,
+): PortfolioVideo[] => {
+  const filtered =
+    activeCategory === "all"
+      ? videos
+      : videos.filter((video) => video.categoryId === activeCategory);
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (activeCategory === "all") {
+      return (a.allWorkOrder ?? a.order) - (b.allWorkOrder ?? b.order);
+    }
+    return a.order - b.order;
+  });
+
+  const limit = Number.isFinite(maxVideos)
+    ? Math.max(1, Math.floor(maxVideos))
+    : DEFAULT_PORTFOLIO_VIDEO_LIMIT;
+
+  return sorted.slice(0, limit);
+};
+
 // Helper function to check if a URL is a YouTube URL
 export const isYouTubeUrl = (url: string): boolean => {
   if (!url) return false;

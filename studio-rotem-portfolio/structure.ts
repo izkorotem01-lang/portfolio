@@ -1,7 +1,9 @@
 import {
   BlockElementIcon,
   CogIcon,
+  DocumentIcon,
   EnvelopeIcon,
+  EyeOpenIcon,
   HomeIcon,
   PlayIcon,
   StarIcon,
@@ -10,6 +12,7 @@ import {
 } from '@sanity/icons'
 import type {ComponentType} from 'react'
 import type {StructureResolver} from 'sanity/structure'
+import {ProofCardSitePreviewView} from './components/ProofCardSitePreview'
 
 export const SECTION_IDS = {
   introductionSection: 'a1000001-0001-4001-8001-000000000001',
@@ -86,6 +89,24 @@ export const structure: StructureResolver = (S) =>
                     .defaultOrdering([{field: 'order', direction: 'asc'}]),
                 ),
             ]),
+        ),
+
+      S.listItem()
+        .title('Real Results')
+        .icon(DocumentIcon)
+        .child(
+          S.documentTypeList('proofCard')
+            .title('Proof / result cards')
+            .defaultOrdering([{field: 'order', direction: 'asc'}])
+            .child((documentId) =>
+              S.document()
+                .documentId(documentId)
+                .schemaType('proofCard')
+                .views([
+                  S.view.form(),
+                  S.view.component(ProofCardSitePreviewView).title('Site preview').icon(EyeOpenIcon),
+                ]),
+            ),
         ),
 
       singleton(S, 'aboutSection', SECTION_IDS.aboutSection, 'Who Are We', UsersIcon),

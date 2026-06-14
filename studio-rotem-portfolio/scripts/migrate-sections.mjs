@@ -64,6 +64,7 @@ async function main() {
     title: homePage?.portfolioSection?.title,
     allWorkLabel: homePage?.portfolioSection?.allWorkLabel,
     expandVideoLabel: homePage?.portfolioSection?.expandVideoLabel,
+    maxVideosDisplayed: homePage?.portfolioSection?.maxVideosDisplayed ?? 8,
   })
 
   tx.createOrReplace({

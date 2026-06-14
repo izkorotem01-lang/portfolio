@@ -11,6 +11,16 @@ import {
   fetchSiteContent,
   type SiteContent,
 } from "@/lib/sanitySite";
+import { ScrollRestoration } from "@/components/ScrollRestoration";
+
+const emptyContent: SiteContent = {
+  homePage: null,
+  siteSettings: null,
+  trustedClients: [],
+  highlightVideos: [],
+  proofCards: [],
+  reviews: [],
+};
 
 type SiteContentContextValue = SiteContent & {
   isLoading: boolean;
@@ -25,13 +35,7 @@ export const SiteContentProvider = ({
   children: React.ReactNode;
 }) => {
   const { language } = useLanguage();
-  const [content, setContent] = useState<SiteContent>({
-    homePage: null,
-    siteSettings: null,
-    trustedClients: [],
-    highlightVideos: [],
-    reviews: [],
-  });
+  const [content, setContent] = useState<SiteContent>(emptyContent);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export const SiteContentProvider = ({
     (async () => {
       try {
         const data = await fetchSiteContent();
-        if (!cancelled) setContent(data);
+        if (!cancelled) setContent({ ...emptyContent, ...data });
       } catch (error) {
         console.error("Failed to load site content from Sanity:", error);
       } finally {
@@ -67,6 +71,7 @@ export const SiteContentProvider = ({
 
   return (
     <SiteContentContext.Provider value={value}>
+      <ScrollRestoration ready={!isLoading} />
       {children}
     </SiteContentContext.Provider>
   );

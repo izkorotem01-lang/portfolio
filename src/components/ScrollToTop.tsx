@@ -1,12 +1,17 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
+const stripLocalePrefix = (path: string) => path.replace(/^\/(en|hb)/, "") || "/";
+
 /**
- * Keeps the page at the top on load/refresh unless a hash target exists.
- * Prevents the browser from restoring a prior scroll offset (e.g. past Trusted By).
+ * Scrolls to top on client-side route changes. On refresh, the browser restores
+ * scroll position. Hash links still scroll to their target section.
+ * Locale-only switches (/en ↔ /hb) preserve scroll position.
  */
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
+  const isInitialMount = useRef(true);
+  const previousPathname = useRef(pathname);
 
   useLayoutEffect(() => {
     if (hash) {
@@ -14,24 +19,25 @@ const ScrollToTop = () => {
       const target = document.getElementById(id);
       if (target) {
         target.scrollIntoView({ block: "start" });
+        previousPathname.current = pathname;
         return;
       }
     }
 
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    };
+    const localeOnlyChange =
+      stripLocalePrefix(previousPathname.current) === stripLocalePrefix(pathname) &&
+      previousPathname.current !== pathname;
 
-    scrollToTop();
-    const rafId = requestAnimationFrame(scrollToTop);
-    const timeoutId = window.setTimeout(scrollToTop, 150);
+    previousPathname.current = pathname;
 
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.clearTimeout(timeoutId);
-    };
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (localeOnlyChange) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname, hash]);
 
   return null;

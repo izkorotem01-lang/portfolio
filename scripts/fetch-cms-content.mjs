@@ -47,7 +47,7 @@ const SECTIONS_QUERY = `{
     audience,
     capabilities[]{ _key, title, icon }
   },
-  "work": *[_type == "workSection"][0]{ title, allWorkLabel, expandVideoLabel },
+  "work": *[_type == "workSection"][0]{ title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
   "services": *[_type == "servicesSection"][0]{ title, subtitle },
   "reviews": *[_type == "reviewsSection"][0]{
     title,
@@ -94,7 +94,7 @@ const SECTIONS_QUERY = `{
       agencyMission,
       stats[]{ _key, value, label }
     },
-    portfolioSection { title, allWorkLabel, expandVideoLabel },
+    portfolioSection { title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
     contactSection { title, subtitle, processSteps[]{ _key, title, description } },
     reviewsSection {
       title,
@@ -130,6 +130,43 @@ const HIGHLIGHT_VIDEOS_QUERY = `*[_type == "highlightVideo" && active != false] 
   order,
   "videoUrl": videoFile.asset->url,
   "thumbnailUrl": coalesce(thumbnail.asset->url, null)
+}`;
+
+const PROOF_CARD_MEDIA_FIELDS = `{
+  _key,
+  alt,
+  isMain,
+  quote,
+  "imageUrl": image.asset->url,
+  "videoUrl": coalesce(videoFile.asset->url, youtubeUrl),
+  "posterUrl": poster.asset->url
+}`;
+
+const PROOF_CARDS_QUERY = `*[_type == "proofCard" && active != false] | order(order asc) {
+  _id,
+  cardNumber,
+  clientName,
+  clientRole,
+  order,
+  tag,
+  titleAccent,
+  titleRest,
+  subtext,
+  subSubtext,
+  titleSegments[]{
+    _key,
+    text,
+    accent
+  },
+  checkpoints,
+  "headerMedia": headerMedia ${PROOF_CARD_MEDIA_FIELDS},
+  bottomMedia[] ${PROOF_CARD_MEDIA_FIELDS},
+  mediaItems[] ${PROOF_CARD_MEDIA_FIELDS},
+  statistics[]{
+    _key,
+    label,
+    value
+  }
 }`;
 
 const REVIEWS_QUERY = `*[_type == "review"] | order(order asc) {
@@ -292,11 +329,71 @@ const mapVideos = (docs) =>
       updatedAt: doc._updatedAt,
     }));
 
+const mapProofCardMedia = (item, fallbackId = "media") => {
+  const quote = item?.quote?.trim();
+  if (!item || (!item.imageUrl && !item.videoUrl && !quote)) return undefined;
+  return {
+    id: item._key || fallbackId,
+    imageUrl: item.imageUrl || undefined,
+    videoUrl: item.videoUrl?.trim() || undefined,
+    posterUrl: item.posterUrl || undefined,
+    alt: item.alt?.trim() || undefined,
+    isMain: Boolean(item.isMain),
+    quote: quote || undefined,
+  };
+};
+
+const mapTitleSegments = (doc) => {
+  if (doc.titleSegments?.length) {
+    return doc.titleSegments
+      .filter((segment) => segment.text?.trim())
+      .map((segment) => ({
+        id: segment._key,
+        text: segment.text.trim(),
+        accent: Boolean(segment.accent),
+      }));
+  }
+  const legacy = [];
+  if (doc.titleAccent?.trim()) legacy.push({ id: "legacy-accent", text: doc.titleAccent.trim(), accent: true });
+  if (doc.titleRest?.trim()) legacy.push({ id: "legacy-rest", text: doc.titleRest.trim(), accent: false });
+  return legacy;
+};
+
+const mapProofCards = (docs) =>
+  docs.map((doc) => {
+    const legacyMedia = (doc.mediaItems ?? [])
+      .map((item) => mapProofCardMedia(item))
+      .filter(Boolean);
+    const mappedBottom = (doc.bottomMedia ?? [])
+      .map((item) => mapProofCardMedia(item))
+      .filter(Boolean);
+
+    return {
+      id: doc._id,
+      cardNumber: doc.cardNumber?.trim() || undefined,
+      clientName: doc.clientName?.trim() || doc.subtext?.trim() || undefined,
+      clientRole: doc.clientRole?.trim() || doc.subSubtext?.trim() || doc.tag?.trim() || undefined,
+      headerMedia: mapProofCardMedia(doc.headerMedia, "header") ?? legacyMedia[0],
+      titleSegments: mapTitleSegments(doc),
+      checkpoints: (doc.checkpoints ?? []).map((point) => point.trim()).filter(Boolean),
+      bottomMedia: mappedBottom.length > 0 ? mappedBottom : legacyMedia.slice(1),
+      statistics: (doc.statistics ?? [])
+        .filter((stat) => stat.label?.trim() && stat.value?.trim())
+        .map((stat) => ({
+          id: stat._key,
+          label: stat.label.trim(),
+          value: stat.value.trim(),
+        })),
+      order: doc.order ?? 0,
+    };
+  });
+
 const fetchSiteContent = async () => {
-  const [sections, trustedRaw, highlightsRaw, reviewDocs] = await Promise.all([
+  const [sections, trustedRaw, highlightsRaw, proofRaw, reviewDocs] = await Promise.all([
     client.fetch(SECTIONS_QUERY),
     client.fetch(TRUSTED_CLIENTS_QUERY),
     client.fetch(HIGHLIGHT_VIDEOS_QUERY),
+    client.fetch(PROOF_CARDS_QUERY),
     client.fetch(REVIEWS_QUERY),
   ]);
 
@@ -320,6 +417,7 @@ const fetchSiteContent = async () => {
         thumbnailUrl: video.thumbnailUrl || undefined,
         order: video.order ?? 0,
       })),
+    proofCards: mapProofCards(proofRaw),
     reviews: mapReviews(reviewDocs),
   };
 };
