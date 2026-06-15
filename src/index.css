@@ -310,6 +310,43 @@
   text-shadow: 0 0 18px rgba(24, 123, 255, 0.45);
 }
 
+/* Testimonial marquee row */
+.testimonial-marquee-card {
+  box-sizing: border-box;
+  width: 220px;
+  height: 240px;
+  overflow: hidden;
+}
+
+.testimonial-marquee-quote-mark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  height: 1.5rem;
+  color: var(--rizz-blue);
+  text-shadow: 0 0 14px rgba(24, 123, 255, 0.4);
+}
+
+.testimonial-marquee-quote {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  height: 4.75rem;
+  margin-top: 0.25rem;
+  overflow: hidden;
+}
+
+.testimonial-marquee-footer {
+  height: 5.75rem;
+}
+
+.testimonial-marquee-company {
+  height: 1rem;
+  line-height: 1rem;
+}
+
 /* Portfolio filter nav — uppercase links with sliding blue glow */
 .rizz-filter-nav {
   position: relative;
@@ -913,6 +950,149 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* How we work — cyan connector lines */
+.how-we-connector-track {
+  position: relative;
+  height: 3px;
+  border-radius: 9999px;
+  overflow: visible;
+  background: linear-gradient(
+    90deg,
+    rgba(24, 123, 255, 0.25) 0%,
+    rgba(56, 189, 248, 0.55) 40%,
+    rgba(125, 211, 252, 0.75) 50%,
+    rgba(56, 189, 248, 0.55) 60%,
+    rgba(24, 123, 255, 0.25) 100%
+  );
+  box-shadow:
+    0 0 6px rgba(56, 189, 248, 0.55),
+    0 0 14px rgba(24, 123, 255, 0.35),
+    0 0 24px rgba(56, 189, 248, 0.2);
+}
+
+.how-we-connector-track::after {
+  content: "";
+  position: absolute;
+  inset: -1px 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(186, 230, 253, 0.95) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.how-we-connector-track--shining::after {
+  opacity: 1;
+  animation: how-we-connector-shine 2.8s ease-in-out infinite;
+  animation-delay: var(--shine-delay, 0s);
+}
+
+.how-we-connector-dot {
+  background: #7dd3fc;
+  box-shadow:
+    0 0 8px rgba(125, 211, 252, 1),
+    0 0 16px rgba(56, 189, 248, 0.85),
+    0 0 28px rgba(24, 123, 255, 0.5);
+}
+
+@keyframes how-we-connector-shine {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -20% 0;
+  }
+}
+
+/* Proof column — neon divider + item cards */
+.proof-column-neon-divider {
+  width: 100%;
+  height: 2px;
+  --shine-delay: 0.4s;
+}
+
+.proof-column-panel {
+  background: linear-gradient(
+    180deg,
+    rgba(7, 17, 31, 0.72) 0%,
+    rgba(3, 7, 18, 0.88) 100%
+  );
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 20px;
+  box-shadow:
+    0 0 28px rgba(24, 123, 255, 0.1),
+    inset 0 1px 0 rgba(56, 189, 248, 0.14);
+}
+
+.proof-column-section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(56, 189, 248, 0.35) 50%,
+    transparent 100%
+  );
+}
+
+.proof-column-item {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.proof-column-item:hover {
+  border-color: rgba(56, 189, 248, 0.28);
+  box-shadow:
+    0 0 16px rgba(24, 123, 255, 0.08),
+    inset 0 1px 0 rgba(56, 189, 248, 0.1);
+}
+
+.proof-column-item-icon {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(255, 106, 0, 0.28);
+  background: rgba(255, 106, 0, 0.08);
+  color: #ff6a00;
+}
+
+.proof-column-item-icon--service {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(24, 123, 255, 0.1);
+  color: #38bdf8;
+}
+
+.proof-column-service-number {
+  display: inline-flex;
+  min-width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(24, 123, 255, 0.12);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #7dd3fc;
 }
 
 /* Accessible: reduced motion */

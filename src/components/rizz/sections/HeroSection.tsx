@@ -5,6 +5,7 @@ import { LanguageSwitcher } from "@/components/rizz/ui/LanguageSwitcher";
 import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { RIZZ_CONTACT } from "@/data/rizz-contact";
 
 export const HeroSection = () => {
   const t = useRizzTranslations();
@@ -85,14 +86,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.55 }}
             className="flex flex-col sm:flex-row gap-4 mb-10"
           >
-            <RizzButton
-              href="#contact"
-              variant="primary"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollTo("#contact");
-              }}
-            >
+            <RizzButton href={RIZZ_CONTACT.phoneTel} variant="primary">
               {t.nav.bookCall}
             </RizzButton>
             <RizzButton

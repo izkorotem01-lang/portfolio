@@ -1,5 +1,7 @@
 import { EyebrowLabel } from "@/components/rizz/ui/EyebrowLabel";
+import { RizzButton } from "@/components/rizz/ui/RizzButton";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
+import { RIZZ_CONTACT } from "@/data/rizz-contact";
 import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 
 export const FinalCtaSection = () => {
@@ -12,7 +14,9 @@ export const FinalCtaSection = () => {
     >
       <div className="relative z-10 mx-auto max-w-3xl">
         <SectionWrapper>
-          <EyebrowLabel className="text-center w-full">{t.cta.eyebrow}</EyebrowLabel>
+          <EyebrowLabel className="text-center w-full">
+            {t.cta.eyebrow}
+          </EyebrowLabel>
           <h2
             className="font-semibold uppercase text-[#F5F7FA] mb-6 leading-[0.92]"
             style={{
@@ -31,22 +35,20 @@ export const FinalCtaSection = () => {
             {t.cta.tagline}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="https://calendly.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rizz-btn-primary text-base py-5 px-10"
+            <RizzButton
+              href={RIZZ_CONTACT.phoneTel}
+              variant="primary"
+              className="text-base px-10 py-5"
             >
               {t.cta.bookCall}
-            </a>
-            <a
-              href="https://wa.me/972000000000"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rizz-btn-secondary text-base py-5 px-10"
+            </RizzButton>
+            <RizzButton
+              href={RIZZ_CONTACT.emailMailto}
+              variant="outline"
+              className="text-base px-10 py-5"
             >
-              {t.cta.whatsapp}
-            </a>
+              {t.cta.emailUs}
+            </RizzButton>
           </div>
         </SectionWrapper>
       </div>

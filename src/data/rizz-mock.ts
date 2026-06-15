@@ -144,7 +144,7 @@ export const PROOF_CARDS = [
   { metric: "46K", label: "Views — comeback video", client: "Noam Firuz" },
   { metric: "892", label: "Weekly leads generated", client: "Yishai Gabian" },
   { metric: "+340%", label: "Watch time growth", client: "Nitai Nakel" },
-  { metric: "2.3M+", label: "Total reel views", client: "Shaked Siroa" },
+  { metric: "10M+", label: "Total reel views", client: "Shaked Siroa" },
   { metric: "₪34K", label: "Ad spend saved monthly", client: "Yishai Gabian" },
 ];
 
@@ -230,67 +230,84 @@ export const PORTFOLIO_ITEMS = [
 
 export const TESTIMONIALS = [
   {
-    name: "Noam Firuz",
+    name: "Michel Zvigi",
+    company: "Shapo Digital",
     stars: 5,
     quote: {
-      he: "נראה מעולה אחי. כל הכבוד.",
-      en: "Looks amazing, bro. Well done.",
+      he: "רותם הוא גורם קריטי להצלחת הקמפיינים שלנו — מפרסומות AI ועד עריכת וידאו, התוצרים שלו תמיד ברמה הגבוהה ביותר. מקצוען אמיתי. ממליצים בלי היסוס.",
+      en: "Rotem is a critical factor in our campaign success — from AI ads to video editing, his work always hits the highest standard. A true professional. We recommend him without hesitation.",
+    },
+  },
+  {
+    name: "Noam Firuz",
+    company: "Content Creator",
+    stars: 5,
+    quote: {
+      he: "נראה מטורף אחי. עריכה ברמה אחרת — כל הכבוד.",
+      en: "Looks insane, bro. Editing on another level — well done.",
     },
   },
   {
     name: "Yishai Gabian",
+    company: "Entrepreneur & Mentor",
     stars: 5,
     quote: {
-      he: "הורדנו פי שתיים תקציב בזכותך — מ-30₪ לליד ל-15₪ לליד. חסכון של בערך 15,000₪.",
-      en: "We cut the budget in half thanks to you — from ₪30 per lead to ₪15 per lead. Savings of about ₪15,000.",
+      he: "הורדנו פי שתיים תקציב — מ-30₪ לליד ל-15₪. חסכון של ~15,000₪. והלידים רק עלו.",
+      en: "We cut the budget in half — from ₪30 to ₪15 per lead. Saved ~₪15K. Leads kept climbing.",
     },
   },
   {
-    name: "Nitai Nakel",
+    name: "Yishai Gabian",
+    company: "Entrepreneur & Mentor",
     stars: 5,
     quote: {
-      he: "זה הנוכחי בכלל חולני. חשמל חשמל פיצוצים.",
-      en: "This one's totally insane. Electric, electric, explosive.",
+      he: "הסרטון אש. אפס תיקונים — בדיוק מה שרציתי.",
+      en: "The video is fire. Zero revisions — exactly what I wanted.",
+    },
+  },
+  {
+    name: "Yishai Gabian",
+    company: "Entrepreneur & Mentor",
+    stars: 5,
+    quote: {
+      he: "עפתי על הסרטון, יאללה בוא נטרוף את הבא.",
+      en: "Loved that edit — let's crush the next one.",
     },
   },
   {
     name: "Shaked Siroa",
+    company: "Co-Founder · RIZZ",
     stars: 5,
     quote: {
-      he: "הרבה מהקרדיט הולך לאיצקו על העריכה — אחרת הסרטון היה על 60K צפיות.",
-      en: "A lot of the credit goes to Itzko for the editing — otherwise the video would've been at 60K views.",
+      he: "הרבה מהקרדיט הולך לעריכה — בלי זה הסרטון היה נתקע על 60K צפיות.",
+      en: "Most of the credit goes to the edit — without it, we'd be stuck at 60K views.",
+    },
+  },
+  {
+    name: "Shaked Siroa",
+    company: "Co-Founder · RIZZ",
+    stars: 5,
+    quote: {
+      he: "אתה מטורף אחי — מלך אמיתי.",
+      en: "You're insane, bro — absolute king.",
     },
   },
   {
     name: "@ivri3235",
+    company: "YouTube comment",
     stars: 5,
     quote: {
-      he: "וואלה אהבתי את העריכה — אשכרה כל רגע, המעברים המהירים, וכל הדברים הקטנים. באמת סרטון אש.",
-      en: "Wow, I loved the editing — literally every moment, the fast cuts, and all the little details. Truly a fire video.",
+      he: "וואלה אהבתי את העריכה — כל רגע, המעברים המהירים, כל הפרטים הקטנים. סרטון אש.",
+      en: "Wow, loved the editing — every moment, the fast cuts, all the little details. Absolute fire.",
     },
   },
   {
     name: "@GhhvBdbbh",
+    company: "YouTube comment",
     stars: 5,
     quote: {
-      he: "מי עורך לך את הסרטונים ביוטיוב? אשמח ליצור קשר עם העורך.",
-      en: "Who edits your YouTube videos? I'd love to get in touch with the editor.",
-    },
-  },
-  {
-    name: "Yishai Gabian",
-    stars: 5,
-    quote: {
-      he: "הסרטון אש, לא צריך תיקונים.",
-      en: "The video is fire — no revisions needed.",
-    },
-  },
-  {
-    name: "Shaked Siroa",
-    stars: 5,
-    quote: {
-      he: "אתה מטורף אחי, איזה מלך.",
-      en: "You're insane, bro — what a king.",
+      he: "מי עורך לך את הסרטונים? חייב לדבר עם העורך הזה.",
+      en: "Who edits your videos? I need to talk to this editor.",
     },
   },
 ];

@@ -5,6 +5,7 @@ import { TrustedByWheel } from "@/components/rizz/ui/TrustedByWheel";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProofCardsFallback } from "@/data/proof-cards-fallback-i18n";
+import { HowWeGetYouThereColumn } from "@/components/rizz/sections/HowWeGetYouThereSection";
 import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 import { useMemo } from "react";
 
@@ -54,19 +55,37 @@ export const ProofSection = () => {
         <TrustedByWheel />
       </SectionWrapper>
 
-      <div className="grid grid-cols-1 gap-6 px-8 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[640px] animate-pulse rounded-3xl border border-[#1D2B3E] bg-[#0A1018]"
-              />
-            ))
-          : cards.map((card, i) => (
-              <SectionWrapper key={card.id} delay={i * 0.1}>
-                <ProofCardItem card={card} />
+      <div className="px-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[640px] animate-pulse rounded-3xl border border-[#1D2B3E] bg-[#0A1018]"
+                />
+              ))
+            : cards.map((card, i) => (
+                <SectionWrapper key={card.id} delay={i * 0.1}>
+                  <ProofCardItem card={card} />
+                </SectionWrapper>
+              ))}
+        </div>
+
+        {!isLoading && (
+          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3 md:mt-12">
+            {t.howWeGetYouThere.columns.map((column, i) => (
+              <SectionWrapper key={`how-we-column-${i}`} delay={0.15 + i * 0.08}>
+                <HowWeGetYouThereColumn
+                  column={column}
+                  labels={{
+                    whoItsFor: t.howWeGetYouThere.whoItsFor,
+                    whatWeBuild: t.howWeGetYouThere.whatWeBuild,
+                  }}
+                />
               </SectionWrapper>
             ))}
+          </div>
+        )}
       </div>
     </section>
   );

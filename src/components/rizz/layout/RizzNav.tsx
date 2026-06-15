@@ -7,6 +7,7 @@ import { RizzButton } from "@/components/rizz/ui/RizzButton";
 import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localePath } from "@/i18n/locale";
+import { RIZZ_CONTACT } from "@/data/rizz-contact";
 
 export const RizzNav = () => {
   const t = useRizzTranslations();
@@ -77,12 +78,8 @@ export const RizzNav = () => {
 
         <div className="relative z-10 ml-auto flex items-center gap-3">
           <RizzButton
-            href="#contact"
+            href={RIZZ_CONTACT.phoneTel}
             variant="outline"
-            onClick={(e) => {
-              e.preventDefault();
-              handleNavClick("#contact");
-            }}
             className="hidden md:inline-flex py-3 px-5 text-[#A7B0C0] hover:text-[#F5F7FA] transition-colors"
           >
             {t.nav.bookCall}
@@ -129,12 +126,8 @@ export const RizzNav = () => {
               </nav>
               <div className="mt-auto pt-8">
                 <RizzButton
-                  href="#contact"
+                  href={RIZZ_CONTACT.phoneTel}
                   variant="outline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick("#contact");
-                  }}
                   className="w-full justify-center py-4"
                 >
                   {t.nav.bookCall}

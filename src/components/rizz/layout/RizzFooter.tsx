@@ -1,4 +1,5 @@
 import { RIZZ_SOCIAL_LINKS } from "@/data/rizz-mock";
+import { RIZZ_CONTACT } from "@/data/rizz-contact";
 import { Instagram, Youtube } from "lucide-react";
 import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 
@@ -41,7 +42,8 @@ export const RizzFooter = () => {
             </p>
             <div className="flex gap-4">
               {RIZZ_SOCIAL_LINKS.map((link) => {
-                const Icon = socialIcons[link.label as keyof typeof socialIcons];
+                const Icon =
+                  socialIcons[link.label as keyof typeof socialIcons];
                 return (
                   <a
                     key={link.label}
@@ -83,11 +85,7 @@ export const RizzFooter = () => {
               {t.footer.getStartedDescription}
             </p>
             <a
-              href="#contact"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollTo("#contact");
-              }}
+              href={RIZZ_CONTACT.phoneTel}
               className="rizz-btn-primary inline-flex text-sm py-3 px-5"
             >
               {t.nav.bookCall}

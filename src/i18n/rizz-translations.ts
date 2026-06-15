@@ -22,6 +22,11 @@ export type ProcessStep = {
   description: string;
 };
 
+export type HowWeColumn = {
+  audience: AudienceCard[];
+  services: ServiceItem[];
+};
+
 export type FounderItem = {
   name: string;
   role: string;
@@ -64,8 +69,7 @@ export type RizzTranslations = {
     headlineAccent: string;
     headlineAfter: string;
     howWeWork: string;
-    audience: AudienceCard[];
-    services: ServiceItem[];
+    columns: HowWeColumn[];
     process: ProcessStep[];
   };
   portfolio: {
@@ -104,7 +108,7 @@ export type RizzTranslations = {
     description: string;
     tagline: string;
     bookCall: string;
-    whatsapp: string;
+    emailUs: string;
   };
   footer: {
     description: string;
@@ -169,52 +173,78 @@ const en: RizzTranslations = {
     headlineAccent: "invisible",
     headlineAfter: "on video",
     howWeWork: "How we work",
-    audience: [
+    columns: [
       {
-        icon: "play",
-        title: "Creators",
-        description: "Build audiences people remember.",
+        audience: [
+          {
+            icon: "play",
+            title: "Creators",
+            description: "Build audiences people remember.",
+          },
+          {
+            icon: "graduation",
+            title: "Podcasters",
+            description: "Turn long-form into clips that grow your reach.",
+          },
+        ],
+        services: [
+          {
+            number: "01",
+            title: "A YouTube system that turns views into",
+            titleAccent: "bookings.",
+            icon: "play",
+          },
+        ],
       },
       {
-        icon: "graduation",
-        title: "Mentors",
-        description: "Turn expertise into authority.",
+        audience: [
+          {
+            icon: "cart",
+            title: "E-commerce",
+            description: "Scale attention into customers.",
+          },
+          {
+            icon: "graduation",
+            title: "Mentors",
+            description: "Turn expertise into authority.",
+          },
+        ],
+        services: [
+          {
+            number: "03",
+            title: "Short-form that builds",
+            titleAccent: "authority on autopilot.",
+            icon: "zap",
+          },
+          {
+            number: "04",
+            title: "Campaigns built for a single",
+            titleAccent: "launch or offer.",
+            icon: "target",
+          },
+        ],
       },
       {
-        icon: "crown",
-        title: "Brands",
-        description: "Create content that drives real growth.",
-      },
-      {
-        icon: "cart",
-        title: "E-commerce",
-        description: "Scale attention into customers.",
-      },
-    ],
-    services: [
-      {
-        number: "01",
-        title: "A YouTube system that turns views into",
-        titleAccent: "bookings.",
-        icon: "play",
-      },
-      {
-        number: "02",
-        title: "Brand films that make people",
-        titleAccent: "stop scrolling.",
-        icon: "clapperboard",
-      },
-      {
-        number: "03",
-        title: "Short-form that builds",
-        titleAccent: "authority on autopilot.",
-        icon: "zap",
-      },
-      {
-        number: "04",
-        title: "Campaigns built for a single",
-        titleAccent: "launch or offer.",
-        icon: "target",
+        audience: [
+          {
+            icon: "play",
+            title: "Creators",
+            description: "Build audiences people remember.",
+          },
+          {
+            icon: "crown",
+            title: "Brands",
+            description: "Create content that drives real growth.",
+          },
+        ],
+        services: [
+          {
+            number: "02",
+            title: "Scroll-stopping branded",
+            titleAccent: "content.",
+            icon: "clapperboard",
+          },
+        ],
       },
     ],
     process: [
@@ -312,7 +342,7 @@ const en: RizzTranslations = {
       "We help creators, entrepreneurs, brands and mentors turn ideas into high-impact content systems that attract attention, build trust and drive measurable growth.",
     tagline: "Strategy · Production · Distribution",
     bookCall: "Book a Strategy Call →",
-    whatsapp: "Message Us on WhatsApp",
+    emailUs: "Email Us",
   },
   footer: {
     description:
@@ -370,52 +400,78 @@ const he: RizzTranslations = {
     headlineAccent: "בלתי נראים",
     headlineAfter: "בווידאו",
     howWeWork: "איך אנחנו עובדים",
-    audience: [
+    columns: [
       {
-        icon: "play",
-        title: "יוצרים",
-        description: "בונים קהלים שאנשים זוכרים.",
+        audience: [
+          {
+            icon: "play",
+            title: "יוצרים",
+            description: "בונים קהלים שאנשים זוכרים.",
+          },
+          {
+            icon: "graduation",
+            title: "פודקאסטרים",
+            description: "הופכים תוכן ארוך לקליפים שמגדילים חשיפה.",
+          },
+        ],
+        services: [
+          {
+            number: "01",
+            title: "מערכת YouTube שהופכת צפיות ל",
+            titleAccent: "פגישות.",
+            icon: "play",
+          },
+        ],
       },
       {
-        icon: "graduation",
-        title: "מנטורים",
-        description: "הופכים מומחיות לסמכות.",
+        audience: [
+          {
+            icon: "cart",
+            title: "מסחר אלקטרוני",
+            description: "ממירים תשומת לב ללקוחות.",
+          },
+          {
+            icon: "graduation",
+            title: "מנטורים",
+            description: "הופכים מומחיות לסמכות.",
+          },
+        ],
+        services: [
+          {
+            number: "03",
+            title: "תוכן קצר שבונה",
+            titleAccent: "סמכות על אוטומט.",
+            icon: "zap",
+          },
+          {
+            number: "04",
+            title: "קמפיינים שנבנים עבור",
+            titleAccent: "השקה או הצעה אחת.",
+            icon: "target",
+          },
+        ],
       },
       {
-        icon: "crown",
-        title: "מותגים",
-        description: "יוצרים תוכן שמניע צמיחה אמיתית.",
-      },
-      {
-        icon: "cart",
-        title: "מסחר אלקטרוני",
-        description: "ממירים תשומת לב ללקוחות.",
-      },
-    ],
-    services: [
-      {
-        number: "01",
-        title: "מערכת YouTube שהופכת צפיות ל",
-        titleAccent: "פגישות.",
-        icon: "play",
-      },
-      {
-        number: "02",
-        title: "סרטי מותג שגורמים לאנשים",
-        titleAccent: "להפסיק לגלול.",
-        icon: "clapperboard",
-      },
-      {
-        number: "03",
-        title: "תוכן קצר שבונה",
-        titleAccent: "סמכות על אוטומט.",
-        icon: "zap",
-      },
-      {
-        number: "04",
-        title: "קמפיינים שנבנים עבור",
-        titleAccent: "השקה או הצעה אחת.",
-        icon: "target",
+        audience: [
+          {
+            icon: "play",
+            title: "יוצרים",
+            description: "בונים קהלים שאנשים זוכרים.",
+          },
+          {
+            icon: "crown",
+            title: "מותגים",
+            description: "יוצרים תוכן שמניע צמיחה אמיתית.",
+          },
+        ],
+        services: [
+          {
+            number: "02",
+            title: "תוכן ממותג שעוצר",
+            titleAccent: "גלילה.",
+            icon: "clapperboard",
+          },
+        ],
       },
     ],
     process: [
@@ -513,7 +569,7 @@ const he: RizzTranslations = {
       "אנחנו עוזרים ליוצרים, יזמים, מותגים ומנטורים להפוך רעיונות למערכות תוכן בעלות impact שמושכות תשומת לב, בונות אמון ומניעות צמיחה מדידה.",
     tagline: "אסטרטגיה · הפקה · הפצה",
     bookCall: "קבעו שיחת אסטרטגיה ←",
-    whatsapp: "שלחו לנו הודעה ב-WhatsApp",
+    emailUs: "כתבו לנו באימייל",
   },
   footer: {
     description:

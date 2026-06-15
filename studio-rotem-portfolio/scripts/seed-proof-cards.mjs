@@ -13,6 +13,12 @@ const media = (youtubeUrl) => ({
   youtubeUrl,
 })
 
+const quoteMedia = (key, quote) => ({
+  _key: key,
+  _type: 'proofCardMedia',
+  quote,
+})
+
 const segment = (key, text, accent = false) => ({
   _key: key,
   _type: 'proofCardTitleSegment',
@@ -36,22 +42,31 @@ export const OUTCOME_PROOF_CARDS = [
     clientRole: 'Content Creator',
     headerMedia: media('https://www.youtube.com/watch?v=lPB_KyjWZko'),
     titleSegments: [
-      segment('t1', 'We revived a dead YouTube channel — ', false),
-      segment('t2', '50K views in 10 hours.', true),
+      segment('t1', 'One edit reignited a dead channel — ', false),
+      segment('t2', '46K views, audience back.', true),
     ],
     checkpoints: [
       'Channel was inactive for about a year before the comeback edit.',
-      'Comeback video crossed 50K views within the first 10 hours.',
+      'Comeback video reached 46K views and kept climbing.',
       'Comments flooded in — audience re-engaged instantly.',
-      'Fans asked who edited the video (add comment screenshots in Bottom media).',
+      'Fans asked who edited the video.',
     ],
     statistics: [
-      stat('s1', 'Views', '50K'),
-      stat('s2', 'To 50K', '10 hrs'),
-      stat('s3', 'Subs gained', '+312%'),
-      stat('s4', 'Engagement', '8.7%'),
+      stat('s1', 'Views', '46K'),
+      stat('s2', 'New subs', '+340'),
+      stat('s3', 'Engagement', '8.7%'),
+      stat('s4', 'Channel dormant', '1 yr'),
     ],
-    bottomMedia: [],
+    bottomMedia: [
+      quoteMedia(
+        'q1',
+        'My channel was dead for a year. One edit. 50K views in 10 hours. Who does that?!',
+      ),
+      quoteMedia(
+        'q2',
+        'Comments flooded in asking one thing: who the hell edited this?',
+      ),
+    ],
     order: 0,
   },
   {
@@ -68,40 +83,57 @@ export const OUTCOME_PROOF_CARDS = [
       'Worked together for over 6 months on YouTube, reels, and campaigns.',
       'Marketing budget cut by ~50% while lead volume kept climbing.',
       'Hundreds of qualified leads every week from organic + paid.',
-      'Add comment screenshots in Bottom media when ready.',
     ],
     statistics: [
       stat('s1', 'Weekly leads', '350+'),
       stat('s2', 'Marketing budget', '-50%'),
       stat('s3', 'ROI increase', '4.3x'),
-      stat('s4', 'CPA reduction', '-62%'),
+      stat('s4', 'Cost per lead', '₪15'),
     ],
-    bottomMedia: [],
+    bottomMedia: [
+      quoteMedia(
+        'q1',
+        'Halved our ad spend. Halved cost per lead. Saved ~₪15K — and leads went UP.',
+      ),
+      quoteMedia(
+        'q2',
+        'Fire video. Zero revisions. Shut up and take my money for the next one.',
+      ),
+    ],
     order: 1,
   },
   {
-    _id: 'proofCard-shaked-siroa',
+    _id: '5e296c36-0e9f-4229-8ab8-4b6a8fb16dd7',
     cardNumber: '03',
     clientName: 'Shaked Siroa',
-    clientRole: 'Content Creator',
+    clientRole: 'Co-Founder · Personal Brand',
     titleSegments: [
-      segment('t1', 'A creator we took from steady posts to ', false),
-      segment('t2', 'repeat viral hits.', true),
+      segment('t1', 'Our own personal brand — ', false),
+      segment('t2', 'a decade of content, now viral.', true),
     ],
     checkpoints: [
-      'Built a reel system designed for shareability, not just consistency.',
-      'Multiple videos broke out — views, saves, and shares stacked fast.',
-      'Personal brand started getting recognized beyond his existing audience.',
-      'Upload viral reel screenshots to Bottom media (1–2 images side by side).',
+      'Co-founder with nearly 10 years of content creation experience.',
+      'Built a reel system with RIZZ that turned consistency into viral reach.',
+      'Personal brand and RIZZ Productions grow together — same engine, same standards.',
+      'Audience scaled through scroll-stopping branded content, not random posts.',
     ],
     statistics: [
       stat('s1', 'Viral videos', '120+'),
-      stat('s2', 'Total views', '2.3M+'),
-      stat('s3', 'Avg. per hit', '48K'),
-      stat('s4', 'Top reel views', '850K+'),
+      stat('s2', 'Total views', '10M+'),
+      stat('s3', 'Years creating', '10+'),
+      stat('s4', 'Top reel views', '1M+'),
     ],
     headerMedia: undefined,
-    bottomMedia: [],
+    bottomMedia: [
+      quoteMedia(
+        'q1',
+        '60K without the edit. 1M+ with it. The edit IS the strategy.',
+      ),
+      quoteMedia(
+        'q2',
+        'Absolute king. Insane work. This is why we built RIZZ around this.',
+      ),
+    ],
     order: 2,
   },
 ]
@@ -116,6 +148,7 @@ const LEGACY_CARD_IDS = [
   'proofCard-industry',
   'proofCard-cafe',
   'proofCard-tattoo',
+  'proofCard-shaked-siroa',
 ]
 
 async function main() {
