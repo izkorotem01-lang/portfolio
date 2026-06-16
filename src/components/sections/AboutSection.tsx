@@ -1,5 +1,4 @@
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import {
   Share2,
@@ -8,11 +7,7 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
-import rotemImage from "@/assets/rotem.webp";
-import shakedImage from "@/assets/shaked.webp";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
-
-const founderFallbackImages = [rotemImage, shakedImage];
 
 const capabilityIconMap: Record<string, LucideIcon> = {
   video: Video,
@@ -21,16 +16,8 @@ const capabilityIconMap: Record<string, LucideIcon> = {
   share: Share2,
 };
 
-const defaultCapabilities = [
-  { icon: Video, label: "Video Editing (AE + AI)" },
-  { icon: Sparkles, label: "Motion Graphics" },
-  { icon: Target, label: "Content Strategy" },
-  { icon: Share2, label: "Social Media Content" },
-];
-
 const AboutSection = () => {
-  const { t } = useLanguage();
-  const { homePage, pick } = useSiteContent();
+  const { homePage, requirePick } = useSiteContent();
   const { ref: sectionRef, isVisible } = useScrollAnimation({
     threshold: 0.08,
     rootMargin: "0px 0px -5% 0px",
@@ -41,21 +28,14 @@ const AboutSection = () => {
     ? [...about.founders].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     : null;
 
-  const capabilities = about?.capabilities?.length
-    ? about.capabilities.map((item) => ({
-        icon: capabilityIconMap[item.icon ?? "video"] ?? Video,
-        label: pick(item.title),
-      }))
-    : defaultCapabilities;
+  const capabilities = (about?.capabilities ?? []).map((item) => ({
+    icon: capabilityIconMap[item.icon ?? "video"] ?? Video,
+    label: requirePick(item.title, `homePage.about.capabilities[${item._key}].title`),
+  }));
 
-  const headline =
-    pick(about?.headline) ||
-    "We help brands & creators look undeniable on video";
-  const subline =
-    pick(about?.subline) || "More authority. More attention. More clients.";
-  const audience =
-    pick(about?.audience) ||
-    "personal brands, mentors, and creators who want to turn content into a client-acquisition system.";
+  const headline = requirePick(about?.headline, "homePage.about.headline");
+  const subline = requirePick(about?.subline, "homePage.about.subline");
+  const audience = requirePick(about?.audience, "homePage.about.audience");
 
   return (
     <section
@@ -72,7 +52,7 @@ const AboutSection = () => {
                   isVisible ? " is-active" : ""
                 }`}
               >
-                {pick(about?.title) || t("about.title")}
+                {requirePick(about?.title, "homePage.about.title")}
               </h2>
               <div
                 className={`showcase-productions-ticks${
@@ -99,10 +79,12 @@ const AboutSection = () => {
               {(founders ?? []).map((founder, index) => {
                 const glow =
                   founder.glowColor ?? (index % 2 === 0 ? "cyan" : "orange");
-                const photo =
-                  founder.photoUrl ||
-                  founderFallbackImages[index] ||
-                  shakedImage;
+                const photo = founder.photoUrl;
+                if (!photo) {
+                  throw new Error(
+                    `Missing required founder photoUrl at homePage.about.founders[${founder._key}].photoUrl`
+                  );
+                }
 
                 return (
                   <div
@@ -117,13 +99,13 @@ const AboutSection = () => {
                   >
                     <div className="min-w-0">
                       <h3 className="text-3xl md:text-4xl font-bold text-primary mb-3">
-                        {pick(founder.name)}
+                        {requirePick(founder.name, `homePage.about.founders[${founder._key}].name`)}
                       </h3>
                       <p className="text-xl md:text-2xl font-semibold text-foreground/90 mb-4">
-                        {pick(founder.role)}
+                        {requirePick(founder.role, `homePage.about.founders[${founder._key}].role`)}
                       </p>
                       <p className="text-xl md:text-2xl leading-relaxed text-foreground/90">
-                        {pick(founder.bio)}
+                        {requirePick(founder.bio, `homePage.about.founders[${founder._key}].bio`)}
                       </p>
                     </div>
                     <div className="flex justify-center lg:justify-start">
@@ -133,7 +115,7 @@ const AboutSection = () => {
                         <div className="about-portrait-neon__ring">
                           <img
                             src={photo}
-                            alt={pick(founder.photoAlt) || pick(founder.name)}
+                            alt={requirePick(founder.photoAlt, `homePage.about.founders[${founder._key}].photoAlt`)}
                             className="about-portrait-neon__photo aspect-[4/5] max-h-56 w-full object-cover md:max-h-64"
                             loading="lazy"
                           />

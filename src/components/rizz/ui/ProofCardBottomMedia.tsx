@@ -1,6 +1,7 @@
 import type { ProofCardMedia } from "@/lib/sanitySite";
 import { ProofCardMediaBlock } from "@/components/rizz/ui/ProofCardMediaBlock";
 import { cn } from "@/lib/utils";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 type BottomMediaLayout =
   | { type: "gallery"; main: ProofCardMedia; secondary: ProofCardMedia[]; others: ProofCardMedia[] }
@@ -27,9 +28,13 @@ const ProofCardQuoteBlock = ({
   </blockquote>
 );
 
-const renderBottomItem = (item: ProofCardMedia, className?: string) => {
+const renderBottomItem = (
+  item: ProofCardMedia,
+  quoteText: string,
+  className?: string
+) => {
   if (item.quote) {
-    return <ProofCardQuoteBlock quote={item.quote} className={className} />;
+    return <ProofCardQuoteBlock quote={quoteText} className={className} />;
   }
 
   return (
@@ -51,6 +56,7 @@ const organizeBottomMedia = (items: ProofCardMedia[]): BottomMediaLayout => {
 };
 
 export const ProofCardBottomMedia = ({ items }: { items: ProofCardMedia[] }) => {
+  const { pick } = useSiteContent();
   const layout = organizeBottomMedia(items);
 
   if (layout.type === "gallery") {
@@ -80,7 +86,7 @@ export const ProofCardBottomMedia = ({ items }: { items: ProofCardMedia[] }) => 
         </div>
         {layout.others.map((item) => (
           <div key={item.id} className={item.quote ? "w-full self-start" : undefined}>
-            {renderBottomItem(item)}
+            {renderBottomItem(item, pick(item.quote))}
           </div>
         ))}
       </div>
@@ -96,7 +102,7 @@ export const ProofCardBottomMedia = ({ items }: { items: ProofCardMedia[] }) => 
     >
       {layout.items.map((item) => (
         <div key={item.id} className={item.quote ? "w-full self-start" : undefined}>
-          {renderBottomItem(item)}
+          {renderBottomItem(item, pick(item.quote))}
         </div>
       ))}
     </div>

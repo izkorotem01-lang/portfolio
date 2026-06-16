@@ -1,8 +1,10 @@
 import type { ProofCard } from "@/lib/sanitySite";
 import { ProofCardBottomMedia } from "@/components/rizz/ui/ProofCardBottomMedia";
 import { ProofCardMediaBlock } from "@/components/rizz/ui/ProofCardMediaBlock";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 export const ProofCardItem = ({ card }: { card: ProofCard }) => {
+  const { requirePick, pick } = useSiteContent();
   const hasTitle = card.titleSegments.length > 0;
   const hasStats = card.statistics.length > 0;
   const hasBottomMedia = card.bottomMedia.length > 0;
@@ -23,7 +25,7 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
               showNameOnHeader
                 ? {
                     clientName: card.clientName,
-                    clientRole: card.clientRole,
+                    clientRole: pick(card.clientRole) || undefined,
                   }
                 : undefined
             }
@@ -41,7 +43,7 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
             )}
             {card.clientRole && (
               <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#187BFF]">
-                {card.clientRole}
+                {requirePick(card.clientRole, `proofCards[${card.id}].clientRole`)}
               </div>
             )}
           </div>
@@ -54,8 +56,11 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
                 key={segment.id}
                 className={segment.accent ? "rizz-title-accent" : undefined}
               >
-                {index > 0 && !segment.text.startsWith(" ") ? " " : ""}
-                {segment.text}
+                {index > 0 ? " " : ""}
+                {requirePick(
+                  segment.text,
+                  `proofCards[${card.id}].titleSegments[${segment.id}].text`,
+                )}
               </span>
             ))}
           </h3>
@@ -69,7 +74,7 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
                 className="flex items-start gap-2 text-sm leading-snug text-[#A7B0C0]"
               >
                 <span className="mt-0.5 shrink-0 text-[#187BFF]">✓</span>
-                {point}
+                {requirePick(point, `proofCards[${card.id}].checkpoints[${index}]`)}
               </li>
             ))}
           </ul>
@@ -85,7 +90,9 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
             {card.statistics.map((stat) => (
               <div key={stat.id} className="proof-card-stat-item">
                 <div className="proof-card-stat-value">{stat.value}</div>
-                <div className="proof-card-stat-label">{stat.label}</div>
+                <div className="proof-card-stat-label">
+                  {requirePick(stat.label, `proofCards[${card.id}].statistics[${stat.id}].label`)}
+                </div>
               </div>
             ))}
           </div>

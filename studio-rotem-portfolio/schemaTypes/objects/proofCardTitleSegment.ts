@@ -8,7 +8,7 @@ export const proofCardTitleSegment = defineType({
     defineField({
       name: 'text',
       title: 'Text',
-      type: 'string',
+      type: 'localeString',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -22,7 +22,8 @@ export const proofCardTitleSegment = defineType({
   preview: {
     select: {text: 'text', accent: 'accent'},
     prepare({text, accent}) {
-      return {title: text || 'Segment', subtitle: accent ? 'Orange' : 'White'}
+      const title = text?.en || text?.hb || 'Segment'
+      return {title, subtitle: accent ? 'Orange' : 'White'}
     },
   },
 })

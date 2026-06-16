@@ -6,6 +6,6 @@ export const localeText = defineType({
   type: 'object',
   fields: [
     defineField({name: 'en', title: 'English', type: 'text', rows: 4}),
-    defineField({name: 'he', title: 'Hebrew', type: 'text', rows: 4}),
+    defineField({name: 'hb', title: 'Hebrew', type: 'text', rows: 4}),
   ],
 })

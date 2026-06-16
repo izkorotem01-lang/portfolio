@@ -1,13 +1,15 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Mail, Phone, Globe } from "lucide-react";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const Footer = () => {
-  const { t, language, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const { siteSettings, homePage, requirePick } = useSiteContent();
   const year = new Date().getFullYear();
 
   const toggleLanguage = () => {
-    setLanguage(language === "en" ? "he" : "en");
+    setLanguage(language === "en" ? "hb" : "en");
   };
 
   return (
@@ -22,9 +24,7 @@ const Footer = () => {
                 RIZZ Productions
               </h3>
               <p className="text-foreground/70 mb-4">
-                {language === "he"
-                  ? "סוכנות תוכן וקריאייטיב לבניית נוכחות דיגיטלית לעסקים, יוצרים ומותגים אישיים."
-                  : "Content and creative systems for businesses, creators, and personal brands."}
+                {requirePick(siteSettings?.footerText, "siteSettings.footerText")}
               </p>
               <div className="flex space-x-4">
                 <a
@@ -45,13 +45,13 @@ const Footer = () => {
             {/* Quick Links */}
             <div>
               <h4 className="font-bold mb-4 text-foreground">
-                {language === "he" ? "ניווט" : "Navigation"}
+                {requirePick(siteSettings?.footerText, "siteSettings.footerText")}
               </h4>
               <div className="space-y-2">
                 {[
-                  { label: t("nav.about"), href: "#about" },
-                  { label: t("nav.portfolio"), href: "#portfolio" },
-                  { label: t("nav.contact"), href: "#contact" },
+                  { label: requirePick(homePage?.about?.title, "homePage.about.title"), href: "#about" },
+                  { label: requirePick(homePage?.portfolioSection?.title, "homePage.portfolioSection.title"), href: "#portfolio" },
+                  { label: requirePick(homePage?.contactSection?.title, "homePage.contactSection.title"), href: "#contact" },
                 ].map((link) => (
                   <button
                     key={link.href}
@@ -71,7 +71,7 @@ const Footer = () => {
             {/* Social Media & Language */}
             <div>
               <h4 className="font-bold mb-4 text-foreground">
-                {language === "he" ? "עקבו אחרינו" : "Follow Us"}
+                {requirePick(siteSettings?.footerText, "siteSettings.footerText")}
               </h4>
               <div className="space-y-2 mb-6">
                 <a
@@ -103,7 +103,7 @@ const Footer = () => {
               {/* Language Switcher */}
               <div>
                 <h4 className="font-bold mb-3 text-foreground">
-                  {language === "he" ? "שפה" : "Language"}
+                  {requirePick(siteSettings?.footerText, "siteSettings.footerText")}
                 </h4>
                 <button
                   onClick={toggleLanguage}
@@ -119,7 +119,7 @@ const Footer = () => {
           {/* Bottom Bar */}
           <div className="border-t border-border/30 pt-8 flex justify-center text-center">
             <p className="text-foreground/60 text-sm">
-              © {year} RIZZ Productions. {language === "he" ? "כל הזכויות שמורות." : "All rights reserved."}
+              © {year} RIZZ Productions. {requirePick(siteSettings?.footerText, "siteSettings.footerText")}
             </p>
           </div>
         </div>

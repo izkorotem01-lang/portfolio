@@ -1,5 +1,5 @@
 import { createClient } from "@sanity/client";
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 export const sanityProjectId =
@@ -11,10 +11,10 @@ export const sanityClient = createClient({
   projectId: sanityProjectId,
   dataset: sanityDataset,
   apiVersion: "2026-02-01",
-  useCdn: true,
+  useCdn: import.meta.env.PROD,
 });
 
-const imageBuilder = imageUrlBuilder(sanityClient);
+const imageBuilder = createImageUrlBuilder(sanityClient);
 
 export const urlForImage = (source: SanityImageSource) =>
   imageBuilder.image(source);

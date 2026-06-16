@@ -8,7 +8,7 @@ export const proofCardStatistic = defineType({
     defineField({
       name: 'label',
       title: 'Label',
-      type: 'string',
+      type: 'localeString',
       description: 'e.g. Leads, Views, Conversion rate',
     }),
     defineField({
@@ -21,7 +21,8 @@ export const proofCardStatistic = defineType({
   preview: {
     select: {label: 'label', value: 'value'},
     prepare({label, value}) {
-      return {title: [label, value].filter(Boolean).join(': ') || 'Statistic'}
+      const labelText = label?.en || label?.hb || ''
+      return {title: [labelText, value].filter(Boolean).join(': ') || 'Statistic'}
     },
   },
 })

@@ -22,7 +22,7 @@ import {
   type PortfolioVideo,
 } from "@/lib/portfolioService";
 import { cn } from "@/lib/utils";
-import { useRizzTranslations } from "@/hooks/useRizzTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PortfolioVideoCard = ({
   video,
@@ -98,8 +98,10 @@ const PortfolioVideoCard = ({
 };
 
 export const PortfolioSection = () => {
-  const t = useRizzTranslations();
-  const { homePage, pick } = useSiteContent();
+  const { language } = useLanguage();
+  const { rizzPage, requirePick } = useSiteContent();
+  if (!rizzPage?.portfolio) throw new Error("Missing required Sanity content: rizzPage.portfolio");
+  const portfolioCopy = rizzPage.portfolio;
   const [activeCategory, setActiveCategory] = useState("all");
   const [categories, setCategories] = useState<PortfolioCategory[]>([]);
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
@@ -136,18 +138,17 @@ export const PortfolioSection = () => {
     () => [
       {
         id: "all",
-        label: pick(homePage?.portfolioSection?.allWorkLabel) || t.portfolio.allVideos,
+        label: requirePick(portfolioCopy.allVideos, "rizzPage.portfolio.allVideos"),
       },
       ...categories.map((category) => ({
         id: category.id,
-        label: category.name,
+        label: language === "hb" ? category.nameHe : category.name,
       })),
     ],
-    [categories, homePage?.portfolioSection?.allWorkLabel, pick, t.portfolio.allVideos],
+    [categories, language, requirePick, portfolioCopy.allVideos],
   );
 
-  const maxVideosDisplayed =
-    homePage?.portfolioSection?.maxVideosDisplayed ?? DEFAULT_PORTFOLIO_VIDEO_LIMIT;
+  const maxVideosDisplayed = DEFAULT_PORTFOLIO_VIDEO_LIMIT;
 
   const filteredVideos = useMemo(
     () => getPortfolioVideosForCategory(videos, activeCategory, maxVideosDisplayed),
@@ -162,20 +163,26 @@ export const PortfolioSection = () => {
     <section id="work" className="overflow-x-hidden bg-[#030712] px-6 py-28">
       <div className="mx-auto max-w-[1440px]">
         <SectionWrapper className="text-center">
-          <EyebrowLabel className="w-full text-center">{t.portfolio.eyebrow}</EyebrowLabel>
+          <EyebrowLabel className="w-full text-center">
+            {requirePick(portfolioCopy.eyebrow, "rizzPage.portfolio.eyebrow")}
+          </EyebrowLabel>
           <h2
             className="mb-10 whitespace-nowrap font-semibold uppercase leading-[0.95]"
             style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", letterSpacing: "-0.05em" }}
           >
-            <span className="text-[#F5F7FA]">{t.portfolio.titlePrimary}</span>{" "}
-            <span className="rizz-title-accent">{t.portfolio.titleAccent}</span>
+            <span className="text-[#F5F7FA]">
+              {requirePick(portfolioCopy.titlePrimary, "rizzPage.portfolio.titlePrimary")}
+            </span>{" "}
+            <span className="rizz-title-accent">
+              {requirePick(portfolioCopy.titleAccent, "rizzPage.portfolio.titleAccent")}
+            </span>
           </h2>
         </SectionWrapper>
 
         <SectionWrapper delay={0.05}>
           <RizzFilterNav
             className="mb-12"
-            aria-label={t.portfolio.categoriesAria}
+            aria-label={requirePick(portfolioCopy.categoriesAria, "rizzPage.portfolio.categoriesAria")}
             options={displayCategories}
             activeId={activeCategory}
             onChange={setActiveCategory}
@@ -188,7 +195,9 @@ export const PortfolioSection = () => {
           </div>
         ) : filteredVideos.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-lg text-[#A7B0C0]">{t.portfolio.emptyState}</p>
+            <p className="text-lg text-[#A7B0C0]">
+              {requirePick(portfolioCopy.emptyState, "rizzPage.portfolio.emptyState")}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -197,7 +206,7 @@ export const PortfolioSection = () => {
                 <PortfolioVideoCard
                   video={video}
                   onOpen={() => openLightbox(video)}
-                  untitledLabel={t.portfolio.untitled}
+                  untitledLabel={requirePick(portfolioCopy.untitled, "rizzPage.portfolio.untitled")}
                 />
               </SectionWrapper>
             ))}

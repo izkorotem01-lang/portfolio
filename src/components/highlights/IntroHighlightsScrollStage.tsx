@@ -29,8 +29,8 @@ const flankRevealClass = (active: boolean, exiting: boolean) =>
   `${active ? " is-active" : ""}${exiting ? " is-exiting" : ""}`;
 
 const IntroHighlightsScrollStage = () => {
-  const { language, t } = useLanguage();
-  const { homePage, pick } = useSiteContent();
+  const { language } = useLanguage();
+  const { homePage, requirePick } = useSiteContent();
   const { videos, isLoading, activeHeroIndex, setHeroRotationPaused } =
     useIntroHighlights();
   const { phases, reveal } = useIntroHighlightsScrollContext();
@@ -89,7 +89,7 @@ const IntroHighlightsScrollStage = () => {
           <h2
             className={`showcase-productions-title intro-scroll-showcase-title${flankRevealClass(titleActive, titleExiting)}`}
           >
-            {pick(homePage?.showcaseTitle) || t("showcase.title")}
+            {requirePick(homePage?.showcaseTitle, "homePage.showcaseTitle")}
           </h2>
           <div
             className={`showcase-productions-ticks intro-scroll-showcase-ticks${flankRevealClass(ticksActive, ticksExiting)}`}

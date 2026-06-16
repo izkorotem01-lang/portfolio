@@ -2,19 +2,30 @@ import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Languages, Menu, X } from "lucide-react";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const Header = () => {
-  const { language, setLanguage, t, dir } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const { homePage, requirePick } = useSiteContent();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
-    setLanguage(language === "en" ? "he" : "en");
+    setLanguage(language === "en" ? "hb" : "en");
   };
 
   const navItems = [
-    { key: "nav.about", href: "#about" },
-    { key: "nav.portfolio", href: "#portfolio" },
-    { key: "nav.contact", href: "#contact" },
+    {
+      label: requirePick(homePage?.about?.title, "homePage.about.title"),
+      href: "#about",
+    },
+    {
+      label: requirePick(homePage?.portfolioSection?.title, "homePage.portfolioSection.title"),
+      href: "#portfolio",
+    },
+    {
+      label: requirePick(homePage?.contactSection?.title, "homePage.contactSection.title"),
+      href: "#contact",
+    },
   ];
 
   const scrollToSection = (href: string) => {
@@ -36,7 +47,7 @@ const Header = () => {
               loading="eager"
             />
             <div className="text-2xl md:text-3xl font-bold text-foreground">
-              {t("hero.name")}
+              RIZZ Productions
             </div>
           </div>
 
@@ -44,11 +55,11 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <button
-                key={item.key}
+                key={item.href}
                 onClick={() => scrollToSection(item.href)}
                 className="text-foreground hover:text-primary transition-smooth hover:scale-105"
               >
-                {t(item.key)}
+                {item.label}
               </button>
             ))}
           </div>
@@ -87,11 +98,11 @@ const Header = () => {
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <button
-                  key={item.key}
+                  key={item.href}
                   onClick={() => scrollToSection(item.href)}
                   className="text-left text-foreground hover:text-primary transition-smooth py-2"
                 >
-                  {t(item.key)}
+                  {item.label}
                 </button>
               ))}
             </div>

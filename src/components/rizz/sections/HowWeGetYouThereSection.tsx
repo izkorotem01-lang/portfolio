@@ -1,48 +1,35 @@
 import { GradientOrb } from "@/components/rizz/ui/GradientOrb";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
-import { useRizzTranslations } from "@/hooks/useRizzTranslations";
+import { SERVICE_BUILD_IMAGES } from "@/data/service-build-images";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
 import {
   Box,
   ChartNoAxesCombined,
   Clapperboard,
-  Crown,
-  GraduationCap,
   Play,
   Search,
-  ShoppingCart,
   Target,
   TrendingUp,
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { AudienceCard, ProcessStep, ServiceItem } from "@/i18n/rizz-translations";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const STEP_STAGGER = 0.38;
+const SERVICE_STAGGER = 0.22;
 const STEP_SPRING = { type: "spring" as const, stiffness: 240, damping: 20, mass: 1 };
 const ICON_CENTER_TOP = "2rem";
 
-type HowWeColumn = {
-  audience: AudienceCard[];
-  services: ServiceItem[];
-};
-
-const AUDIENCE_ICONS: Record<AudienceCard["icon"], LucideIcon> = {
-  play: Play,
-  graduation: GraduationCap,
-  crown: Crown,
-  cart: ShoppingCart,
-};
-
-const SERVICE_ICONS: Record<ServiceItem["icon"], LucideIcon> = {
+const SERVICE_ICONS: Record<string, LucideIcon> = {
   play: Play,
   clapperboard: Clapperboard,
   zap: Zap,
   target: Target,
 };
 
-const PROCESS_ICONS: Record<ProcessStep["icon"], LucideIcon> = {
+const PROCESS_ICONS: Record<string, LucideIcon> = {
   search: Search,
   box: Box,
   clapperboard: Clapperboard,
@@ -63,52 +50,158 @@ const ProofColumnNeonDivider = () => (
   />
 );
 
-const AudienceList = ({ items }: { items: AudienceCard[] }) => (
-  <ul className="space-y-3">
-    {items.map((card) => {
-      const Icon = AUDIENCE_ICONS[card.icon];
-      return (
-        <li key={card.title} className="proof-column-item p-4 md:p-5">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="proof-column-item-icon">
-              <Icon size={16} strokeWidth={2.25} />
-            </div>
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#F5F7FA] md:text-base">
-              {card.title}
-            </p>
-            <p className="text-sm leading-relaxed text-[#8B95A8] md:text-[0.9375rem]">
-              {card.description}
-            </p>
-          </div>
-        </li>
-      );
-    })}
-  </ul>
-);
+const ServiceCard = ({
+  service,
+  index,
+  animate,
+}: {
+  service: {
+    number?: string;
+    title?: unknown;
+    titleAccent?: unknown;
+    icon?: string;
+  };
+  index: number;
+  animate: boolean;
+}) => {
+  const { requirePick } = useSiteContent();
+  const Icon = SERVICE_ICONS[service.icon ?? "play"] ?? Play;
+  const cardDelay = index * SERVICE_STAGGER;
+  const imageSrc = service.number ? SERVICE_BUILD_IMAGES[service.number] : undefined;
 
-const ServiceList = ({ items }: { items: ServiceItem[] }) => (
-  <ul className="space-y-3">
-    {items.map((service) => {
-      const Icon = SERVICE_ICONS[service.icon];
-      return (
-        <li key={service.number} className="proof-column-item p-4 md:p-5">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="flex items-center gap-2">
-              <span className="proof-column-service-number">{service.number}</span>
-              <div className="proof-column-item-icon proof-column-item-icon--service">
-                <Icon size={16} strokeWidth={2.25} />
-              </div>
-            </div>
-            <p className="text-sm font-medium leading-snug text-[#F5F7FA] md:text-base">
-              {service.title}{" "}
-              <span className="rizz-title-accent">{service.titleAccent}</span>
-            </p>
-          </div>
-        </li>
-      );
-    })}
-  </ul>
-);
+  return (
+    <motion.div
+      className="proof-column-item overflow-hidden p-0"
+      initial={{ opacity: 0, y: 48, scale: 0.94 }}
+      animate={
+        animate
+          ? { opacity: 1, y: 0, scale: 1 }
+          : { opacity: 0, y: 48, scale: 0.94 }
+      }
+      transition={{ ...STEP_SPRING, delay: cardDelay }}
+    >
+      {imageSrc && (
+        <motion.div
+          className="relative h-28 w-full overflow-hidden md:h-32"
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={
+            animate
+              ? { opacity: 1, scale: 1 }
+              : { opacity: 0, scale: 1.08 }
+          }
+          transition={{
+            duration: 0.75,
+            delay: cardDelay + 0.05,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          <img
+            src={imageSrc}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/35 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#030712]/50 via-transparent to-transparent" />
+        </motion.div>
+      )}
+
+      <div className="flex flex-col items-center gap-3 p-4 text-center md:p-5">
+        <div className="flex items-center gap-2">
+          <motion.span
+            className="proof-column-service-number"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={
+              animate
+                ? { opacity: 1, scale: 1 }
+                : { opacity: 0, scale: 0.6 }
+            }
+            transition={{
+              type: "spring",
+              stiffness: 340,
+              damping: 16,
+              delay: cardDelay + 0.12,
+            }}
+          >
+            {service.number}
+          </motion.span>
+          <motion.div
+            className="proof-column-item-icon proof-column-item-icon--service relative"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={
+              animate
+                ? { scale: 1, opacity: 1 }
+                : { scale: 0.5, opacity: 0 }
+            }
+            transition={{
+              type: "spring",
+              stiffness: 340,
+              damping: 16,
+              delay: cardDelay + 0.16,
+            }}
+          >
+            <Icon size={16} strokeWidth={2.25} />
+            <motion.span
+              className="pointer-events-none absolute inset-0 rounded-[0.625rem] border border-[#38bdf8]/35"
+              initial={{ opacity: 0, scale: 1 }}
+              animate={
+                animate
+                  ? { opacity: [0, 0.8, 0], scale: [1, 1.35, 1.5] }
+                  : { opacity: 0, scale: 1 }
+              }
+              transition={{ duration: 0.95, delay: cardDelay + 0.22, ease: "easeOut" }}
+              aria-hidden
+            />
+          </motion.div>
+        </div>
+        <motion.p
+          className="text-sm font-medium leading-snug text-[#F5F7FA] md:text-base"
+          initial={{ opacity: 0, y: 10 }}
+          animate={animate ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          transition={{ duration: 0.6, delay: cardDelay + 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {requirePick(service.title as any, `rizzPage.howWeGetYouThere.columns.services[${service.number}].title`)}{" "}
+          <span className="rizz-title-accent">
+            {requirePick(
+              service.titleAccent as any,
+              `rizzPage.howWeGetYouThere.columns.services[${service.number}].titleAccent`,
+            )}
+          </span>
+        </motion.p>
+      </div>
+    </motion.div>
+  );
+};
+
+export const WhatWeBuildPanel = ({
+  services,
+  label,
+}: {
+  services: Array<{ number?: string; title?: unknown; titleAccent?: unknown; icon?: string }>;
+  label: string;
+}) => {
+  const reduceMotion = useReducedMotion();
+  const listRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(listRef, { once: true, margin: "-40px" });
+  const animate = reduceMotion || isInView;
+
+  return (
+    <div className="w-full">
+      <ProofColumnNeonDivider />
+      <div className="proof-column-panel p-4 md:p-5">
+        <ColumnLabel>{label}</ColumnLabel>
+        <div
+          ref={listRef}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6"
+        >
+          {services.map((service, index) => (
+            <ServiceCard key={service.number} service={service} index={index} animate={animate} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ProcessConnector = ({
   index,
@@ -163,12 +256,13 @@ const ProcessStepCard = ({
   isLast,
   animate,
 }: {
-  step: ProcessStep;
+  step: { step?: string; title?: unknown; icon?: string; description?: unknown };
   index: number;
   isLast: boolean;
   animate: boolean;
 }) => {
-  const Icon = PROCESS_ICONS[step.icon];
+  const { requirePick } = useSiteContent();
+  const Icon = PROCESS_ICONS[step.icon ?? "search"] ?? Search;
   const stepDelay = index * STEP_STAGGER;
 
   return (
@@ -228,7 +322,7 @@ const ProcessStepCard = ({
           animate={animate ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
           transition={{ duration: 0.6, delay: stepDelay + 0.28, ease: [0.22, 1, 0.36, 1] }}
         >
-          {step.title}
+          {requirePick(step.title as any, `rizzPage.howWeGetYouThere.process[${step.step}].title`)}
         </motion.h4>
         <motion.p
           className="relative z-10 max-w-[14rem] text-sm leading-relaxed text-[#A7B0C0] md:max-w-[15rem] md:text-base"
@@ -236,40 +330,23 @@ const ProcessStepCard = ({
           animate={animate ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={{ duration: 0.65, delay: stepDelay + 0.36, ease: [0.22, 1, 0.36, 1] }}
         >
-          {step.description}
+          {requirePick(
+            step.description as any,
+            `rizzPage.howWeGetYouThere.process[${step.step}].description`,
+          )}
         </motion.p>
       </div>
     </motion.li>
   );
 };
 
-export const HowWeGetYouThereColumn = ({
-  column,
-  labels,
-  className = "",
-}: {
-  column: HowWeColumn;
-  labels: { whoItsFor: string; whatWeBuild: string };
-  className?: string;
-}) => (
-  <div className={`w-full ${className}`}>
-    <ProofColumnNeonDivider />
-    <div className="proof-column-panel flex flex-col gap-6 p-4 md:gap-7 md:p-5">
-      <div>
-        <ColumnLabel>{labels.whoItsFor}</ColumnLabel>
-        <AudienceList items={column.audience} />
-      </div>
-      <div className="proof-column-section-divider" aria-hidden />
-      <div>
-        <ColumnLabel>{labels.whatWeBuild}</ColumnLabel>
-        <ServiceList items={column.services} />
-      </div>
-    </div>
-  </div>
-);
-
 export const HowWeGetYouThereSection = () => {
-  const t = useRizzTranslations();
+  const { rizzPage, requirePick } = useSiteContent();
+  const { dir } = useLanguage();
+  if (!rizzPage?.howWeGetYouThere) {
+    throw new Error("Missing required Sanity content: rizzPage.howWeGetYouThere");
+  }
+  const copy = rizzPage.howWeGetYouThere;
   const reduceMotion = useReducedMotion();
   const listRef = useRef<HTMLOListElement>(null);
   const isInView = useInView(listRef, { once: true, margin: "-60px" });
@@ -279,6 +356,7 @@ export const HowWeGetYouThereSection = () => {
     <section
       id="how-we-get-you-there"
       className="relative overflow-hidden bg-[#030712] pb-20 md:pb-28"
+      dir={dir}
     >
       <GradientOrb color="blue" className="-left-32 top-10" size="420px" opacity={0.1} />
       <GradientOrb color="orange" className="-right-24 bottom-0" size="360px" opacity={0.07} />
@@ -289,16 +367,16 @@ export const HowWeGetYouThereSection = () => {
             className="mb-8 w-full text-center font-semibold uppercase leading-[0.95] text-[#F5F7FA] md:mb-10"
             style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.25rem)", letterSpacing: "-0.03em" }}
           >
-            {t.howWeGetYouThere.howWeWork}
+            {requirePick(copy.howWeWork, "rizzPage.howWeGetYouThere.howWeWork")}
           </h3>
 
           <motion.ol
             ref={listRef}
             className="relative isolate grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-6"
           >
-            {t.howWeGetYouThere.process.map((step, index, steps) => (
+            {(copy.process ?? []).map((step, index, steps) => (
               <ProcessStepCard
-                key={step.step}
+                key={step.step ?? String(index)}
                 step={step}
                 index={index}
                 isLast={index === steps.length - 1}

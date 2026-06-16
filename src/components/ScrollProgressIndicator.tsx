@@ -124,7 +124,7 @@ const ScrollProgressIndicator = () => {
     <>
       <div
         className={`fixed top-1/2 transform -translate-y-1/2 z-10 hidden 2xl:block ${
-          language === "he" ? "right-6" : "left-6"
+          language === "hb" ? "right-6" : "left-6"
         }`}
       >
         <div className="relative scale-75 2xl:scale-90">
@@ -134,7 +134,7 @@ const ScrollProgressIndicator = () => {
           {/* Main Connecting Line - Background */}
           <div
             className={`absolute top-0 w-px h-full ${
-              language === "he" ? "right-4" : "left-4"
+              language === "hb" ? "right-4" : "left-4"
             }`}
           >
             <div className="w-full h-full bg-gradient-to-b from-transparent via-white/3 to-transparent"></div>
@@ -143,7 +143,7 @@ const ScrollProgressIndicator = () => {
           {/* Progressive Connecting Line */}
           <div
             className={`absolute top-0 w-px h-full ${
-              language === "he" ? "right-4" : "left-4"
+              language === "hb" ? "right-4" : "left-4"
             }`}
           >
             <div
@@ -293,7 +293,7 @@ const ScrollProgressIndicator = () => {
                           index <= activeStep ? "text-white" : "text-white"
                         } group-hover:text-white`}
                       >
-                        {language === "he" ? step.hebrew : step.english}
+                        {language === "hb" ? step.hebrew : step.english}
                       </div>
                     </div>
 
@@ -301,7 +301,7 @@ const ScrollProgressIndicator = () => {
                     {index < steps.length - 1 && (
                       <div
                         className={`absolute top-full w-px h-4 2xl:h-6 transform -translate-x-1/2 ${
-                          language === "he" ? "right-4" : "left-4"
+                          language === "hb" ? "right-4" : "left-4"
                         }`}
                       >
                         {/* Background line */}
@@ -348,7 +348,7 @@ const ScrollProgressIndicator = () => {
       {isInContactSection && (
         <div
           className={`fixed z-10 hidden 2xl:block pointer-events-none ${
-            language === "he" ? "right-6" : "left-6"
+            language === "hb" ? "right-6" : "left-6"
           }`}
         >
           <div

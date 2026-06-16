@@ -5,7 +5,7 @@ import type { PortfolioCategory, PortfolioVideo } from "@/lib/portfolioService";
 
 type LocalizedString = {
   en?: string;
-  he?: string;
+  hb?: string;
 };
 
 type SanityCategory = {
@@ -79,7 +79,7 @@ const toTimestamp = (iso: string) => Timestamp.fromDate(new Date(iso));
 const mapCategory = (doc: SanityCategory): PortfolioCategory => ({
   id: doc._id,
   name: doc.name?.en ?? "",
-  nameHe: doc.name?.he ?? "",
+  nameHe: doc.name?.hb ?? "",
   order: doc.order ?? 0,
   createdAt: toTimestamp(doc._createdAt),
   updatedAt: toTimestamp(doc._updatedAt),
@@ -89,9 +89,9 @@ const mapVideo = (doc: SanityVideo): PortfolioVideo => ({
   id: doc._id,
   categoryId: doc.categoryId ?? "",
   title: doc.title?.en ?? "",
-  titleHe: doc.title?.he ?? "",
+  titleHe: doc.title?.hb ?? "",
   subtitle: doc.subtitle?.en ?? "",
-  subtitleHe: doc.subtitle?.he ?? "",
+  subtitleHe: doc.subtitle?.hb ?? "",
   videoUrl: doc.videoUrl ?? "",
   videoWidth: doc.videoWidth || undefined,
   videoHeight: doc.videoHeight || undefined,

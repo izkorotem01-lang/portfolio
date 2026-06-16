@@ -40,14 +40,13 @@ export const proofCardMedia = defineType({
     defineField({
       name: 'quote',
       title: 'Quote',
-      type: 'text',
-      rows: 3,
+      type: 'localeText',
       description: 'Comment or testimonial text (shown in bottom media).',
     }),
     defineField({
       name: 'alt',
       title: 'Alt text',
-      type: 'string',
+      type: 'localeString',
     }),
     defineField({
       name: 'isMain',
@@ -69,13 +68,15 @@ export const proofCardMedia = defineType({
       quote: 'quote',
     },
     prepare({image, videoFile, youtubeUrl, alt, isMain, quote}) {
-      if (quote?.trim()) {
-        const snippet =
-          quote.trim().length > 56 ? `${quote.trim().slice(0, 56)}…` : quote.trim()
+      const quoteText = quote?.en || quote?.hb
+      if (quoteText?.trim()) {
+        const trimmed = quoteText.trim()
+        const snippet = trimmed.length > 56 ? `${trimmed.slice(0, 56)}…` : trimmed
         return {title: `Quote: “${snippet}”`, media: image}
       }
       const kind = image ? 'Image' : videoFile || youtubeUrl ? 'Video' : 'Empty'
-      const title = [alt || kind, isMain ? '(Main)' : ''].filter(Boolean).join(' ')
+      const altText = alt?.en || alt?.hb
+      const title = [altText || kind, isMain ? '(Main)' : ''].filter(Boolean).join(' ')
       return {title, media: image}
     },
   },
@@ -86,7 +87,8 @@ export const proofCardMedia = defineType({
         fields.image ||
         fields.videoFile ||
         fields.youtubeUrl ||
-        (typeof fields.quote === 'string' && fields.quote.trim())
+        (typeof fields.quote?.en === 'string' && fields.quote.en.trim()) ||
+        (typeof fields.quote?.hb === 'string' && fields.quote.hb.trim())
       return hasContent ? true : 'Add an image, video, YouTube URL, or quote'
     }),
 })

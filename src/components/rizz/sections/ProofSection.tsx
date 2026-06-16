@@ -3,20 +3,17 @@ import { ProofCardItem } from "@/components/rizz/ui/ProofCard";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
 import { TrustedByWheel } from "@/components/rizz/ui/TrustedByWheel";
 import { useSiteContent } from "@/contexts/SiteContentContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { getProofCardsFallback } from "@/data/proof-cards-fallback-i18n";
-import { HowWeGetYouThereColumn } from "@/components/rizz/sections/HowWeGetYouThereSection";
-import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 import { useMemo } from "react";
 
 export const ProofSection = () => {
-  const t = useRizzTranslations();
-  const { language } = useLanguage();
-  const { proofCards, isLoading } = useSiteContent();
+  const { proofCards, isLoading, rizzPage, requirePick } = useSiteContent();
+  if (!rizzPage?.proof) throw new Error("Missing required Sanity content: rizzPage.proof");
+  const copy = rizzPage.proof;
   const cards = useMemo(() => {
-    const source =
-      proofCards.length > 0 ? proofCards : getProofCardsFallback(language);
-    return source.filter(
+    if (proofCards.length === 0) {
+      throw new Error("Missing required proofCards in Sanity (no fallbacks).");
+    }
+    return proofCards.filter(
       (card) =>
         card.clientName ||
         card.clientRole ||
@@ -26,13 +23,13 @@ export const ProofSection = () => {
         card.bottomMedia.length > 0 ||
         card.statistics.length > 0,
     );
-  }, [proofCards, language]);
+  }, [proofCards]);
 
   return (
     <section id="proof" className="pt-32 pb-20 bg-[#030712] overflow-x-hidden">
       <SectionWrapper className="text-center px-8 mb-10">
         <EyebrowLabel className="justify-center text-center w-full tracking-[0.4em]">
-          {t.proof.eyebrow}
+          {requirePick(copy.eyebrow, "rizzPage.proof.eyebrow")}
         </EyebrowLabel>
         <h2
           className="font-semibold uppercase leading-[0.95] mb-4 md:whitespace-nowrap"
@@ -41,13 +38,15 @@ export const ProofSection = () => {
             letterSpacing: "-0.04em",
           }}
         >
-          <span className="block md:inline text-[#F5F7FA]">{t.proof.titlePrimary}</span>
+          <span className="block md:inline text-[#F5F7FA]">
+            {requirePick(copy.titlePrimary, "rizzPage.proof.titlePrimary")}
+          </span>
           <span className="block md:inline rizz-title-accent md:ms-[0.2em]">
-            {t.proof.titleAccent}
+            {requirePick(copy.titleAccent, "rizzPage.proof.titleAccent")}
           </span>
         </h2>
         <p className="text-[#A7B0C0] text-base mx-auto max-w-xl">
-          {t.proof.subtitle}
+          {requirePick(copy.subtitle, "rizzPage.proof.subtitle")}
         </p>
       </SectionWrapper>
 
@@ -70,22 +69,6 @@ export const ProofSection = () => {
                 </SectionWrapper>
               ))}
         </div>
-
-        {!isLoading && (
-          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3 md:mt-12">
-            {t.howWeGetYouThere.columns.map((column, i) => (
-              <SectionWrapper key={`how-we-column-${i}`} delay={0.15 + i * 0.08}>
-                <HowWeGetYouThereColumn
-                  column={column}
-                  labels={{
-                    whoItsFor: t.howWeGetYouThere.whoItsFor,
-                    whatWeBuild: t.howWeGetYouThere.whatWeBuild,
-                  }}
-                />
-              </SectionWrapper>
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );

@@ -19,10 +19,10 @@ const ReviewsSection = () => {
   );
 
   const title = pick(homePage?.reviewsSection?.title) ||
-    (language === "he" ? "המלצות" : "Reviews");
+    (language === "hb" ? "המלצות" : "Reviews");
   const subtitle =
     pick(homePage?.reviewsSection?.subtitle) ||
-    (language === "he"
+    (language === "hb"
       ? "מה הלקוחות שלי אומרים על העבודה שלי"
       : "What my clients say about my work");
 

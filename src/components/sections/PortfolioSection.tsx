@@ -97,8 +97,8 @@ const portfolioContainerClass = (isReel: boolean) =>
   }`;
 
 const PortfolioSection = () => {
-  const { t, language } = useLanguage();
-  const { homePage, pick } = useSiteContent();
+  const { language } = useLanguage();
+  const { homePage, requirePick } = useSiteContent();
   const { ref: sectionRef, isVisible } = useScrollAnimation({
     threshold: 0.08,
     rootMargin: "0px 0px -5% 0px",
@@ -405,10 +405,13 @@ const PortfolioSection = () => {
 
   // Create display categories with "All Work" option
   const displayCategories = [
-    { id: "all", label: pick(homePage?.portfolioSection?.allWorkLabel) || t("portfolio.allWork") },
+    {
+      id: "all",
+      label: requirePick(homePage?.portfolioSection?.allWorkLabel, "homePage.portfolioSection.allWorkLabel"),
+    },
     ...categories.map((cat) => ({
       id: cat.id,
-      label: language === "he" ? cat.nameHe : cat.name,
+      label: language === "hb" ? cat.nameHe : cat.name,
     })),
   ];
 
@@ -437,7 +440,7 @@ const PortfolioSection = () => {
                   isVisible ? " is-active" : ""
                 }`}
               >
-                {pick(homePage?.portfolioSection?.title) || t("portfolio.title")}
+                {requirePick(homePage?.portfolioSection?.title, "homePage.portfolioSection.title")}
               </h2>
               <div
                 className={`showcase-productions-ticks${
@@ -518,7 +521,7 @@ const PortfolioSection = () => {
           {lightboxVideo ? (
             <>
               <DialogTitle className="sr-only">
-                {language === "he"
+                {language === "hb"
                   ? lightboxVideo.titleHe
                   : lightboxVideo.title}
               </DialogTitle>
@@ -541,7 +544,7 @@ const PortfolioSection = () => {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     allowFullScreen
                     title={
-                      language === "he"
+                      language === "hb"
                         ? lightboxVideo.titleHe
                         : lightboxVideo.title
                     }
@@ -576,7 +579,7 @@ const PortfolioSection = () => {
                 </div>
               )}
               <p className="truncate text-center text-sm text-muted-foreground">
-                {language === "he"
+                {language === "hb"
                   ? lightboxVideo.titleHe
                   : lightboxVideo.title}
               </p>
@@ -732,12 +735,12 @@ const SimpleVideoItem = React.memo(
                   className="absolute left-0 top-0 h-full w-full rounded-lg"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title={language === "he" ? video.titleHe : video.title}
+                  title={language === "hb" ? video.titleHe : video.title}
                 />
               ) : youtubeThumbnailUrl ? (
                 <img
                   src={youtubeThumbnailUrl}
-                  alt={language === "he" ? video.titleHe : video.title}
+                  alt={language === "hb" ? video.titleHe : video.title}
                   className="absolute left-0 top-0 h-full w-full rounded-lg object-cover"
                   loading="eager"
                   decoding="async"
@@ -857,7 +860,7 @@ const SimpleVideoItem = React.memo(
                   ) : videoHasThumbnail ? (
                     <img
                       src={video.thumbnailUrl}
-                      alt={language === "he" ? video.titleHe : video.title}
+                      alt={language === "hb" ? video.titleHe : video.title}
                       className={`w-full h-full ${mediaFitClass}`}
                       loading="lazy"
                     />
@@ -875,7 +878,7 @@ const SimpleVideoItem = React.memo(
                   {videoHasThumbnail ? (
                     <img
                       src={video.thumbnailUrl}
-                      alt={language === "he" ? video.titleHe : video.title}
+                      alt={language === "hb" ? video.titleHe : video.title}
                       className={`w-full h-full ${mediaFitClass}`}
                       loading="lazy"
                       decoding="async"

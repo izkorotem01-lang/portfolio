@@ -1,15 +1,17 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 import { cn } from "@/lib/utils";
 import type { UrlLocale } from "@/i18n/locale";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 export const LanguageSwitcher = ({ className }: { className?: string }) => {
   const { urlLocale, switchUrlLocale } = useLanguage();
-  const t = useRizzTranslations();
+  const { rizzPage, requirePick } = useSiteContent();
+  if (!rizzPage?.nav) throw new Error("Missing required Sanity content: rizzPage.nav");
+  const nav = rizzPage.nav;
 
   const options: { locale: UrlLocale; label: string }[] = [
-    { locale: "en", label: t.nav.switchToEn },
-    { locale: "hb", label: t.nav.switchToHb },
+    { locale: "en", label: requirePick(nav.switchToEn, "rizzPage.nav.switchToEn") },
+    { locale: "hb", label: requirePick(nav.switchToHb, "rizzPage.nav.switchToHb") },
   ];
 
   return (

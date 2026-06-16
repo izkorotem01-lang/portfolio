@@ -36,7 +36,7 @@ const REVIEWS_QUERY = `*[_type == "review"] | order(order asc) {
   name,
   company,
   rating,
-  text,
+  "text": {"en": text.en, "hb": coalesce(text.hb, text.he)},
   showOnMainSection,
   order,
   "videoUrl": coalesce(videoFile.asset->url, youtubeUrl),

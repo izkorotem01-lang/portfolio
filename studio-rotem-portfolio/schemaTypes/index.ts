@@ -16,6 +16,7 @@ import {servicesSection} from './documents/servicesSection'
 import {siteSettings} from './documents/siteSettings'
 import {trustedByClient} from './documents/trustedByClient'
 import {workSection} from './documents/workSection'
+import {rizzPage} from './documents/rizzPage'
 import {aboutCapability} from './objects/aboutCapability'
 import {aboutFounder} from './objects/aboutFounder'
 import {aboutStat} from './objects/aboutStat'
@@ -31,6 +32,7 @@ export const schemaTypes = [
   proofCardStatistic,
   proofCardMedia,
   proofCardTitleSegment,
+  rizzPage,
   introductionSection,
   highlightsSection,
   aboutSection,

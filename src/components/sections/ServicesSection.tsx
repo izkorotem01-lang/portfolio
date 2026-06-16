@@ -1,5 +1,5 @@
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 import {
   Video,
   Sparkles,
@@ -15,60 +15,15 @@ import {
 import { useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 
 const ServicesSection = () => {
-  const { t } = useLanguage();
+  const { homePage, requirePick } = useSiteContent();
 
-  const services = [
-    {
-      icon: Video,
-      title: t("services.video"),
-      description: "Professional video editing with cutting-edge techniques",
-    },
-    {
-      icon: Sparkles,
-      title: t("services.motion"),
-      description: "Eye-catching motion graphics and animations",
-    },
-    {
-      icon: Share2,
-      title: t("services.social"),
-      description: "Optimized content for all social platforms",
-    },
-    {
-      icon: Camera,
-      title: t("services.photo"),
-      description: "Professional photo editing and retouching",
-    },
-    {
-      icon: Music,
-      title: t("services.aiSongs"),
-      description: "Create original songs and music using AI technology",
-    },
-    {
-      icon: Image,
-      title: t("services.aiContent"),
-      description: "Generate stunning images, videos and graphics with AI",
-    },
-    {
-      icon: Zap,
-      title: t("services.logos"),
-      description: "Professional logo design and brand identity",
-    },
-    {
-      icon: Target,
-      title: t("services.aiAdvertising"),
-      description: "AI-powered advertising creation and campaigns",
-    },
-    {
-      icon: Mic,
-      title: t("services.voiceover"),
-      description: "Professional voiceover and narration services",
-    },
-    {
-      icon: TrendingUp,
-      title: t("services.digitalPresence"),
-      description: "Build your complete digital presence across all platforms",
-    },
-  ];
+  // This section is legacy; all copy must come from Sanity.
+  // If you still render this component, define a services list in Sanity and map it here.
+  const services: Array<{ icon: React.ComponentType<any>; title: string; description: string }> =
+    [];
+  if (services.length === 0) {
+    throw new Error("Missing required services items (define them in Sanity and map them here).");
+  }
 
   const {
     ref: sectionRef,
@@ -87,7 +42,7 @@ const ServicesSection = () => {
             }`}
           >
             <h2 className="section-title">
-              {t("services.title")}
+              {requirePick(homePage?.servicesSection?.title, "homePage.servicesSection.title")}
             </h2>
           </div>
 

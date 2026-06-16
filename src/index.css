@@ -484,6 +484,10 @@
   );
 }
 
+.hero-section-image-mobile {
+  height: min(48vh, 26rem);
+}
+
 /* Proof card — bottom media quotes */
 .proof-card-quote {
   position: relative;

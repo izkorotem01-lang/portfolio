@@ -6,6 +6,7 @@ import {
   EyeOpenIcon,
   HomeIcon,
   PlayIcon,
+  RocketIcon,
   StarIcon,
   TagIcon,
   UsersIcon,
@@ -15,6 +16,7 @@ import type {StructureResolver} from 'sanity/structure'
 import {ProofCardSitePreviewView} from './components/ProofCardSitePreview'
 
 export const SECTION_IDS = {
+  rizzPage: 'rizzPage',
   introductionSection: 'a1000001-0001-4001-8001-000000000001',
   highlightsSection: 'a1000002-0002-4002-8002-000000000002',
   aboutSection: 'a1000003-0003-4003-8003-000000000003',
@@ -41,6 +43,10 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title('RIZ Productions')
     .items([
+      singleton(S, 'rizzPage', SECTION_IDS.rizzPage, 'Rizz landing page', RocketIcon),
+
+      S.divider(),
+
       S.listItem()
         .title('Introduction')
         .icon(HomeIcon)

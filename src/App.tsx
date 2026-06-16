@@ -10,6 +10,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
 import { VideoControlProvider } from "@/contexts/VideoControlContext";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -31,14 +32,16 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
-        <LanguageProvider>
-          <SiteContentProvider>
-            <VideoControlProvider>
-              <ScrollToTop />
-              <AppContent />
-            </VideoControlProvider>
-          </SiteContentProvider>
-        </LanguageProvider>
+        <AppErrorBoundary>
+          <LanguageProvider>
+            <SiteContentProvider>
+              <VideoControlProvider>
+                <ScrollToTop />
+                <AppContent />
+              </VideoControlProvider>
+            </SiteContentProvider>
+          </LanguageProvider>
+        </AppErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

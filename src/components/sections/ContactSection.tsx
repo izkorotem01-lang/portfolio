@@ -9,8 +9,8 @@ import { Lightbulb, Mail, MessageCircle, PenTool, Rocket, Instagram, Youtube, Se
 import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
-  const { t, language } = useLanguage();
-  const { homePage, siteSettings, pick } = useSiteContent();
+  const { language } = useLanguage();
+  const { homePage, siteSettings, requirePick } = useSiteContent();
   const { ref: sectionRef, isVisible } = useScrollAnimation({
     threshold: 0.08,
     rootMargin: "0px 0px -5% 0px",
@@ -41,37 +41,14 @@ const ContactSection = () => {
     }));
   };
 
-  const email = siteSettings?.contactEmail || t("contact.email");
-  const whatsappUrl = siteSettings?.whatsappUrl || "https://wa.me/972549702996";
-  const processSteps =
-    homePage?.contactSection?.processSteps?.length
-      ? homePage.contactSection.processSteps
-      : [
-          {
-            _key: "discovery",
-            title: { en: "Discovery", he: "היכרות" },
-            description: {
-              en: "We understand your business, audience, goals, and current content situation.",
-              he: "מבינים את העסק, הקהל, המטרות והמצב הנוכחי של התוכן.",
-            },
-          },
-          {
-            _key: "plan",
-            title: { en: "Personalized Plan", he: "תוכנית אישית" },
-            description: {
-              en: "We build a custom content plan that fits your needs, budget, and growth direction.",
-              he: "בונים תוכנית תוכן אישית שמתאימה לצרכים, לתקציב ולכיוון הצמיחה שלכם.",
-            },
-          },
-          {
-            _key: "production",
-            title: { en: "Create & Improve", he: "יוצרים ומשפרים" },
-            description: {
-              en: "We produce the content, publish consistently, and improve it based on results.",
-              he: "מפיקים את התוכן, מפרסמים בצורה עקבית ומשפרים לפי התוצאות.",
-            },
-          },
-        ];
+  const email = siteSettings?.contactEmail;
+  if (!email) throw new Error("Missing required contact email at siteSettings.contactEmail");
+  const whatsappUrl = siteSettings?.whatsappUrl;
+  if (!whatsappUrl) throw new Error("Missing required WhatsApp URL at siteSettings.whatsappUrl");
+  const processSteps = homePage?.contactSection?.processSteps ?? [];
+  if (processSteps.length === 0) {
+    throw new Error("Missing required contact processSteps at homePage.contactSection.processSteps");
+  }
 
   const processIcons = [Lightbulb, PenTool, Rocket];
 
@@ -85,8 +62,8 @@ const ContactSection = () => {
     },
     {
       icon: MessageCircle,
-      title: pick(siteSettings?.whatsappLabel) || "WhatsApp",
-      value: language === "he" ? "מענה מהיר" : "Quick Response",
+      title: requirePick(siteSettings?.whatsappLabel, "siteSettings.whatsappLabel"),
+      value: "",
       action: () => window.open(whatsappUrl),
       color: "bg-brand-orange/12 border border-brand-orange/30 text-brand-orange",
     },
@@ -130,7 +107,7 @@ const ContactSection = () => {
                   isVisible ? " is-active" : ""
                 }`}
               >
-                {pick(homePage?.contactSection?.title) || t("contact.title")}
+                {requirePick(homePage?.contactSection?.title, "homePage.contactSection.title")}
               </h2>
               <div
                 className={`showcase-productions-ticks${
@@ -139,7 +116,7 @@ const ContactSection = () => {
                 aria-hidden
               />
               <p className="mt-6 text-xl text-foreground/80 max-w-2xl mx-auto text-center">
-                {pick(homePage?.contactSection?.subtitle) || t("contact.subtitle")}
+                {requirePick(homePage?.contactSection?.subtitle, "homePage.contactSection.subtitle")}
               </p>
             </header>
 
@@ -157,13 +134,13 @@ const ContactSection = () => {
                       {React.createElement(processIcons[index] ?? Rocket, { className: "h-7 w-7" })}
                     </div>
                     <div className="relative mx-auto mb-4 w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-foreground/55">
-                      {language === "he" ? `שלב ${index + 1}` : `Step ${index + 1}`}
+                      {language === "hb" ? `שלב ${index + 1}` : `Step ${index + 1}`}
                     </div>
                     <h3 className="relative mb-3 text-xl font-bold text-foreground md:text-2xl">
-                      {pick(step.title)}
+                      {requirePick(step.title, `homePage.contactSection.processSteps[${step._key}].title`)}
                     </h3>
                     <p className="relative text-sm leading-relaxed text-foreground/72 md:text-base">
-                      {pick(step.description)}
+                      {requirePick(step.description, `homePage.contactSection.processSteps[${step._key}].description`)}
                     </p>
                   </div>
                 </div>
@@ -183,7 +160,7 @@ const ContactSection = () => {
                     >
                       <div
                         className={`flex items-center ${
-                          language === "he"
+                          language === "hb"
                             ? "space-x-reverse space-x-5"
                             : "space-x-5"
                         }`}
@@ -207,11 +184,11 @@ const ContactSection = () => {
                 {/* Social Links */}
                 <div className="text-center">
                   <h3 className="text-xl font-bold mb-4 text-foreground">
-                    {language === "he" ? "עקבו אחרי העבודות שלנו" : "Follow Our Work"}
+                    {language === "hb" ? "עקבו אחרי העבודות שלנו" : "Follow Our Work"}
                   </h3>
                   <div
                     className={`flex justify-center ${
-                      language === "he"
+                      language === "hb"
                         ? "space-x-reverse space-x-4"
                         : "space-x-4"
                     }`}

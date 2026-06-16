@@ -6,7 +6,12 @@ import React, {
   useState,
 } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { pickLocale, type LocaleString, type LocaleText } from "@/lib/sanity/locale";
+import {
+  pickLocale,
+  requireLocale,
+  type LocaleString,
+  type LocaleText,
+} from "@/lib/sanity/locale";
 import {
   fetchSiteContent,
   type SiteContent,
@@ -16,6 +21,7 @@ import { ScrollRestoration } from "@/components/ScrollRestoration";
 const emptyContent: SiteContent = {
   homePage: null,
   siteSettings: null,
+  rizzPage: null,
   trustedClients: [],
   highlightVideos: [],
   proofCards: [],
@@ -25,6 +31,7 @@ const emptyContent: SiteContent = {
 type SiteContentContextValue = SiteContent & {
   isLoading: boolean;
   pick: (field?: LocaleString | LocaleText) => string;
+  requirePick: (field: LocaleString | LocaleText | undefined, debugPath: string) => string;
 };
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
@@ -60,13 +67,21 @@ export const SiteContentProvider = ({
     [language]
   );
 
+  const requirePick = useMemo(
+    () =>
+      (field: LocaleString | LocaleText | undefined, debugPath: string) =>
+        requireLocale(field, language, debugPath),
+    [language]
+  );
+
   const value = useMemo(
     () => ({
       ...content,
       isLoading,
       pick,
+      requirePick,
     }),
-    [content, isLoading, pick]
+    [content, isLoading, pick, requirePick]
   );
 
   return (

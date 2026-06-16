@@ -29,7 +29,7 @@ export const proofCard = defineType({
     defineField({
       name: 'clientRole',
       title: 'Client role / category',
-      type: 'string',
+      type: 'localeString',
       description: 'Shown in blue under the name (e.g. Content Creator).',
     }),
     defineField({
@@ -50,7 +50,7 @@ export const proofCard = defineType({
       name: 'checkpoints',
       title: 'Checkpoints',
       type: 'array',
-      of: [defineArrayMember({type: 'string'})],
+      of: [defineArrayMember({type: 'localeString'})],
       description: 'Bullet points with a checkmark (e.g. key results or context).',
     }),
     defineField({

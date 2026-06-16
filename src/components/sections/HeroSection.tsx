@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { Button } from "@/components/ui/button";
 import HeroBlendHeadline from "@/components/HeroBlendHeadline";
@@ -9,8 +8,7 @@ import { useIntroHighlightsScrollContext } from "@/contexts/IntroHighlightsScrol
 import { splitMainSectionReviews } from "@/lib/sanityReviews";
 
 const HeroSection = () => {
-  const { t } = useLanguage();
-  const { homePage, reviews, pick } = useSiteContent();
+  const { homePage, reviews, requirePick } = useSiteContent();
   const { morphEnabled } = useIntroHighlightsScrollContext();
   const { left, right } = useMemo(
     () => splitMainSectionReviews(reviews),
@@ -45,7 +43,7 @@ const HeroSection = () => {
               <HeroBlendHeadline />
 
               <p className="hero-subtitle intro-reveal intro-reveal--delay-1 intro-reveal--soft m-0 w-full max-w-2xl px-4 text-center font-semibold leading-snug tracking-wide text-foreground/95">
-                {pick(homePage?.hero?.subtitle) || t("hero.subtitle")}
+                {requirePick(homePage?.hero?.subtitle, "homePage.hero.subtitle")}
               </p>
 
               <div className="intro-reveal intro-reveal--delay-2 hidden flex-wrap justify-center gap-3 md:flex">
@@ -53,13 +51,13 @@ const HeroSection = () => {
                   onClick={scrollToPortfolio}
                   className="btn-glory btn-glory-orange"
                 >
-                  {pick(homePage?.hero?.cta) || t("hero.cta")}
+                  {requirePick(homePage?.hero?.cta, "homePage.hero.cta")}
                 </Button>
                 <Button
                   onClick={scrollToContact}
                   className="btn-glory btn-glory-cyan"
                 >
-                  {pick(homePage?.contactSection?.title) || t("contact.title")}
+                  {requirePick(homePage?.contactSection?.title, "homePage.contactSection.title")}
                 </Button>
               </div>
             </div>

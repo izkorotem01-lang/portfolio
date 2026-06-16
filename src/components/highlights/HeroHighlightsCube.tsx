@@ -187,7 +187,7 @@ const HeroHighlightsCube = ({
       className="hero-cube-stage"
       aria-live="polite"
       aria-label={
-        language === "he"
+        language === "hb"
           ? `היילייט ${activeIndex + 1} מתוך ${count}`
           : `Highlight ${activeIndex + 1} of ${count}`
       }

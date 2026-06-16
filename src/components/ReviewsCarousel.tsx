@@ -252,7 +252,7 @@ const ReviewSlide = ({
         <p
           className={`review-text-clamp leading-relaxed text-foreground/90 ${
             isHero ? "mb-4 text-sm sm:text-base" : "mb-4 text-sm md:text-base"
-          } ${language === "he" ? "text-right" : "text-left"}`}
+          } ${language === "hb" ? "text-right" : "text-left"}`}
         >
           &ldquo;{review.text}&rdquo;
         </p>
@@ -307,7 +307,7 @@ const ReviewsCarousel = ({
   const isHero = variant === "hero";
   const fallbackReviews = useMemo(
     () =>
-      language === "he" ? reviewsContent.hebrew : reviewsContent.english,
+      language === "hb" ? reviewsContent.hebrew : reviewsContent.english,
     [language]
   );
   const reviews = reviewsProp?.length ? reviewsProp : fallbackReviews;
@@ -493,13 +493,13 @@ const ReviewsCarousel = ({
             >
               <button
                 type="button"
-                onClick={language === "he" ? nextReview : prevReview}
+                onClick={language === "hb" ? nextReview : prevReview}
                 className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
                 aria-label={
-                  language === "he" ? "ביקורת הבאה" : "Previous review"
+                  language === "hb" ? "ביקורת הבאה" : "Previous review"
                 }
               >
-                {language === "he" ? (
+                {language === "hb" ? (
                   <ChevronRight className="h-4 w-4 text-foreground" />
                 ) : (
                   <ChevronLeft className="h-4 w-4 text-foreground" />
@@ -517,18 +517,18 @@ const ReviewsCarousel = ({
                         ? "bg-primary"
                         : "bg-white/30 hover:bg-white/50"
                     }`}
-                    aria-label={`${language === "he" ? "ביקורת" : "Review"} ${index + 1}`}
+                    aria-label={`${language === "hb" ? "ביקורת" : "Review"} ${index + 1}`}
                   />
                 ))}
               </div>
 
               <button
                 type="button"
-                onClick={language === "he" ? prevReview : nextReview}
+                onClick={language === "hb" ? prevReview : nextReview}
                 className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
-                aria-label={language === "he" ? "ביקורת קודמת" : "Next review"}
+                aria-label={language === "hb" ? "ביקורת קודמת" : "Next review"}
               >
-                {language === "he" ? (
+                {language === "hb" ? (
                   <ChevronLeft className="h-4 w-4 text-foreground" />
                 ) : (
                   <ChevronRight className="h-4 w-4 text-foreground" />

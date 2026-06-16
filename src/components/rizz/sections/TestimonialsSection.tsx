@@ -7,8 +7,6 @@ import {
 } from "@/components/rizz/ui/TestimonialsMarquee";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TESTIMONIALS } from "@/data/rizz-mock";
-import { useRizzTranslations } from "@/hooks/useRizzTranslations";
 
 const MIN_MARQUEE_REVIEWS = 8;
 
@@ -30,45 +28,47 @@ const ensureMinimumReviews = (items: TestimonialMarqueeItem[]): TestimonialMarqu
 };
 
 export const TestimonialsSection = () => {
-  const t = useRizzTranslations();
   const { dir } = useLanguage();
-  const { reviews, pick } = useSiteContent();
+  const { reviews, rizzPage, pick, requirePick } = useSiteContent();
+  if (!rizzPage?.testimonials) {
+    throw new Error("Missing required Sanity content: rizzPage.testimonials");
+  }
+  const copy = rizzPage.testimonials;
 
   const items = useMemo<TestimonialMarqueeItem[]>(() => {
     const mapped =
-      reviews.length > 0
-        ? reviews
-            .map((review) => ({
-              id: review.id,
-              name: review.name,
-              company: review.company,
-              quote: pick(review.text),
-              stars: review.rating || 5,
-            }))
-            .filter((review) => review.quote.trim().length > 0)
-        : TESTIMONIALS.map((testimonial, index) => ({
-            id: `fallback-${index}`,
-            name: testimonial.name,
-            company: testimonial.company,
-            quote: pick(testimonial.quote),
-            stars: testimonial.stars,
-          }));
+      reviews
+        .map((review) => ({
+          id: review.id,
+          name: review.name,
+          company: review.company,
+          quote: pick(review.text),
+          stars: review.rating || 5,
+        }))
+        .filter((review) => review.quote.trim().length > 0);
 
     return ensureMinimumReviews(mapped);
-  }, [reviews, pick]);
+  }, [reviews, requirePick]);
+
+  const starsLabel = (count: number) =>
+    `${count} ${requirePick(copy.starsAriaSuffix, "rizzPage.testimonials.starsAriaSuffix")}`;
 
   return (
     <section id="testimonials" className="overflow-x-hidden bg-[#030712] py-28">
       <div className="mx-auto mb-12 max-w-[1440px] px-6 text-center md:mb-14">
         <SectionWrapper>
-          <EyebrowLabel className="w-full text-center">{t.testimonials.eyebrow}</EyebrowLabel>
+          <EyebrowLabel className="w-full text-center">
+            {requirePick(copy.eyebrow, "rizzPage.testimonials.eyebrow")}
+          </EyebrowLabel>
           <h2
             className="font-semibold uppercase leading-[0.95] text-[#F5F7FA]"
             style={{ fontSize: "clamp(2.5rem, 5vw, 5rem)", letterSpacing: "-0.05em" }}
           >
-            {t.testimonials.titleLine1}
+            {requirePick(copy.titleLine1, "rizzPage.testimonials.titleLine1")}
             <br />
-            <span className="rizz-title-accent">{t.testimonials.titleAccent}</span>
+            <span className="rizz-title-accent">
+              {requirePick(copy.titleAccent, "rizzPage.testimonials.titleAccent")}
+            </span>
           </h2>
         </SectionWrapper>
       </div>
@@ -76,7 +76,7 @@ export const TestimonialsSection = () => {
       <SectionWrapper>
         <TestimonialsMarquee
           items={items}
-          starsLabel={t.testimonials.starsAria}
+          starsLabel={starsLabel}
           dir={dir}
         />
       </SectionWrapper>

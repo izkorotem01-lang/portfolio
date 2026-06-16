@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIntroHighlights } from "@/contexts/IntroHighlightsContext";
 import { useIntroHighlightsScrollContext } from "@/contexts/IntroHighlightsScrollContext";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 import { useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 import HighlightVideoCard from "@/components/highlights/HighlightVideoCard";
 
@@ -13,7 +14,8 @@ const CARD_REVEAL_DELAYS = [
 ] as const;
 
 const ShortformShowcaseSection = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
+  const { homePage, requirePick } = useSiteContent();
   const { videos, isLoading } = useIntroHighlights();
   const { morphEnabled } = useIntroHighlightsScrollContext();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -55,7 +57,7 @@ const ShortformShowcaseSection = () => {
                 }`}
               >
                 <h2 className="showcase-productions-title">
-                  {t("showcase.title")}
+                  {requirePick(homePage?.showcaseTitle, "homePage.showcaseTitle")}
                 </h2>
                 <div
                   className={`showcase-productions-ticks ${isVisible ? "intro-ticks-active" : ""}`}

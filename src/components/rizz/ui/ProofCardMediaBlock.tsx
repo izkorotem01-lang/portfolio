@@ -7,6 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 type MediaOverlayProps = {
   clientName?: string;
@@ -257,6 +258,7 @@ export const ProofCardMediaBlock = ({
   compact = false,
   overlay,
 }: ProofCardMediaBlockProps) => {
+  const { pick } = useSiteContent();
   const fillsContainer = Boolean(className?.includes("h-full"));
   const aspect = fillsContainer
     ? undefined
@@ -269,6 +271,7 @@ export const ProofCardMediaBlock = ({
   const showChrome = hasOverlay ? !isPlaying : false;
 
   if (media.imageUrl) {
+    const altText = pick(media.alt);
     return (
       <div
         className={cn(
@@ -279,7 +282,7 @@ export const ProofCardMediaBlock = ({
       >
         <img
           src={media.imageUrl}
-          alt={media.alt ?? ""}
+          alt={altText}
           className="h-full w-full object-cover"
         />
         {hasOverlay && (
@@ -297,10 +300,11 @@ export const ProofCardMediaBlock = ({
   if (!media.videoUrl) return null;
 
   if (isYouTubeUrl(media.videoUrl)) {
+    const altText = pick(media.alt);
     return (
       <YouTubeProofMedia
         videoUrl={media.videoUrl}
-        alt={media.alt}
+        alt={altText}
         aspect={aspect ?? ""}
         className={className}
         compact={compact}
@@ -343,7 +347,7 @@ export const ProofCardMediaBlock = ({
             void videoRef.current?.play();
           }}
           className="group absolute inset-0 z-20 cursor-pointer border-0 bg-transparent p-0"
-          aria-label={media.alt ?? "Play video"}
+          aria-label={pick(media.alt) || "Play video"}
         >
           <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-black/70 text-white shadow-lg transition-transform group-hover:scale-105">
             <Play size={14} fill="currentColor" className="ml-0.5" />

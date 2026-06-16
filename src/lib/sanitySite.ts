@@ -4,7 +4,6 @@ import {
   fetchReviewsFromSanity,
   type ContentReview,
 } from "@/lib/sanityReviews";
-import { loadBakedSiteContent } from "@/lib/cmsContent";
 
 export type { ContentReview };
 
@@ -124,20 +123,20 @@ export type ProofCardMedia = {
   imageUrl?: string;
   videoUrl?: string;
   posterUrl?: string;
-  alt?: string;
+  alt?: LocaleString;
   isMain?: boolean;
-  quote?: string;
+  quote?: LocaleText;
 };
 
 export type ProofCardTitleSegment = {
   id: string;
-  text: string;
+  text?: LocaleString;
   accent: boolean;
 };
 
 export type ProofCardStatistic = {
   id: string;
-  label: string;
+  label?: LocaleString;
   value: string;
 };
 
@@ -145,14 +144,133 @@ export type ProofCard = {
   id: string;
   cardNumber?: string;
   clientName?: string;
-  clientRole?: string;
+  clientRole?: LocaleString;
   headerMedia?: ProofCardMedia;
   titleSegments: ProofCardTitleSegment[];
-  checkpoints: string[];
+  checkpoints: LocaleString[];
   bottomMedia: ProofCardMedia[];
   statistics: ProofCardStatistic[];
   order: number;
 };
+
+export type RizzNavLink = { label?: LocaleString; href?: string };
+
+export type RizzPageContent = {
+  nav?: {
+    logoAlt?: LocaleString;
+    openMenu?: LocaleString;
+    bookCall?: LocaleString;
+    viewWork?: LocaleString;
+    switchToEn?: LocaleString;
+    switchToHb?: LocaleString;
+    links?: RizzNavLink[];
+    footerLinks?: RizzNavLink[];
+  };
+  hero?: {
+    eyebrow?: LocaleString;
+    titleLine1?: LocaleString;
+    titleLine2?: LocaleString;
+    titleAccent?: LocaleString;
+    description?: LocaleText;
+    tagline?: LocaleString;
+    titleAfterAccent?: LocaleString;
+    heroImageLtrUrl?: string;
+    heroImageRtlUrl?: string;
+  };
+  proof?: {
+    eyebrow?: LocaleString;
+    titlePrimary?: LocaleString;
+    titleAccent?: LocaleString;
+    subtitle?: LocaleText;
+  };
+  howWeGetYouThere?: {
+    whoItsFor?: LocaleString;
+    whatWeBuild?: LocaleString;
+    headlineBefore?: LocaleText;
+    headlineAccent?: LocaleString;
+    headlineAfter?: LocaleText;
+    howWeWork?: LocaleString;
+    columns?: Array<{
+      audience?: Array<{
+        icon?: string;
+        title?: LocaleString;
+        description?: LocaleText;
+      }>;
+      services?: Array<{
+        number?: string;
+        title?: LocaleText;
+        titleAccent?: LocaleString;
+        icon?: string;
+      }>;
+    }>;
+    process?: Array<{
+      step?: string;
+      title?: LocaleString;
+      icon?: string;
+      description?: LocaleText;
+    }>;
+  };
+  portfolio?: {
+    eyebrow?: LocaleString;
+    titlePrimary?: LocaleString;
+    titleAccent?: LocaleString;
+    allVideos?: LocaleString;
+    categoriesAria?: LocaleString;
+    emptyState?: LocaleText;
+    untitled?: LocaleString;
+  };
+  testimonials?: {
+    eyebrow?: LocaleString;
+    titleLine1?: LocaleString;
+    titleAccent?: LocaleString;
+    starsAriaPrefix?: LocaleString;
+    starsAriaSuffix?: LocaleString;
+  };
+  founders?: {
+    eyebrow?: LocaleString;
+    titleBefore?: LocaleText;
+    titleFilmed?: LocaleString;
+    titleEdited?: LocaleString;
+    titleLived?: LocaleString;
+    titleAfter?: LocaleText;
+    intro?: LocaleText;
+    values?: LocaleString;
+    trustedBy?: LocaleString;
+    showBio?: LocaleString;
+    hideBio?: LocaleString;
+    cards?: Array<{
+      name?: LocaleString;
+      role?: LocaleString;
+      keywords?: LocaleString;
+      bio?: LocaleText;
+      badge?: LocaleString;
+      variant?: string;
+      imageKey?: string;
+    }>;
+  };
+  cta?: {
+    eyebrow?: LocaleString;
+    titleLine1?: LocaleString;
+    titleAccent?: LocaleText;
+    description?: LocaleText;
+    tagline?: LocaleString;
+    bookCall?: LocaleString;
+    emailUs?: LocaleString;
+  };
+  footer?: {
+    description?: LocaleText;
+    navigation?: LocaleString;
+    getStarted?: LocaleString;
+    getStartedDescription?: LocaleText;
+    copyrightPrefix?: LocaleString;
+    copyrightSuffix?: LocaleString;
+    tagline?: LocaleString;
+  };
+  seo?: {
+    title?: LocaleString;
+    description?: LocaleText;
+  };
+} | null;
 
 const SECTIONS_QUERY = `{
   "introduction": *[_type == "introductionSection"][0]{
@@ -323,9 +441,9 @@ type SanityHighlightVideo = {
 
 type SanityProofCardMedia = {
   _key: string;
-  alt?: string;
+  alt?: LocaleString;
   isMain?: boolean;
-  quote?: string;
+  quote?: LocaleText;
   imageUrl?: string;
   videoUrl?: string;
   posterUrl?: string;
@@ -333,7 +451,7 @@ type SanityProofCardMedia = {
 
 type SanityProofCardStatistic = {
   _key: string;
-  label?: string;
+  label?: LocaleString;
   value?: string;
 };
 
@@ -341,15 +459,15 @@ type SanityProofCard = {
   _id: string;
   cardNumber?: string;
   clientName?: string;
-  clientRole?: string;
+  clientRole?: LocaleString;
   tag?: string;
   titleAccent?: string;
   titleRest?: string;
   subtext?: string;
   subSubtext?: string;
   order?: number;
-  titleSegments?: Array<{ _key: string; text?: string; accent?: boolean }>;
-  checkpoints?: string[];
+  titleSegments?: Array<{ _key: string; text?: LocaleString; accent?: boolean }>;
+  checkpoints?: LocaleString[];
   headerMedia?: SanityProofCardMedia | null;
   bottomMedia?: SanityProofCardMedia[];
   mediaItems?: SanityProofCardMedia[];
@@ -359,6 +477,7 @@ type SanityProofCard = {
 export type SiteContent = {
   homePage: HomePageContent | null;
   siteSettings: SiteSettingsContent | null;
+  rizzPage: RizzPageContent;
   trustedClients: TrustedClient[];
   highlightVideos: HighlightVideo[];
   proofCards: ProofCard[];
@@ -432,14 +551,15 @@ const buildSiteSettings = (sections: SectionsQueryResult): SiteSettingsContent |
 };
 
 const mapProofCardMedia = (item?: SanityProofCardMedia | null): ProofCardMedia | undefined => {
-  const quote = item?.quote?.trim();
-  if (!item || (!item.imageUrl && !item.videoUrl && !quote)) return undefined;
+  const quote = item?.quote;
+  const hasQuote = Boolean(quote?.en?.trim() || quote?.hb?.trim());
+  if (!item || (!item.imageUrl && !item.videoUrl && !hasQuote)) return undefined;
   return {
     id: item._key || "media",
     imageUrl: item.imageUrl || undefined,
     videoUrl: item.videoUrl?.trim() || undefined,
     posterUrl: item.posterUrl || undefined,
-    alt: item.alt?.trim() || undefined,
+    alt: item.alt,
     isMain: Boolean(item.isMain),
     quote: quote || undefined,
   };
@@ -448,10 +568,10 @@ const mapProofCardMedia = (item?: SanityProofCardMedia | null): ProofCardMedia |
 const mapTitleSegments = (doc: SanityProofCard): ProofCardTitleSegment[] => {
   if (doc.titleSegments?.length) {
     return doc.titleSegments
-      .filter((segment) => segment.text?.trim())
+      .filter((segment) => segment.text?.en?.trim() || segment.text?.hb?.trim())
       .map((segment) => ({
         id: segment._key,
-        text: segment.text!.trim(),
+        text: segment.text,
         accent: Boolean(segment.accent),
       }));
   }
@@ -480,26 +600,56 @@ const mapProofCards = (docs: SanityProofCard[]): ProofCard[] =>
       id: doc._id,
       cardNumber: doc.cardNumber?.trim() || undefined,
       clientName: doc.clientName?.trim() || doc.subtext?.trim() || undefined,
-      clientRole:
-        doc.clientRole?.trim() || doc.subSubtext?.trim() || doc.tag?.trim() || undefined,
+      clientRole: doc.clientRole,
       headerMedia: mapProofCardMedia(doc.headerMedia) ?? legacyMedia[0],
       titleSegments: mapTitleSegments(doc),
-      checkpoints: (doc.checkpoints ?? []).map((point) => point.trim()).filter(Boolean),
+      checkpoints: (doc.checkpoints ?? []).filter(
+        (point) => Boolean(point?.en?.trim() || point?.hb?.trim()),
+      ),
       bottomMedia: mappedBottom.length > 0 ? mappedBottom : legacyMedia.slice(1),
       statistics: (doc.statistics ?? [])
-        .filter((stat) => stat.label?.trim() && stat.value?.trim())
+        .filter((stat) => (stat.label?.en?.trim() || stat.label?.hb?.trim()) && stat.value?.trim())
         .map((stat) => ({
           id: stat._key,
-          label: stat.label!.trim(),
+          label: stat.label,
           value: stat.value!.trim(),
         })),
       order: doc.order ?? 0,
     };
   });
 
+const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
+  nav{
+    logoAlt, openMenu, bookCall, viewWork, switchToEn, switchToHb,
+    links[]{label, href},
+    footerLinks[]{label, href}
+  },
+  hero{eyebrow, titleLine1, titleLine2, titleAccent, titleAfterAccent, description, tagline, "heroImageLtrUrl": heroImageLtr.asset->url, "heroImageRtlUrl": heroImageRtl.asset->url},
+  proof{eyebrow, titlePrimary, titleAccent, subtitle},
+  howWeGetYouThere{
+    whoItsFor, whatWeBuild, headlineBefore, headlineAccent, headlineAfter, howWeWork,
+    columns[]{
+      audience[]{icon, title, description},
+      services[]{number, title, titleAccent, icon}
+    },
+    process[]{step, title, icon, description}
+  },
+  portfolio{eyebrow, titlePrimary, titleAccent, allVideos, categoriesAria, emptyState, untitled},
+  testimonials{eyebrow, titleLine1, titleAccent, starsAriaPrefix, starsAriaSuffix},
+  founders{
+    eyebrow, titleBefore, titleFilmed, titleEdited, titleLived, titleAfter,
+    intro, values, trustedBy, showBio, hideBio,
+    cards[]{name, role, keywords, bio, badge, variant, imageKey}
+  },
+  cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
+  footer{description, navigation, getStarted, getStartedDescription, copyrightPrefix, copyrightSuffix, tagline},
+  seo{title, description}
+}`;
+
 export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
-  const [sections, trustedRaw, highlightsRaw, proofRaw, reviews] = await Promise.all([
+  const [sections, rizzPage, trustedRaw, highlightsRaw, proofRaw, reviews] = await Promise.all([
     sanityClient.fetch<SectionsQueryResult>(SECTIONS_QUERY),
+    sanityClient.fetch<RizzPageContent>(RIZZ_PAGE_QUERY),
     sanityClient.fetch<SanityTrustedClient[]>(TRUSTED_CLIENTS_QUERY),
     sanityClient.fetch<SanityHighlightVideo[]>(HIGHLIGHT_VIDEOS_QUERY),
     sanityClient.fetch<SanityProofCard[]>(PROOF_CARDS_QUERY),
@@ -512,6 +662,7 @@ export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
   return {
     homePage,
     siteSettings,
+    rizzPage,
     trustedClients: trustedRaw.map((client) => ({
       id: client._id,
       name: client.name,
@@ -535,21 +686,7 @@ export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
 };
 
 export const fetchSiteContent = async (): Promise<SiteContent> => {
-  if (import.meta.env.PROD) {
-    const baked = await loadBakedSiteContent();
-    if (baked) return baked;
-  }
-
-  try {
-    return await fetchSiteContentFromSanity();
-  } catch (error) {
-    const baked = await loadBakedSiteContent();
-    if (baked) {
-      console.warn("Sanity fetch failed; using baked CMS content.", error);
-      return baked;
-    }
-    throw error;
-  }
+  return await fetchSiteContentFromSanity();
 };
 
 const getYouTubeVideoId = (url: string): string | undefined => {
