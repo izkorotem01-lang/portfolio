@@ -329,33 +329,41 @@ const mapVideos = (docs) =>
       updatedAt: doc._updatedAt,
     }));
 
+const hasLocalizedText = (field) =>
+  Boolean(field?.en?.trim() || field?.hb?.trim());
+
 const mapProofCardMedia = (item, fallbackId = "media") => {
-  const quote = item?.quote?.trim();
-  if (!item || (!item.imageUrl && !item.videoUrl && !quote)) return undefined;
+  const quote = item?.quote;
+  const hasQuote = hasLocalizedText(quote);
+  if (!item || (!item.imageUrl && !item.videoUrl && !hasQuote)) return undefined;
   return {
     id: item._key || fallbackId,
     imageUrl: item.imageUrl || undefined,
     videoUrl: item.videoUrl?.trim() || undefined,
     posterUrl: item.posterUrl || undefined,
-    alt: item.alt?.trim() || undefined,
+    alt: item.alt,
     isMain: Boolean(item.isMain),
-    quote: quote || undefined,
+    quote: hasQuote ? quote : undefined,
   };
 };
 
 const mapTitleSegments = (doc) => {
   if (doc.titleSegments?.length) {
     return doc.titleSegments
-      .filter((segment) => segment.text?.trim())
+      .filter((segment) => hasLocalizedText(segment.text))
       .map((segment) => ({
         id: segment._key,
-        text: segment.text.trim(),
+        text: segment.text,
         accent: Boolean(segment.accent),
       }));
   }
   const legacy = [];
-  if (doc.titleAccent?.trim()) legacy.push({ id: "legacy-accent", text: doc.titleAccent.trim(), accent: true });
-  if (doc.titleRest?.trim()) legacy.push({ id: "legacy-rest", text: doc.titleRest.trim(), accent: false });
+  if (doc.titleAccent?.trim()) {
+    legacy.push({ id: "legacy-accent", text: doc.titleAccent.trim(), accent: true });
+  }
+  if (doc.titleRest?.trim()) {
+    legacy.push({ id: "legacy-rest", text: doc.titleRest.trim(), accent: false });
+  }
   return legacy;
 };
 
@@ -372,16 +380,16 @@ const mapProofCards = (docs) =>
       id: doc._id,
       cardNumber: doc.cardNumber?.trim() || undefined,
       clientName: doc.clientName?.trim() || doc.subtext?.trim() || undefined,
-      clientRole: doc.clientRole?.trim() || doc.subSubtext?.trim() || doc.tag?.trim() || undefined,
+      clientRole: doc.clientRole,
       headerMedia: mapProofCardMedia(doc.headerMedia, "header") ?? legacyMedia[0],
       titleSegments: mapTitleSegments(doc),
-      checkpoints: (doc.checkpoints ?? []).map((point) => point.trim()).filter(Boolean),
+      checkpoints: (doc.checkpoints ?? []).filter((point) => hasLocalizedText(point)),
       bottomMedia: mappedBottom.length > 0 ? mappedBottom : legacyMedia.slice(1),
       statistics: (doc.statistics ?? [])
-        .filter((stat) => stat.label?.trim() && stat.value?.trim())
+        .filter((stat) => hasLocalizedText(stat.label) && stat.value?.trim())
         .map((stat) => ({
           id: stat._key,
-          label: stat.label.trim(),
+          label: stat.label,
           value: stat.value.trim(),
         })),
       order: doc.order ?? 0,
