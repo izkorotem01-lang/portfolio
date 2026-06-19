@@ -174,12 +174,40 @@ const REVIEWS_QUERY = `*[_type == "review"] | order(order asc) {
   name,
   company,
   rating,
-  text,
+  "text": {"en": text.en, "hb": coalesce(text.hb, text.he)},
   showOnMainSection,
   order,
   "videoUrl": coalesce(videoFile.asset->url, youtubeUrl),
   "thumbnailUrl": thumbnail.asset->url,
   "screenshotUrl": screenshot.asset->url
+}`;
+
+const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
+  nav{
+    logoAlt, openMenu, bookCall, viewWork, switchToEn, switchToHb,
+    links[]{label, href},
+    footerLinks[]{label, href}
+  },
+  hero{eyebrow, titleLine1, titleLine2, titleAccent, titleAfterAccent, description, tagline, "heroImageLtrUrl": heroImageLtr.asset->url, "heroImageRtlUrl": heroImageRtl.asset->url},
+  proof{eyebrow, titlePrimary, titleAccent, subtitle},
+  howWeGetYouThere{
+    whoItsFor, whatWeBuild, headlineBefore, headlineAccent, headlineAfter, howWeWork,
+    columns[]{
+      audience[]{icon, title, description},
+      services[]{number, title, titleAccent, icon}
+    },
+    process[]{step, title, icon, description}
+  },
+  portfolio{eyebrow, titlePrimary, titleAccent, allVideos, categoriesAria, emptyState, untitled},
+  testimonials{eyebrow, titleLine1, titleAccent, starsAriaPrefix, starsAriaSuffix},
+  founders{
+    eyebrow, titleBefore, titleFilmed, titleEdited, titleLived, titleAfter,
+    intro, values, trustedBy, showBio, hideBio,
+    cards[]{name, role, keywords, bio, badge, variant, imageKey}
+  },
+  cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
+  footer{description, navigation, getStarted, getStartedDescription, copyrightPrefix, copyrightSuffix, tagline},
+  seo{title, description}
 }`;
 
 const CATEGORIES_QUERY = `*[_type == "portfolioCategory"] | order(order asc) {
@@ -397,17 +425,20 @@ const mapProofCards = (docs) =>
   });
 
 const fetchSiteContent = async () => {
-  const [sections, trustedRaw, highlightsRaw, proofRaw, reviewDocs] = await Promise.all([
-    client.fetch(SECTIONS_QUERY),
-    client.fetch(TRUSTED_CLIENTS_QUERY),
-    client.fetch(HIGHLIGHT_VIDEOS_QUERY),
-    client.fetch(PROOF_CARDS_QUERY),
-    client.fetch(REVIEWS_QUERY),
-  ]);
+  const [sections, rizzPage, trustedRaw, highlightsRaw, proofRaw, reviewDocs] =
+    await Promise.all([
+      client.fetch(SECTIONS_QUERY),
+      client.fetch(RIZZ_PAGE_QUERY),
+      client.fetch(TRUSTED_CLIENTS_QUERY),
+      client.fetch(HIGHLIGHT_VIDEOS_QUERY),
+      client.fetch(PROOF_CARDS_QUERY),
+      client.fetch(REVIEWS_QUERY),
+    ]);
 
   return {
     homePage: buildHomePage(sections),
     siteSettings: buildSiteSettings(sections),
+    rizzPage: rizzPage ?? null,
     trustedClients: trustedRaw.map((client) => ({
       id: client._id,
       name: client.name,

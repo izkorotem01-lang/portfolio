@@ -1,3 +1,4 @@
+import { loadBakedSiteContent } from "@/lib/cmsContent";
 import { sanityClient, urlForImage } from "@/lib/sanity";
 import type { LocaleString, LocaleText } from "@/lib/sanity/locale";
 import {
@@ -686,6 +687,11 @@ export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
 };
 
 export const fetchSiteContent = async (): Promise<SiteContent> => {
+  if (import.meta.env.PROD) {
+    const baked = await loadBakedSiteContent();
+    if (baked) return baked;
+  }
+
   return await fetchSiteContentFromSanity();
 };
 
