@@ -488,6 +488,48 @@
   height: min(48vh, 26rem);
 }
 
+/* Final CTA — founder portraits at section edges, feet on footer line */
+.cta-founder-image {
+  height: auto;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom center;
+}
+
+.cta-founder-image--left {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 78%,
+    transparent 100%
+  );
+}
+
+.cta-founder-image--right {
+  -webkit-mask-image: linear-gradient(
+    to left,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to left,
+    #000 55%,
+    rgba(0, 0, 0, 0.55) 78%,
+    transparent 100%
+  );
+}
+
+.cta-founder-portraits-mobile {
+  margin-top: -0.5rem;
+}
+
 /* Proof card — bottom media quotes */
 .proof-card-quote {
   position: relative;
