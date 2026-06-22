@@ -1,5 +1,4 @@
 import { createClient } from "@sanity/client";
-import imageUrlBuilder from "@sanity/image-url";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,104 +16,6 @@ const client = createClient({
   useCdn: true,
 });
 
-const imageBuilder = imageUrlBuilder({ projectId, dataset });
-
-const SECTIONS_QUERY = `{
-  "introduction": *[_type == "introductionSection"][0]{
-    hero {
-      "wordmarkUrl": wordmarkImage.asset->url,
-      wordmarkAlt,
-      subtitle,
-      cta
-    },
-    trustedBy { title, subtitle, visitLabel, clientLabel }
-  },
-  "highlights": *[_type == "highlightsSection"][0]{ showcaseTitle },
-  "about": *[_type == "aboutSection"][0]{
-    title,
-    headline,
-    subline,
-    founders[]{
-      _key,
-      name,
-      role,
-      bio,
-      "photoUrl": photo.asset->url,
-      photoAlt,
-      glowColor,
-      order
-    },
-    audience,
-    capabilities[]{ _key, title, icon }
-  },
-  "work": *[_type == "workSection"][0]{ title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
-  "services": *[_type == "servicesSection"][0]{ title, subtitle },
-  "reviews": *[_type == "reviewsSection"][0]{
-    title,
-    subtitle,
-    ctaTitle,
-    ctaSubtitle,
-    ctaContact,
-    ctaPortfolio
-  },
-  "contact": *[_type == "contactSection"][0]{
-    title,
-    subtitle,
-    contactEmail,
-    contactPhone,
-    whatsappLabel,
-    whatsappUrl,
-    processSteps[]{ _key, title, description },
-    socialLinks[]{ _key, platform, url, label }
-  },
-  "settings": *[_type == "siteSettings"][0]{ footerText },
-  "legacyHomePage": *[_type == "homePage"][0]{
-    hero {
-      "wordmarkUrl": wordmarkImage.asset->url,
-      wordmarkAlt,
-      subtitle,
-      cta
-    },
-    trustedBy { title, subtitle, visitLabel, clientLabel },
-    showcaseTitle,
-    about {
-      title,
-      founders[]{
-        _key,
-        name,
-        role,
-        bio,
-        "photoUrl": photo.asset->url,
-        photoAlt,
-        glowColor,
-        order
-      },
-      agencyTitle,
-      agencyContent,
-      agencyMission,
-      stats[]{ _key, value, label }
-    },
-    portfolioSection { title, allWorkLabel, expandVideoLabel, maxVideosDisplayed },
-    contactSection { title, subtitle, processSteps[]{ _key, title, description } },
-    reviewsSection {
-      title,
-      subtitle,
-      ctaTitle,
-      ctaSubtitle,
-      ctaContact,
-      ctaPortfolio
-    }
-  },
-  "legacySettings": *[_type == "siteSettings"][0]{
-    contactEmail,
-    contactPhone,
-    whatsappLabel,
-    whatsappUrl,
-    footerText,
-    socialLinks[]{ _key, platform, url, label }
-  }
-}`;
-
 const TRUSTED_CLIENTS_QUERY = `*[_type == "trustedByClient"] | order(order asc) {
   _id,
   name,
@@ -122,14 +23,6 @@ const TRUSTED_CLIENTS_QUERY = `*[_type == "trustedByClient"] | order(order asc) 
   url,
   order,
   "logoUrl": logo.asset->url
-}`;
-
-const HIGHLIGHT_VIDEOS_QUERY = `*[_type == "highlightVideo" && active != false] | order(order asc)[0...4] {
-  _id,
-  title,
-  order,
-  "videoUrl": videoFile.asset->url,
-  "thumbnailUrl": coalesce(thumbnail.asset->url, null)
 }`;
 
 const PROOF_CARD_MEDIA_FIELDS = `{
@@ -144,15 +37,9 @@ const PROOF_CARD_MEDIA_FIELDS = `{
 
 const PROOF_CARDS_QUERY = `*[_type == "proofCard" && active != false] | order(order asc) {
   _id,
-  cardNumber,
   clientName,
   clientRole,
   order,
-  tag,
-  titleAccent,
-  titleRest,
-  subtext,
-  subSubtext,
   titleSegments[]{
     _key,
     text,
@@ -161,7 +48,6 @@ const PROOF_CARDS_QUERY = `*[_type == "proofCard" && active != false] | order(or
   checkpoints,
   "headerMedia": headerMedia ${PROOF_CARD_MEDIA_FIELDS},
   bottomMedia[] ${PROOF_CARD_MEDIA_FIELDS},
-  mediaItems[] ${PROOF_CARD_MEDIA_FIELDS},
   statistics[]{
     _key,
     label,
@@ -175,11 +61,7 @@ const REVIEWS_QUERY = `*[_type == "review"] | order(order asc) {
   company,
   rating,
   "text": {"en": text.en, "hb": coalesce(text.hb, text.he)},
-  showOnMainSection,
-  order,
-  "videoUrl": coalesce(videoFile.asset->url, youtubeUrl),
-  "thumbnailUrl": thumbnail.asset->url,
-  "screenshotUrl": screenshot.asset->url
+  order
 }`;
 
 const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
@@ -191,22 +73,22 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
   hero{eyebrow, titleLine1, titleLine2, titleAccent, titleAfterAccent, description, tagline, "heroImageLtrUrl": heroImageLtr.asset->url, "heroImageRtlUrl": heroImageRtl.asset->url},
   proof{eyebrow, titlePrimary, titleAccent, subtitle},
   howWeGetYouThere{
-    whoItsFor, whatWeBuild, headlineBefore, headlineAccent, headlineAfter, howWeWork,
-    columns[]{
-      audience[]{icon, title, description},
-      services[]{number, title, titleAccent, icon}
-    },
+    howWeWork,
     process[]{step, title, icon, description}
   },
   portfolio{eyebrow, titlePrimary, titleAccent, allVideos, categoriesAria, emptyState, untitled},
-  testimonials{eyebrow, titleLine1, titleAccent, starsAriaPrefix, starsAriaSuffix},
+  testimonials{eyebrow, titleLine1, titleAccent, starsAriaSuffix},
   founders{
     eyebrow, titleBefore, titleFilmed, titleEdited, titleLived, titleAfter,
-    intro, values, trustedBy, showBio, hideBio,
+    intro, values, showBio, hideBio,
     cards[]{name, role, keywords, bio, badge, variant, imageKey}
   },
   cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
-  footer{description, navigation, getStarted, getStartedDescription, copyrightPrefix, copyrightSuffix, tagline},
+  footer{
+    description, navigation, getStarted, getStartedDescription,
+    copyrightPrefix, copyrightSuffix, tagline,
+    socialLinks[]{_key, platform, url, label}
+  },
   seo{title, description}
 }`;
 
@@ -235,94 +117,20 @@ const VIDEOS_QUERY = `*[_type == "portfolioVideo"] | order(coalesce(allWorkOrder
   _updatedAt
 }`;
 
-const isYouTubeUrl = (url) =>
-  Boolean(url && /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/i.test(url));
-
-const getYouTubeThumbnail = (url) => {
-  const match = url.match(
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#/]+)/
-  );
-  return match?.[1]
-    ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
-    : undefined;
-};
-
-const buildHomePage = (sections) => {
-  const legacy = sections.legacyHomePage;
-  const introduction = sections.introduction;
-  const about = sections.about ?? legacy?.about;
-
-  if (
-    !introduction?.hero &&
-    !sections.highlights?.showcaseTitle &&
-    !about &&
-    !sections.work &&
-    !sections.contact?.title &&
-    !legacy
-  ) {
-    return legacy ?? null;
-  }
-
-  return {
-    hero: introduction?.hero ?? legacy?.hero,
-    trustedBy: introduction?.trustedBy ?? legacy?.trustedBy,
-    showcaseTitle: sections.highlights?.showcaseTitle ?? legacy?.showcaseTitle,
-    about,
-    portfolioSection: sections.work ?? legacy?.portfolioSection,
-    contactSection:
-      sections.contact?.title || sections.contact?.subtitle
-        ? {
-            title: sections.contact.title,
-            subtitle: sections.contact.subtitle,
-            processSteps: sections.contact.processSteps,
-          }
-        : legacy?.contactSection,
-    servicesSection: sections.services,
-    reviewsSection: sections.reviews ?? legacy?.reviewsSection,
-  };
-};
-
-const buildSiteSettings = (sections) => {
-  const contact = sections.contact;
-  const settings = sections.settings;
-  const legacy = sections.legacySettings;
-
-  if (!contact?.contactEmail && !settings?.footerText && !legacy) {
-    return legacy ?? null;
-  }
-
-  return {
-    contactEmail: contact?.contactEmail ?? legacy?.contactEmail,
-    contactPhone: contact?.contactPhone ?? legacy?.contactPhone,
-    whatsappLabel: contact?.whatsappLabel ?? legacy?.whatsappLabel,
-    whatsappUrl: contact?.whatsappUrl ?? legacy?.whatsappUrl,
-    footerText: settings?.footerText ?? legacy?.footerText,
-    socialLinks: contact?.socialLinks ?? legacy?.socialLinks,
-  };
-};
+const hasLocalizedText = (field) =>
+  Boolean(field?.en?.trim() || field?.hb?.trim());
 
 const mapReviews = (docs) =>
   docs
     .filter((doc) => doc.name?.trim())
-    .map((doc) => {
-      const videoUrl = doc.videoUrl?.trim() || undefined;
-      return {
-        id: doc._id,
-        name: doc.name ?? "",
-        company: doc.company,
-        rating: doc.rating ?? 5,
-        text: doc.text,
-        videoUrl,
-        thumbnailUrl:
-          doc.thumbnailUrl ||
-          (videoUrl && isYouTubeUrl(videoUrl)
-            ? getYouTubeThumbnail(videoUrl)
-            : undefined),
-        screenshotUrl: doc.screenshotUrl || undefined,
-        showOnMainSection: doc.showOnMainSection ?? false,
-        order: doc.order ?? 0,
-      };
-    });
+    .map((doc) => ({
+      id: doc._id,
+      name: doc.name ?? "",
+      company: doc.company,
+      rating: doc.rating ?? 5,
+      text: doc.text,
+      order: doc.order ?? 0,
+    }));
 
 const mapCategories = (docs) =>
   docs
@@ -330,7 +138,7 @@ const mapCategories = (docs) =>
     .map((doc) => ({
       id: doc._id,
       name: doc.name?.en ?? "",
-      nameHe: doc.name?.he ?? "",
+      nameHe: doc.name?.hb ?? doc.name?.he ?? "",
       order: doc.order ?? 0,
       createdAt: doc._createdAt,
       updatedAt: doc._updatedAt,
@@ -343,9 +151,9 @@ const mapVideos = (docs) =>
       id: doc._id,
       categoryId: doc.categoryId ?? "",
       title: doc.title?.en ?? "",
-      titleHe: doc.title?.he ?? "",
+      titleHe: doc.title?.hb ?? doc.title?.he ?? "",
       subtitle: doc.subtitle?.en ?? "",
-      subtitleHe: doc.subtitle?.he ?? "",
+      subtitleHe: doc.subtitle?.hb ?? doc.subtitle?.he ?? "",
       videoUrl: doc.videoUrl ?? "",
       videoWidth: doc.videoWidth || undefined,
       videoHeight: doc.videoHeight || undefined,
@@ -356,9 +164,6 @@ const mapVideos = (docs) =>
       createdAt: doc._createdAt,
       updatedAt: doc._updatedAt,
     }));
-
-const hasLocalizedText = (field) =>
-  Boolean(field?.en?.trim() || field?.hb?.trim());
 
 const mapProofCardMedia = (item, fallbackId = "media") => {
   const quote = item?.quote;
@@ -375,69 +180,42 @@ const mapProofCardMedia = (item, fallbackId = "media") => {
   };
 };
 
-const mapTitleSegments = (doc) => {
-  if (doc.titleSegments?.length) {
-    return doc.titleSegments
+const mapProofCards = (docs) =>
+  docs.map((doc) => ({
+    id: doc._id,
+    clientName: doc.clientName?.trim() || undefined,
+    clientRole: doc.clientRole,
+    headerMedia: mapProofCardMedia(doc.headerMedia, "header"),
+    titleSegments: (doc.titleSegments ?? [])
       .filter((segment) => hasLocalizedText(segment.text))
       .map((segment) => ({
         id: segment._key,
         text: segment.text,
         accent: Boolean(segment.accent),
-      }));
-  }
-  const legacy = [];
-  if (doc.titleAccent?.trim()) {
-    legacy.push({ id: "legacy-accent", text: doc.titleAccent.trim(), accent: true });
-  }
-  if (doc.titleRest?.trim()) {
-    legacy.push({ id: "legacy-rest", text: doc.titleRest.trim(), accent: false });
-  }
-  return legacy;
-};
-
-const mapProofCards = (docs) =>
-  docs.map((doc) => {
-    const legacyMedia = (doc.mediaItems ?? [])
+      })),
+    checkpoints: (doc.checkpoints ?? []).filter((point) => hasLocalizedText(point)),
+    bottomMedia: (doc.bottomMedia ?? [])
       .map((item) => mapProofCardMedia(item))
-      .filter(Boolean);
-    const mappedBottom = (doc.bottomMedia ?? [])
-      .map((item) => mapProofCardMedia(item))
-      .filter(Boolean);
-
-    return {
-      id: doc._id,
-      cardNumber: doc.cardNumber?.trim() || undefined,
-      clientName: doc.clientName?.trim() || doc.subtext?.trim() || undefined,
-      clientRole: doc.clientRole,
-      headerMedia: mapProofCardMedia(doc.headerMedia, "header") ?? legacyMedia[0],
-      titleSegments: mapTitleSegments(doc),
-      checkpoints: (doc.checkpoints ?? []).filter((point) => hasLocalizedText(point)),
-      bottomMedia: mappedBottom.length > 0 ? mappedBottom : legacyMedia.slice(1),
-      statistics: (doc.statistics ?? [])
-        .filter((stat) => hasLocalizedText(stat.label) && stat.value?.trim())
-        .map((stat) => ({
-          id: stat._key,
-          label: stat.label,
-          value: stat.value.trim(),
-        })),
-      order: doc.order ?? 0,
-    };
-  });
+      .filter(Boolean),
+    statistics: (doc.statistics ?? [])
+      .filter((stat) => hasLocalizedText(stat.label) && stat.value?.trim())
+      .map((stat) => ({
+        id: stat._key,
+        label: stat.label,
+        value: stat.value.trim(),
+      })),
+    order: doc.order ?? 0,
+  }));
 
 const fetchSiteContent = async () => {
-  const [sections, rizzPage, trustedRaw, highlightsRaw, proofRaw, reviewDocs] =
-    await Promise.all([
-      client.fetch(SECTIONS_QUERY),
-      client.fetch(RIZZ_PAGE_QUERY),
-      client.fetch(TRUSTED_CLIENTS_QUERY),
-      client.fetch(HIGHLIGHT_VIDEOS_QUERY),
-      client.fetch(PROOF_CARDS_QUERY),
-      client.fetch(REVIEWS_QUERY),
-    ]);
+  const [rizzPage, trustedRaw, proofRaw, reviewDocs] = await Promise.all([
+    client.fetch(RIZZ_PAGE_QUERY),
+    client.fetch(TRUSTED_CLIENTS_QUERY),
+    client.fetch(PROOF_CARDS_QUERY),
+    client.fetch(REVIEWS_QUERY),
+  ]);
 
   return {
-    homePage: buildHomePage(sections),
-    siteSettings: buildSiteSettings(sections),
     rizzPage: rizzPage ?? null,
     trustedClients: trustedRaw.map((client) => ({
       id: client._id,
@@ -447,15 +225,6 @@ const fetchSiteContent = async () => {
       url: client.url,
       order: client.order ?? 0,
     })),
-    highlightVideos: highlightsRaw
-      .filter((video) => video.videoUrl?.trim())
-      .map((video) => ({
-        id: video._id,
-        title: video.title?.trim() || undefined,
-        videoUrl: video.videoUrl ?? "",
-        thumbnailUrl: video.thumbnailUrl || undefined,
-        order: video.order ?? 0,
-      })),
     proofCards: mapProofCards(proofRaw),
     reviews: mapReviews(reviewDocs),
   };

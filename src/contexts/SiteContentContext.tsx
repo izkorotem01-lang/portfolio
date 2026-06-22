@@ -19,11 +19,8 @@ import {
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 
 const emptyContent: SiteContent = {
-  homePage: null,
-  siteSettings: null,
   rizzPage: null,
   trustedClients: [],
-  highlightVideos: [],
   proofCards: [],
   reviews: [],
 };

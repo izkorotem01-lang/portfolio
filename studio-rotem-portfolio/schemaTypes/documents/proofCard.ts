@@ -16,12 +16,6 @@ export const proofCard = defineType({
       components: {input: ProofCardSitePreviewInput},
     }),
     defineField({
-      name: 'cardNumber',
-      title: 'Card number',
-      type: 'string',
-      description: 'Optional label shown on the header (e.g. 01, 02, 03).',
-    }),
-    defineField({
       name: 'clientName',
       title: 'Client name',
       type: 'string',

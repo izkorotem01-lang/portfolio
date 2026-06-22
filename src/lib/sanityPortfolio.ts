@@ -79,7 +79,7 @@ const toTimestamp = (iso: string) => Timestamp.fromDate(new Date(iso));
 const mapCategory = (doc: SanityCategory): PortfolioCategory => ({
   id: doc._id,
   name: doc.name?.en ?? "",
-  nameHe: doc.name?.hb ?? "",
+  nameHe: doc.name?.hb ?? doc.name?.he ?? "",
   order: doc.order ?? 0,
   createdAt: toTimestamp(doc._createdAt),
   updatedAt: toTimestamp(doc._updatedAt),

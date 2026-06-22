@@ -21,7 +21,7 @@ const socialIcons = {
 } as const;
 
 export const RizzFooter = () => {
-  const { rizzPage, siteSettings, requirePick, pick } = useSiteContent();
+  const { rizzPage, requirePick, pick } = useSiteContent();
   if (!rizzPage?.footer) throw new Error("Missing required Sanity content: rizzPage.footer");
   if (!rizzPage?.nav) throw new Error("Missing required Sanity content: rizzPage.nav");
   const footer = rizzPage.footer;
@@ -45,7 +45,7 @@ export const RizzFooter = () => {
               {requirePick(footer.description, "rizzPage.footer.description")}
             </p>
             <div className="flex gap-4">
-              {(siteSettings?.socialLinks ?? []).map((link) => {
+              {(footer.socialLinks ?? []).map((link) => {
                 const label = pick(link.label) || link.label?.en?.trim() || link.label?.hb?.trim() || "";
                 const Icon = socialIcons[label as keyof typeof socialIcons] ?? Instagram;
                 return (

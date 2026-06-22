@@ -1,5 +1,6 @@
 import {RocketIcon} from '@sanity/icons'
 import {defineField, defineType} from 'sanity'
+import {socialLinksField} from '../shared/socialLink'
 
 export const rizzPage = defineType({
   name: 'rizzPage',
@@ -96,61 +97,7 @@ export const rizzPage = defineType({
       title: 'How we get you there',
       type: 'object',
       fields: [
-        defineField({name: 'whoItsFor', title: "Who it's for label", type: 'localeString'}),
-        defineField({name: 'whatWeBuild', title: 'What we build label', type: 'localeString'}),
-        defineField({name: 'headlineBefore', title: 'Headline before', type: 'localeText'}),
-        defineField({name: 'headlineAccent', title: 'Headline accent', type: 'localeString'}),
-        defineField({name: 'headlineAfter', title: 'Headline after', type: 'localeText'}),
         defineField({name: 'howWeWork', title: 'How we work label', type: 'localeString'}),
-        defineField({
-          name: 'columns',
-          title: 'Columns',
-          type: 'array',
-          of: [
-            defineField({
-              name: 'howWeColumn',
-              title: 'How-we column',
-              type: 'object',
-              fields: [
-                defineField({
-                  name: 'audience',
-                  title: 'Audience cards',
-                  type: 'array',
-                  of: [
-                    defineField({
-                      name: 'audienceCard',
-                      title: 'Audience card',
-                      type: 'object',
-                      fields: [
-                        defineField({name: 'icon', title: 'Icon key', type: 'string'}),
-                        defineField({name: 'title', title: 'Title', type: 'localeString'}),
-                        defineField({name: 'description', title: 'Description', type: 'localeText'}),
-                      ],
-                    }),
-                  ],
-                }),
-                defineField({
-                  name: 'services',
-                  title: 'Service cards',
-                  type: 'array',
-                  of: [
-                    defineField({
-                      name: 'serviceItem',
-                      title: 'Service item',
-                      type: 'object',
-                      fields: [
-                        defineField({name: 'number', title: 'Number', type: 'string'}),
-                        defineField({name: 'title', title: 'Title', type: 'localeText'}),
-                        defineField({name: 'titleAccent', title: 'Title accent', type: 'localeString'}),
-                        defineField({name: 'icon', title: 'Icon key', type: 'string'}),
-                      ],
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
         defineField({
           name: 'process',
           title: 'Process steps',
@@ -193,7 +140,6 @@ export const rizzPage = defineType({
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
         defineField({name: 'titleLine1', title: 'Title line 1', type: 'localeString'}),
         defineField({name: 'titleAccent', title: 'Title accent', type: 'localeString'}),
-        defineField({name: 'starsAriaPrefix', title: 'Stars aria prefix', type: 'localeString'}),
         defineField({name: 'starsAriaSuffix', title: 'Stars aria suffix', type: 'localeString'}),
       ],
     }),
@@ -210,7 +156,6 @@ export const rizzPage = defineType({
         defineField({name: 'titleAfter', title: 'Title after', type: 'localeText'}),
         defineField({name: 'intro', title: 'Intro', type: 'localeText'}),
         defineField({name: 'values', title: 'Values', type: 'localeString'}),
-        defineField({name: 'trustedBy', title: 'Trusted by', type: 'localeString'}),
         defineField({name: 'showBio', title: 'Show bio label', type: 'localeString'}),
         defineField({name: 'hideBio', title: 'Hide bio label', type: 'localeString'}),
         defineField({
@@ -262,6 +207,7 @@ export const rizzPage = defineType({
         defineField({name: 'copyrightPrefix', title: 'Copyright prefix', type: 'localeString'}),
         defineField({name: 'copyrightSuffix', title: 'Copyright suffix', type: 'localeString'}),
         defineField({name: 'tagline', title: 'Tagline', type: 'localeString'}),
+        socialLinksField,
       ],
     }),
     defineField({
