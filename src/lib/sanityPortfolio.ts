@@ -106,38 +106,44 @@ const mapVideo = (doc: SanityVideo): PortfolioVideo => ({
 });
 
 export const fetchCategoriesFromSanity = async (): Promise<PortfolioCategory[]> => {
-  if (import.meta.env.PROD) {
+  try {
+    const docs = await sanityClient.fetch<SanityCategory[]>(CATEGORIES_QUERY);
+    return docs.filter((doc) => doc.showInFilters !== false).map(mapCategory);
+  } catch (error) {
+    if (!import.meta.env.PROD) throw error;
     const baked = await loadBakedPortfolio();
     if (baked) return baked.categories;
+    throw error;
   }
-
-  const docs = await sanityClient.fetch<SanityCategory[]>(CATEGORIES_QUERY);
-  return docs.filter((doc) => doc.showInFilters !== false).map(mapCategory);
 };
 
 export const fetchVideosFromSanity = async (): Promise<PortfolioVideo[]> => {
-  if (import.meta.env.PROD) {
+  try {
+    const docs = await sanityClient.fetch<SanityVideo[]>(VIDEOS_QUERY);
+    return docs.filter((doc) => doc.videoUrl?.trim()).map(mapVideo);
+  } catch (error) {
+    if (!import.meta.env.PROD) throw error;
     const baked = await loadBakedPortfolio();
     if (baked) return baked.videos;
+    throw error;
   }
-
-  const docs = await sanityClient.fetch<SanityVideo[]>(VIDEOS_QUERY);
-  return docs.filter((doc) => doc.videoUrl?.trim()).map(mapVideo);
 };
 
 export const fetchVideosByCategoryFromSanity = async (
   categoryId: string
 ): Promise<PortfolioVideo[]> => {
-  if (import.meta.env.PROD) {
+  try {
+    const docs = await sanityClient.fetch<SanityVideo[]>(
+      VIDEOS_BY_CATEGORY_QUERY,
+      { categoryId }
+    );
+    return docs.filter((doc) => doc.videoUrl?.trim()).map(mapVideo);
+  } catch (error) {
+    if (!import.meta.env.PROD) throw error;
     const baked = await loadBakedPortfolio();
     if (baked) {
       return baked.videos.filter((video) => video.categoryId === categoryId);
     }
+    throw error;
   }
-
-  const docs = await sanityClient.fetch<SanityVideo[]>(
-    VIDEOS_BY_CATEGORY_QUERY,
-    { categoryId }
-  );
-  return docs.filter((doc) => doc.videoUrl?.trim()).map(mapVideo);
 };

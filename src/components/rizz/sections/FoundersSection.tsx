@@ -76,9 +76,11 @@ export const FoundersSection = () => {
                     ? requirePick(founder.badge, `rizzPage.founders.cards[${i}].badge`)
                     : undefined,
                   variant: (founder.variant as "portrait" | "team" | undefined) ?? "portrait",
-                  image: founder.imageKey
-                    ? founderImages[founder.imageKey as keyof typeof founderImages]
-                    : undefined,
+                  image:
+                    founder.imageUrl ??
+                    (founder.imageKey
+                      ? founderImages[founder.imageKey as keyof typeof founderImages]
+                      : undefined),
                   showBioLabel: bioLabels.showBio,
                   hideBioLabel: bioLabels.hideBio,
                 }}

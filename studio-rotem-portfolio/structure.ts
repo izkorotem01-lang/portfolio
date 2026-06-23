@@ -1,10 +1,16 @@
 import {
+  BlockElementIcon,
+  CogIcon,
+  CommentIcon,
   DocumentIcon,
+  DocumentsIcon,
   EyeOpenIcon,
+  ImageIcon,
   PlayIcon,
   RocketIcon,
   StarIcon,
   TagIcon,
+  ThListIcon,
   UsersIcon,
 } from '@sanity/icons'
 import type {ComponentType} from 'react'
@@ -15,23 +21,44 @@ export const SECTION_IDS = {
   rizzPage: 'rizzPage',
 } as const
 
-const singleton = (
+const landingPageSection = (
   S: Parameters<StructureResolver>[0],
-  type: string,
-  documentId: string,
   title: string,
   icon?: ComponentType,
 ) =>
   S.listItem()
     .title(title)
     .icon(icon)
-    .child(S.document().schemaType(type).documentId(documentId))
+    .child(
+      S.document()
+        .title(title)
+        .schemaType('rizzPage')
+        .documentId(SECTION_IDS.rizzPage),
+    )
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('RIZ Productions')
     .items([
-      singleton(S, 'rizzPage', SECTION_IDS.rizzPage, 'Rizz landing page', RocketIcon),
+      S.listItem()
+        .title('Landing page')
+        .icon(RocketIcon)
+        .child(
+          S.list()
+            .title('Landing page')
+            .items([
+              landingPageSection(S, 'Navigation', ThListIcon),
+              landingPageSection(S, 'Hero', RocketIcon),
+              landingPageSection(S, 'Real Results labels', DocumentsIcon),
+              landingPageSection(S, 'How we work', BlockElementIcon),
+              landingPageSection(S, 'Our Work labels', ImageIcon),
+              landingPageSection(S, 'Reviews labels', StarIcon),
+              landingPageSection(S, 'About / team', UsersIcon),
+              landingPageSection(S, 'Book a call', CommentIcon),
+              landingPageSection(S, 'Footer', ThListIcon),
+              landingPageSection(S, 'SEO', CogIcon),
+            ]),
+        ),
 
       S.divider(),
 

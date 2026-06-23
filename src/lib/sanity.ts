@@ -11,7 +11,8 @@ export const sanityClient = createClient({
   projectId: sanityProjectId,
   dataset: sanityDataset,
   apiVersion: "2026-02-01",
-  useCdn: import.meta.env.PROD,
+  // API (not CDN) so published CMS edits show up immediately on the live site.
+  useCdn: false,
 });
 
 const imageBuilder = createImageUrlBuilder(sanityClient);

@@ -1,16 +1,41 @@
-import {RocketIcon} from '@sanity/icons'
+import {
+  BlockElementIcon,
+  CogIcon,
+  CommentIcon,
+  DocumentsIcon,
+  ImageIcon,
+  RocketIcon,
+  StarIcon,
+  ThListIcon,
+  UsersIcon,
+} from '@sanity/icons'
 import {defineField, defineType} from 'sanity'
 import {socialLinksField} from '../shared/socialLink'
+
+const LANDING_PAGE_GROUPS = [
+  {name: 'nav', title: 'Navigation', icon: ThListIcon, default: true},
+  {name: 'hero', title: 'Hero', icon: RocketIcon},
+  {name: 'proof', title: 'Real Results', icon: DocumentsIcon},
+  {name: 'process', title: 'How We Work', icon: BlockElementIcon},
+  {name: 'portfolio', title: 'Our Work', icon: ImageIcon},
+  {name: 'testimonials', title: 'Reviews', icon: StarIcon},
+  {name: 'founders', title: 'About / Team', icon: UsersIcon},
+  {name: 'cta', title: 'Book a Call', icon: CommentIcon},
+  {name: 'footer', title: 'Footer', icon: ThListIcon},
+  {name: 'seo', title: 'SEO', icon: CogIcon},
+] as const
 
 export const rizzPage = defineType({
   name: 'rizzPage',
   title: 'Rizz Landing Page',
   type: 'document',
   icon: RocketIcon,
+  groups: [...LANDING_PAGE_GROUPS],
   fields: [
     defineField({
       name: 'nav',
       title: 'Navigation',
+      group: 'nav',
       type: 'object',
       fields: [
         defineField({name: 'logoAlt', title: 'Logo alt', type: 'localeString'}),
@@ -56,6 +81,7 @@ export const rizzPage = defineType({
     defineField({
       name: 'hero',
       title: 'Hero',
+      group: 'hero',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
@@ -84,6 +110,8 @@ export const rizzPage = defineType({
     defineField({
       name: 'proof',
       title: 'Proof',
+      group: 'proof',
+      description: 'Section headings only — add result cards under Real Results in the sidebar.',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
@@ -95,6 +123,7 @@ export const rizzPage = defineType({
     defineField({
       name: 'howWeGetYouThere',
       title: 'How we get you there',
+      group: 'process',
       type: 'object',
       fields: [
         defineField({name: 'howWeWork', title: 'How we work label', type: 'localeString'}),
@@ -121,6 +150,8 @@ export const rizzPage = defineType({
     defineField({
       name: 'portfolio',
       title: 'Portfolio',
+      group: 'portfolio',
+      description: 'Section headings only — add videos under Our Work in the sidebar.',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
@@ -135,6 +166,8 @@ export const rizzPage = defineType({
     defineField({
       name: 'testimonials',
       title: 'Testimonials',
+      group: 'testimonials',
+      description: 'Section headings only — add review quotes under Reviews in the sidebar.',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
@@ -145,17 +178,45 @@ export const rizzPage = defineType({
     }),
     defineField({
       name: 'founders',
-      title: 'Founders',
+      title: 'Built by someone who filmed it…',
+      group: 'founders',
+      description:
+        'The “BUILT BY SOMEONE WHO FILMED IT, EDITED IT, AND LIVED IT FIRST” section — edit the headline, intro, team cards, and photos here.',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
-        defineField({name: 'titleBefore', title: 'Title before', type: 'localeText'}),
-        defineField({name: 'titleFilmed', title: 'Title filmed', type: 'localeString'}),
-        defineField({name: 'titleEdited', title: 'Title edited', type: 'localeString'}),
-        defineField({name: 'titleLived', title: 'Title lived', type: 'localeString'}),
-        defineField({name: 'titleAfter', title: 'Title after', type: 'localeText'}),
-        defineField({name: 'intro', title: 'Intro', type: 'localeText'}),
-        defineField({name: 'values', title: 'Values', type: 'localeString'}),
+        defineField({
+          name: 'titleBefore',
+          title: 'Headline — before accents',
+          type: 'localeText',
+          description: 'e.g. “BUILT BY SOMEONE WHO”',
+        }),
+        defineField({
+          name: 'titleFilmed',
+          title: 'Headline accent — filmed',
+          type: 'localeString',
+          description: 'Orange accent text, e.g. “FILMED IT”',
+        }),
+        defineField({
+          name: 'titleEdited',
+          title: 'Headline accent — edited',
+          type: 'localeString',
+          description: 'Orange accent text, e.g. “EDITED IT”',
+        }),
+        defineField({
+          name: 'titleLived',
+          title: 'Headline — lived',
+          type: 'localeString',
+          description: 'Plain text between accents, e.g. “AND LIVED IT”',
+        }),
+        defineField({
+          name: 'titleAfter',
+          title: 'Headline accent — ending',
+          type: 'localeText',
+          description: 'Orange accent text at the end, e.g. “FIRST.”',
+        }),
+        defineField({name: 'intro', title: 'Intro paragraph', type: 'localeText'}),
+        defineField({name: 'values', title: 'Values line', type: 'localeString'}),
         defineField({name: 'showBio', title: 'Show bio label', type: 'localeString'}),
         defineField({name: 'hideBio', title: 'Hide bio label', type: 'localeString'}),
         defineField({
@@ -174,12 +235,12 @@ export const rizzPage = defineType({
         }),
         defineField({
           name: 'cards',
-          title: 'Founder cards',
+          title: 'Team cards',
           type: 'array',
           of: [
             defineField({
               name: 'founderCard',
-              title: 'Founder card',
+              title: 'Team card',
               type: 'object',
               fields: [
                 defineField({name: 'name', title: 'Name', type: 'localeString'}),
@@ -187,8 +248,27 @@ export const rizzPage = defineType({
                 defineField({name: 'keywords', title: 'Keywords', type: 'localeString'}),
                 defineField({name: 'bio', title: 'Bio', type: 'localeText'}),
                 defineField({name: 'badge', title: 'Badge', type: 'localeString'}),
-                defineField({name: 'variant', title: 'Variant', type: 'string'}),
-                defineField({name: 'imageKey', title: 'Image key', type: 'string'}),
+                defineField({
+                  name: 'variant',
+                  title: 'Card style',
+                  type: 'string',
+                  options: {
+                    list: [
+                      {title: 'Portrait (photo card)', value: 'portrait'},
+                      {title: 'Team (abstract background)', value: 'team'},
+                    ],
+                    layout: 'radio',
+                  },
+                  initialValue: 'portrait',
+                }),
+                defineField({
+                  name: 'image',
+                  title: 'Card photo',
+                  type: 'image',
+                  description: 'Upload a portrait for portrait-style cards. Not used for team-style cards.',
+                  options: {hotspot: true},
+                  hidden: ({parent}) => parent?.variant === 'team',
+                }),
               ],
             }),
           ],
@@ -198,6 +278,7 @@ export const rizzPage = defineType({
     defineField({
       name: 'cta',
       title: 'Final CTA',
+      group: 'cta',
       type: 'object',
       fields: [
         defineField({name: 'eyebrow', title: 'Eyebrow', type: 'localeString'}),
@@ -212,6 +293,7 @@ export const rizzPage = defineType({
     defineField({
       name: 'footer',
       title: 'Footer',
+      group: 'footer',
       type: 'object',
       fields: [
         defineField({name: 'description', title: 'Description', type: 'localeText'}),
@@ -227,6 +309,7 @@ export const rizzPage = defineType({
     defineField({
       name: 'seo',
       title: 'SEO',
+      group: 'seo',
       type: 'object',
       fields: [
         defineField({name: 'title', title: 'Document title', type: 'localeString'}),

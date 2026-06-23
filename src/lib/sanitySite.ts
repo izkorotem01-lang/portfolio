@@ -132,6 +132,7 @@ export type RizzPageContent = {
       bio?: LocaleText;
       badge?: LocaleString;
       variant?: string;
+      imageUrl?: string;
       imageKey?: string;
     }>;
   };
@@ -225,7 +226,7 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
     intro, values, showBio, hideBio,
     "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
     "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
-    cards[]{name, role, keywords, bio, badge, variant, imageKey}
+    cards[]{name, role, keywords, bio, badge, variant, imageKey, "imageUrl": image.asset->url}
   },
   cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
   footer{
@@ -341,12 +342,16 @@ export const fetchSiteContentFromSanity = async (): Promise<SiteContent> => {
 };
 
 export const fetchSiteContent = async (): Promise<SiteContent> => {
-  if (import.meta.env.PROD) {
+  try {
+    return await fetchSiteContentFromSanity();
+  } catch (error) {
+    if (!import.meta.env.PROD) throw error;
+
+    console.warn("Live Sanity fetch failed, falling back to baked CMS JSON.", error);
     const baked = await loadBakedSiteContent();
     if (baked) return baked;
+    throw error;
   }
-
-  return await fetchSiteContentFromSanity();
 };
 
 const getYouTubeVideoId = (url: string): string | undefined => {

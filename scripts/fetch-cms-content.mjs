@@ -83,7 +83,7 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
     intro, values, showBio, hideBio,
     "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
     "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
-    cards[]{name, role, keywords, bio, badge, variant, imageKey}
+    cards[]{name, role, keywords, bio, badge, variant, imageKey, "imageUrl": image.asset->url}
   },
   cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
   footer{
