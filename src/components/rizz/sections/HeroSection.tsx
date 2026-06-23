@@ -42,6 +42,7 @@ export const HeroSection = () => {
       {/* Mobile: image stacked above content */}
       <div className="relative z-0 w-full shrink-0 overflow-hidden bg-[#030712] md:hidden hero-section-image-mobile">
         <img
+          key={heroImageSrc}
           src={heroImageSrc}
           alt=""
           aria-hidden="true"
@@ -53,6 +54,7 @@ export const HeroSection = () => {
       {/* Desktop: image behind content (unchanged) */}
       <div className="absolute inset-0 z-0 hidden overflow-hidden bg-[#030712] md:block">
         <img
+          key={heroImageSrc}
           src={heroImageSrc}
           alt=""
           aria-hidden="true"
