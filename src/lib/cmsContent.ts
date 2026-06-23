@@ -22,7 +22,10 @@ const cmsUrl = (filename: string) =>
 
 const loadJson = async <T>(filename: string): Promise<T | null> => {
   try {
-    const response = await fetch(cmsUrl(filename), { cache: "no-cache" });
+    const response = await fetch(
+      cmsUrl(filename),
+      import.meta.env.PROD ? undefined : { cache: "no-cache" },
+    );
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {

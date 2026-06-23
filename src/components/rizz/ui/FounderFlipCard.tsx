@@ -61,7 +61,7 @@ export const FounderFlipCard = ({ founder, className }: FounderFlipCardProps) =>
   return (
     <button
       type="button"
-      className={cn("founder-flip-card w-full text-left", className)}
+      className={cn("founder-flip-card w-full text-start", className)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => setLocked((value) => !value)}

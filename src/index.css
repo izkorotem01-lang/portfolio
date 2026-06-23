@@ -878,11 +878,13 @@
   justify-content: space-between;
   gap: 20px;
   padding: 32px 28px;
+  text-align: start;
 }
 
 .founder-flip-back-header {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -894,8 +896,9 @@
   width: 44px;
   height: 2px;
   margin-top: 4px;
+  align-self: flex-start;
   border-radius: 999px;
-  background: linear-gradient(to right, var(--rizz-blue), rgba(24, 123, 255, 0.2));
+  background: linear-gradient(to inline-end, var(--rizz-blue), rgba(24, 123, 255, 0.2));
   box-shadow: 0 0 10px rgba(24, 123, 255, 0.45);
 }
 
@@ -924,8 +927,10 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
   padding: 28px 24px 26px;
+  text-align: start;
   background: linear-gradient(
     to top,
     rgba(3, 7, 18, 0.96) 0%,
@@ -975,12 +980,12 @@
   content: "";
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: min(220px, 55%);
   height: 2px;
   border-radius: 999px;
   background: linear-gradient(
-    to right,
+    to inline-end,
     rgba(24, 123, 255, 0.95) 0%,
     rgba(24, 123, 255, 0.35) 55%,
     transparent 100%
@@ -1044,6 +1049,34 @@
   animation-delay: var(--shine-delay, 0s);
 }
 
+.how-we-connector-track--rtl {
+  background: linear-gradient(
+    270deg,
+    rgba(24, 123, 255, 0.25) 0%,
+    rgba(56, 189, 248, 0.55) 40%,
+    rgba(125, 211, 252, 0.75) 50%,
+    rgba(56, 189, 248, 0.55) 60%,
+    rgba(24, 123, 255, 0.25) 100%
+  );
+}
+
+.how-we-connector-track--rtl::after {
+  background: linear-gradient(
+    270deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(186, 230, 253, 0.95) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-position: -20% 0;
+}
+
+.how-we-connector-track--rtl.how-we-connector-track--shining::after {
+  animation-name: how-we-connector-shine-rtl;
+}
+
 .how-we-connector-dot {
   background: #7dd3fc;
   box-shadow:
@@ -1058,6 +1091,15 @@
   }
   100% {
     background-position: -20% 0;
+  }
+}
+
+@keyframes how-we-connector-shine-rtl {
+  0% {
+    background-position: -20% 0;
+  }
+  100% {
+    background-position: 120% 0;
   }
 }
 

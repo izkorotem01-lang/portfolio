@@ -1,4 +1,5 @@
 import { RIZZ_CONTACT } from "@/data/rizz-contact";
+import type { RizzSocialLink } from "@/lib/sanitySite";
 import { Instagram, Youtube } from "lucide-react";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
@@ -14,11 +15,19 @@ const TikTokIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
-const socialIcons = {
-  Instagram,
-  YouTube: Youtube,
-  TikTok: TikTokIcon,
-} as const;
+const socialIconsByPlatform: Record<string, typeof Instagram | typeof TikTokIcon> = {
+  instagram: Instagram,
+  youtube: Youtube,
+  tiktok: TikTokIcon,
+};
+
+const getSocialIcon = (link: RizzSocialLink) => {
+  const platform = link.platform?.toLowerCase().trim();
+  if (platform && socialIconsByPlatform[platform]) {
+    return socialIconsByPlatform[platform];
+  }
+  return Instagram;
+};
 
 export const RizzFooter = () => {
   const { rizzPage, requirePick, pick } = useSiteContent();
@@ -46,8 +55,12 @@ export const RizzFooter = () => {
             </p>
             <div className="flex gap-4">
               {(footer.socialLinks ?? []).map((link) => {
-                const label = pick(link.label) || link.label?.en?.trim() || link.label?.hb?.trim() || "";
-                const Icon = socialIcons[label as keyof typeof socialIcons] ?? Instagram;
+                const label =
+                  pick(link.label) ||
+                  link.platform ||
+                  link.label?.en?.trim() ||
+                  "Social link";
+                const Icon = getSocialIcon(link);
                 return (
                   <a
                     key={link._key}

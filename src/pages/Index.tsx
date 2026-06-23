@@ -12,8 +12,8 @@ import { FinalCtaSection } from "@/components/rizz/sections/FinalCtaSection";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const Index = () => {
-  const { isLoading } = useSiteContent();
-  if (isLoading) return null;
+  const { isLoading, rizzPage } = useSiteContent();
+  if (isLoading && !rizzPage) return null;
   return (
     <>
       <RizzSeo />

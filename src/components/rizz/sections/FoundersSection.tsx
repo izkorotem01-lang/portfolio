@@ -3,6 +3,7 @@ import shakedImg from "@/assets/shaked.webp";
 import { FounderFlipCard } from "@/components/rizz/ui/FounderFlipCard";
 import { EyebrowLabel } from "@/components/rizz/ui/EyebrowLabel";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const founderImages = {
@@ -12,6 +13,7 @@ const founderImages = {
 
 export const FoundersSection = () => {
   const { rizzPage, requirePick } = useSiteContent();
+  const { dir } = useLanguage();
   if (!rizzPage?.founders) throw new Error("Missing required Sanity content: rizzPage.founders");
   const copy = rizzPage.founders;
   const bioLabels = {
@@ -22,13 +24,13 @@ export const FoundersSection = () => {
   if (cards.length === 0) throw new Error("Missing required rizzPage.founders.cards");
 
   return (
-    <section id="about" className="py-28 px-6 bg-[#030712]">
+    <section id="about" className="py-28 px-6 bg-[#030712]" dir={dir}>
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-14 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-16">
           <SectionWrapper>
             <EyebrowLabel>{requirePick(copy.eyebrow, "rizzPage.founders.eyebrow")}</EyebrowLabel>
             <h2
-              className="font-semibold uppercase text-[#F5F7FA] leading-[0.95] max-w-3xl"
+              className="max-w-3xl font-semibold uppercase leading-[0.95] text-[#F5F7FA] text-start"
               style={{ fontSize: "clamp(2.25rem, 4.5vw, 4.5rem)", letterSpacing: "-0.05em" }}
             >
               {requirePick(copy.titleBefore, "rizzPage.founders.titleBefore")}{" "}
@@ -47,11 +49,11 @@ export const FoundersSection = () => {
           </SectionWrapper>
 
           <SectionWrapper delay={0.1} className="lg:pt-10">
-            <p className="text-[#A7B0C0] text-base leading-relaxed max-w-xl">
+            <p className="max-w-xl text-base leading-relaxed text-[#A7B0C0] text-start">
               {requirePick(copy.intro, "rizzPage.founders.intro")}
             </p>
             <div className="founders-values-line">
-              <p className="text-[#6F7A8C] text-[11px] font-semibold uppercase tracking-[0.22em]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6F7A8C] text-start">
                 {requirePick(copy.values, "rizzPage.founders.values")}
               </p>
             </div>

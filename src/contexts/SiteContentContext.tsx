@@ -13,9 +13,10 @@ import {
   type LocaleText,
 } from "@/lib/sanity/locale";
 import {
-  fetchSiteContent,
+  fetchSiteContentFromSanity,
   type SiteContent,
 } from "@/lib/sanitySite";
+import { loadBakedSiteContent } from "@/lib/cmsContent";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 
 const emptyContent: SiteContent = {
@@ -44,16 +45,32 @@ export const SiteContentProvider = ({
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const loadContent = async () => {
+      if (import.meta.env.PROD) {
+        const baked = await loadBakedSiteContent();
+        if (!cancelled && baked) {
+          setContent({ ...emptyContent, ...baked });
+          setIsLoading(false);
+        }
+      }
+
       try {
-        const data = await fetchSiteContent();
-        if (!cancelled) setContent({ ...emptyContent, ...data });
+        const live = await fetchSiteContentFromSanity();
+        if (!cancelled) setContent({ ...emptyContent, ...live });
       } catch (error) {
         console.error("Failed to load site content from Sanity:", error);
+        if (!cancelled && import.meta.env.PROD) {
+          const baked = await loadBakedSiteContent();
+          if (baked) setContent({ ...emptyContent, ...baked });
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
-    })();
+    };
+
+    void loadContent();
+
     return () => {
       cancelled = true;
     };

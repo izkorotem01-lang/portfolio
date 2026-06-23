@@ -21,6 +21,7 @@ import {
   type PortfolioCategory,
   type PortfolioVideo,
 } from "@/lib/portfolioService";
+import { loadBakedPortfolio } from "@/lib/cmsContent";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -112,6 +113,15 @@ export const PortfolioSection = () => {
     let cancelled = false;
 
     const loadPortfolioData = async () => {
+      if (import.meta.env.PROD) {
+        const baked = await loadBakedPortfolio();
+        if (!cancelled && baked) {
+          setCategories(baked.categories);
+          setVideos(baked.videos);
+          setIsLoading(false);
+        }
+      }
+
       try {
         const [categoriesData, videosData] = await Promise.all([
           getCategories(),

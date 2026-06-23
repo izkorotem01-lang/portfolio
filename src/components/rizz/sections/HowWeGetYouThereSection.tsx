@@ -1,6 +1,7 @@
 import { GradientOrb } from "@/components/rizz/ui/GradientOrb";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
 import { SERVICE_BUILD_IMAGES } from "@/data/service-build-images";
+import { cn } from "@/lib/utils";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
 import {
@@ -206,20 +207,25 @@ export const WhatWeBuildPanel = ({
 const ProcessConnector = ({
   index,
   animate,
+  isRtl,
 }: {
   index: number;
   animate: boolean;
+  isRtl: boolean;
 }) => {
   const lineDelay = index * STEP_STAGGER + 0.45;
 
   return (
     <div
-      className="pointer-events-none absolute left-1/2 z-0 hidden lg:block"
+      className={cn(
+        "pointer-events-none absolute z-0 hidden lg:block",
+        isRtl ? "right-1/2" : "left-1/2",
+      )}
       style={{ top: `calc(${ICON_CENTER_TOP} - 1.5px)`, width: "calc(100% + 1rem)" }}
       aria-hidden
     >
       <motion.div
-        className={`how-we-connector-track relative ${animate ? "how-we-connector-track--shining" : ""}`}
+        className="h-[3px] w-full"
         initial={{ scaleX: 0, opacity: 0 }}
         animate={animate ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
         transition={{
@@ -227,24 +233,35 @@ const ProcessConnector = ({
           opacity: { duration: 0.35, delay: lineDelay },
         }}
         style={{
-          transformOrigin: "left center",
-          ["--shine-delay" as string]: `${lineDelay + 0.9}s`,
+          transformOrigin: isRtl ? "right center" : "left center",
         }}
       >
-        <motion.span
-          className="how-we-connector-dot absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
-          initial={{ left: "0%", opacity: 0 }}
-          animate={
-            animate
-              ? { left: "100%", opacity: [0, 1, 1, 0] }
-              : { left: "0%", opacity: 0 }
-          }
-          transition={{
-            duration: 0.85,
-            delay: lineDelay,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        />
+        <div
+          className={cn(
+            "how-we-connector-track relative h-full w-full",
+            animate && "how-we-connector-track--shining",
+            isRtl && "how-we-connector-track--rtl",
+          )}
+          style={{ ["--shine-delay" as string]: `${lineDelay + 0.9}s` }}
+        >
+          <motion.span
+            className="how-we-connector-dot absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
+            initial={{ opacity: 0, ...(isRtl ? { right: "0%" } : { left: "0%" }) }}
+            animate={
+              animate
+                ? {
+                    opacity: [0, 1, 1, 0],
+                    ...(isRtl ? { right: "100%" } : { left: "100%" }),
+                  }
+                : { opacity: 0, ...(isRtl ? { right: "0%" } : { left: "0%" }) }
+            }
+            transition={{
+              duration: 0.85,
+              delay: lineDelay,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          />
+        </div>
       </motion.div>
     </div>
   );
@@ -255,11 +272,13 @@ const ProcessStepCard = ({
   index,
   isLast,
   animate,
+  isRtl,
 }: {
   step: { step?: string; title?: unknown; icon?: string; description?: unknown };
   index: number;
   isLast: boolean;
   animate: boolean;
+  isRtl: boolean;
 }) => {
   const { requirePick } = useSiteContent();
   const Icon = PROCESS_ICONS[step.icon ?? "search"] ?? Search;
@@ -276,7 +295,7 @@ const ProcessStepCard = ({
       }
       transition={{ ...STEP_SPRING, delay: stepDelay }}
     >
-      {!isLast && <ProcessConnector index={index} animate={animate} />}
+      {!isLast && <ProcessConnector index={index} animate={animate} isRtl={isRtl} />}
 
       <div className="relative z-10 flex w-full flex-col items-center text-center">
         <motion.div
@@ -351,6 +370,7 @@ export const HowWeGetYouThereSection = () => {
   const listRef = useRef<HTMLOListElement>(null);
   const isInView = useInView(listRef, { once: true, margin: "-60px" });
   const animate = reduceMotion || isInView;
+  const isRtl = dir === "rtl";
 
   return (
     <section
@@ -381,6 +401,7 @@ export const HowWeGetYouThereSection = () => {
                 index={index}
                 isLast={index === steps.length - 1}
                 animate={animate}
+                isRtl={isRtl}
               />
             ))}
           </motion.ol>
