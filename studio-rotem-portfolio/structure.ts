@@ -1,40 +1,18 @@
 import {
-  BlockElementIcon,
-  CogIcon,
-  CommentIcon,
   DocumentIcon,
-  DocumentsIcon,
   EyeOpenIcon,
-  ImageIcon,
   PlayIcon,
   RocketIcon,
   StarIcon,
   TagIcon,
-  ThListIcon,
   UsersIcon,
 } from '@sanity/icons'
-import type {ComponentType} from 'react'
 import type {StructureResolver} from 'sanity/structure'
 import {ProofCardSitePreviewView} from './components/ProofCardSitePreview'
 
 export const SECTION_IDS = {
   rizzPage: 'rizzPage',
 } as const
-
-const landingPageSection = (
-  S: Parameters<StructureResolver>[0],
-  title: string,
-  icon?: ComponentType,
-) =>
-  S.listItem()
-    .title(title)
-    .icon(icon)
-    .child(
-      S.document()
-        .title(title)
-        .schemaType('rizzPage')
-        .documentId(SECTION_IDS.rizzPage),
-    )
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -44,20 +22,10 @@ export const structure: StructureResolver = (S) =>
         .title('Landing page')
         .icon(RocketIcon)
         .child(
-          S.list()
-            .title('Landing page')
-            .items([
-              landingPageSection(S, 'Navigation', ThListIcon),
-              landingPageSection(S, 'Hero', RocketIcon),
-              landingPageSection(S, 'Real Results labels', DocumentsIcon),
-              landingPageSection(S, 'How we work', BlockElementIcon),
-              landingPageSection(S, 'Our Work labels', ImageIcon),
-              landingPageSection(S, 'Reviews labels', StarIcon),
-              landingPageSection(S, 'About / team', UsersIcon),
-              landingPageSection(S, 'Book a call', CommentIcon),
-              landingPageSection(S, 'Footer', ThListIcon),
-              landingPageSection(S, 'SEO', CogIcon),
-            ]),
+          S.document()
+            .schemaType('rizzPage')
+            .documentId(SECTION_IDS.rizzPage)
+            .title('Landing page'),
         ),
 
       S.divider(),
