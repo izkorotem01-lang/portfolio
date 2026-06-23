@@ -20,8 +20,10 @@ export const RizzFilterNav = ({
 }: RizzFilterNavProps) => {
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef(new Map<string, HTMLButtonElement>());
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, top: 0 });
   const [isReady, setIsReady] = useState(false);
+
+  const INDICATOR_HEIGHT = 18;
 
   const updateIndicator = useCallback(() => {
     const nav = navRef.current;
@@ -34,6 +36,7 @@ export const RizzFilterNav = ({
     setIndicator({
       left: activeRect.left - navRect.left,
       width: activeRect.width,
+      top: activeRect.bottom - navRect.top - INDICATOR_HEIGHT,
     });
     setIsReady(true);
   }, [activeId]);
@@ -85,7 +88,7 @@ export const RizzFilterNav = ({
           "rizz-filter-nav__indicator",
           isReady && "rizz-filter-nav__indicator--ready",
         )}
-        style={{ left: indicator.left, width: indicator.width }}
+        style={{ left: indicator.left, width: indicator.width, top: indicator.top }}
         aria-hidden="true"
       >
         <span className="rizz-filter-nav__indicator-glow" />

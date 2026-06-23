@@ -39,7 +39,7 @@ const PortfolioVideoCard = ({
   const thumbnailUrl =
     video.thumbnailUrl ||
     (isYouTube ? getYouTubeThumbnail(video.videoUrl) : undefined);
-  const title = video.title || untitledLabel;
+  const title = video.title || video.titleHe || untitledLabel;
 
   return (
     <button
@@ -86,12 +86,10 @@ const PortfolioVideoCard = ({
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent p-4">
-        {video.subtitle ? (
-          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-[#6F7A8C]">
-            {video.subtitle}
-          </p>
-        ) : null}
+      <div
+        dir="rtl"
+        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent p-4 text-right"
+      >
         <h3 className="text-sm font-bold text-[#F5F7FA]">{title}</h3>
       </div>
     </button>

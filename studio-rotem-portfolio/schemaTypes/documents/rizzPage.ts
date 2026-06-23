@@ -263,9 +263,19 @@ export const rizzPage = defineType({
                 }),
                 defineField({
                   name: 'image',
-                  title: 'Card photo',
+                  title: 'Front photo',
                   type: 'image',
-                  description: 'Upload a portrait for portrait-style cards. Not used for team-style cards.',
+                  description:
+                    'Portrait shown on the front of the card. Not used for team-style cards.',
+                  options: {hotspot: true},
+                  hidden: ({parent}) => parent?.variant === 'team',
+                }),
+                defineField({
+                  name: 'backImage',
+                  title: 'Back photo',
+                  type: 'image',
+                  description:
+                    'Photo revealed on the back when the card is flipped. Shown darkened so the bio text stays readable.',
                   options: {hotspot: true},
                   hidden: ({parent}) => parent?.variant === 'team',
                 }),

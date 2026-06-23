@@ -383,12 +383,12 @@
 
 .rizz-filter-nav__indicator {
   position: absolute;
-  bottom: 0;
   height: 18px;
   pointer-events: none;
   opacity: 0;
   transition:
     left 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.22s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.15s ease;
 }
@@ -843,6 +843,29 @@
 .founder-flip-back {
   transform: rotateY(180deg);
   background: #07111f;
+}
+
+.founder-flip-back-photo {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.founder-flip-back-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to top,
+      rgba(3, 7, 18, 0.97) 0%,
+      rgba(3, 7, 18, 0.88) 38%,
+      rgba(3, 7, 18, 0.72) 62%,
+      rgba(3, 7, 18, 0.55) 100%
+    ),
+    rgba(3, 7, 18, 0.45);
 }
 
 .founder-flip-back-surface {

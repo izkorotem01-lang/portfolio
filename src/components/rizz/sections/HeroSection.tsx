@@ -70,8 +70,8 @@ export const HeroSection = () => {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#030712] from-15% to-transparent" />
       </div>
 
-      <div className="relative z-10 w-full px-16 py-10 md:py-20">
-        <div className="max-w-3xl">
+      <div className="relative z-10 w-full px-4 py-10 sm:px-6 md:px-16 md:py-20">
+        <div className="max-w-3xl text-center md:text-start">
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -110,7 +110,10 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className={cn("text-[#A7B0C0] leading-relaxed mb-8 max-w-xl", dir === "rtl" ? "text-xl" : "text-lg")}
+            className={cn(
+              "text-[#A7B0C0] leading-relaxed mb-8 max-w-xl mx-auto md:mx-0",
+              dir === "rtl" ? "text-xl" : "text-lg",
+            )}
           >
             {requirePick(hero.description, "rizzPage.hero.description")}
           </motion.p>
@@ -119,7 +122,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.55 }}
-            className="flex flex-col sm:flex-row gap-4 mb-10"
+            className="mb-10 flex flex-col items-center gap-4 sm:flex-row sm:items-stretch sm:justify-start"
           >
             <RizzButton href={RIZZ_CONTACT.phoneTel} variant="primary">
               {requirePick(nav.bookCall, "rizzPage.nav.bookCall")}
@@ -140,7 +143,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.7 }}
-            className="text-[#6F7A8C] uppercase"
+            className="text-[#6F7A8C] uppercase text-center md:text-start"
             style={dir === "rtl" ? { fontSize: "1rem", letterSpacing: "0.2em" } : { fontSize: "0.75rem", letterSpacing: "0.25em" }}
           >
             {requirePick(hero.tagline, "rizzPage.hero.tagline")}
@@ -152,7 +155,7 @@ export const HeroSection = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.85 }}
-        className="absolute bottom-8 start-8 z-20 md:bottom-10 md:start-16"
+        className="absolute bottom-8 start-8 z-20 hidden md:block md:bottom-10 md:start-16"
       >
         <LanguageSwitcher />
       </motion.div>

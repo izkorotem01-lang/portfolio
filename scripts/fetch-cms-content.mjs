@@ -2,6 +2,11 @@ import { createClient } from "@sanity/client";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  fetchYouTubeTitle,
+  isYouTubeUrl,
+  toLocaleTitle,
+} from "./youtube-title.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outputDir = join(__dirname, "..", "public", "cms");
@@ -83,7 +88,11 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
     intro, values, showBio, hideBio,
     "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
     "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
-    cards[]{name, role, keywords, bio, badge, variant, imageKey, "imageUrl": image.asset->url}
+    cards[]{
+      name, role, keywords, bio, badge, variant, imageKey,
+      "imageUrl": image.asset->url,
+      "backImageUrl": backImage.asset->url
+    }
   },
   cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},
   footer{
@@ -107,8 +116,10 @@ const VIDEOS_QUERY = `*[_type == "portfolioVideo"] | order(coalesce(allWorkOrder
   _id,
   title,
   subtitle,
+  useCustomTitle,
   "categoryId": category._ref,
   "videoUrl": coalesce(videoFile.asset->url, videoUrl),
+  "youtubeUrl": videoUrl,
   "videoWidth": videoFile.asset->metadata.dimensions.width,
   "videoHeight": videoFile.asset->metadata.dimensions.height,
   "thumbnailUrl": thumbnail.asset->url,
@@ -118,6 +129,30 @@ const VIDEOS_QUERY = `*[_type == "portfolioVideo"] | order(coalesce(allWorkOrder
   _createdAt,
   _updatedAt
 }`;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const resolveVideoTitle = async (doc, titleCache) => {
+  const customTitle = doc.title;
+  const customEn = customTitle?.en?.trim() || "";
+  const customHb =
+    customTitle?.hb?.trim() || customTitle?.he?.trim() || customEn;
+
+  if (doc.useCustomTitle || !isYouTubeUrl(doc.youtubeUrl)) {
+    return { title: customEn, titleHe: customHb };
+  }
+
+  const youtubeUrl = doc.youtubeUrl.trim();
+  let youtubeTitle = titleCache.get(youtubeUrl);
+  if (!youtubeTitle) {
+    youtubeTitle = await fetchYouTubeTitle(youtubeUrl);
+    if (youtubeTitle) titleCache.set(youtubeUrl, youtubeTitle);
+    await sleep(120);
+  }
+
+  const resolved = youtubeTitle || customEn;
+  return { title: resolved, titleHe: resolved };
+};
 
 const hasLocalizedText = (field) =>
   Boolean(field?.en?.trim() || field?.hb?.trim());
@@ -146,14 +181,18 @@ const mapCategories = (docs) =>
       updatedAt: doc._updatedAt,
     }));
 
-const mapVideos = (docs) =>
-  docs
-    .filter((doc) => doc.videoUrl?.trim())
-    .map((doc) => ({
+const mapVideos = async (docs) => {
+  const titleCache = new Map();
+  const mapped = [];
+
+  for (const doc of docs) {
+    if (!doc.videoUrl?.trim()) continue;
+    const { title, titleHe } = await resolveVideoTitle(doc, titleCache);
+    mapped.push({
       id: doc._id,
       categoryId: doc.categoryId ?? "",
-      title: doc.title?.en ?? "",
-      titleHe: doc.title?.hb ?? doc.title?.he ?? "",
+      title,
+      titleHe,
       subtitle: doc.subtitle?.en ?? "",
       subtitleHe: doc.subtitle?.hb ?? doc.subtitle?.he ?? "",
       videoUrl: doc.videoUrl ?? "",
@@ -165,7 +204,11 @@ const mapVideos = (docs) =>
       allWorkOrder: doc.allWorkOrder,
       createdAt: doc._createdAt,
       updatedAt: doc._updatedAt,
-    }));
+    });
+  }
+
+  return mapped;
+};
 
 const mapProofCardMedia = (item, fallbackId = "media") => {
   const quote = item?.quote;
@@ -240,7 +283,7 @@ const fetchPortfolio = async () => {
 
   return {
     categories: mapCategories(categories),
-    videos: mapVideos(videos),
+    videos: await mapVideos(videos),
   };
 };
 

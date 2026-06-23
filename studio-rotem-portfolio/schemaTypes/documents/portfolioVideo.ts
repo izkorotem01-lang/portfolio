@@ -23,10 +23,38 @@ export const portfolioVideo = defineType({
     }),
   fields: [
     defineField({
+      name: 'useCustomTitle',
+      title: 'Use custom title',
+      type: 'boolean',
+      description:
+        'When off, the site uses the YouTube video title automatically. Turn on to override with the title below.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'localeString',
-      validation: (rule) => rule.required(),
+      description:
+        'Custom title override. Ignored when "Use custom title" is off and a YouTube URL is set.',
+      validation: (rule) =>
+        rule.custom((title, context) => {
+          const parent = context.parent as {
+            useCustomTitle?: boolean
+            videoUrl?: string
+            videoFile?: {asset?: {_ref?: string}}
+          }
+          const hasTitle = Boolean(title?.en?.trim() || title?.hb?.trim())
+          if (parent?.useCustomTitle && !hasTitle) {
+            return 'Title is required when using a custom title'
+          }
+          if (parent?.videoFile?.asset?._ref && !hasTitle) {
+            return 'Title is required for uploaded videos'
+          }
+          if (parent?.videoUrl?.trim() && isYouTubeUrl(parent.videoUrl) && !hasTitle) {
+            return true
+          }
+          return hasTitle ? true : 'Title is required'
+        }),
     }),
     defineField({name: 'subtitle', title: 'Subtitle', type: 'localeString'}),
     defineField({

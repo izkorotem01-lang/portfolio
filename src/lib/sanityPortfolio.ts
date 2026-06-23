@@ -19,10 +19,12 @@ type SanityCategory = {
 
 type SanityVideo = {
   _id: string;
-  title?: LocalizedString;
-  subtitle?: LocalizedString;
+  title?: LocalizedString & { he?: string };
+  subtitle?: LocalizedString & { he?: string };
+  useCustomTitle?: boolean;
   categoryId?: string;
   videoUrl?: string;
+  youtubeUrl?: string;
   videoWidth?: number;
   videoHeight?: number;
   thumbnail?: { asset?: { _ref?: string } };
@@ -46,8 +48,10 @@ const VIDEOS_QUERY = `*[_type == "portfolioVideo"] | order(coalesce(allWorkOrder
   _id,
   title,
   subtitle,
+  useCustomTitle,
   "categoryId": category._ref,
   "videoUrl": coalesce(videoFile.asset->url, videoUrl),
+  "youtubeUrl": videoUrl,
   "videoWidth": videoFile.asset->metadata.dimensions.width,
   "videoHeight": videoFile.asset->metadata.dimensions.height,
   thumbnail,
@@ -62,8 +66,10 @@ const VIDEOS_BY_CATEGORY_QUERY = `*[_type == "portfolioVideo" && category._ref =
   _id,
   title,
   subtitle,
+  useCustomTitle,
   "categoryId": category._ref,
   "videoUrl": coalesce(videoFile.asset->url, videoUrl),
+  "youtubeUrl": videoUrl,
   "videoWidth": videoFile.asset->metadata.dimensions.width,
   "videoHeight": videoFile.asset->metadata.dimensions.height,
   thumbnail,
@@ -85,25 +91,31 @@ const mapCategory = (doc: SanityCategory): PortfolioCategory => ({
   updatedAt: toTimestamp(doc._updatedAt),
 });
 
-const mapVideo = (doc: SanityVideo): PortfolioVideo => ({
-  id: doc._id,
-  categoryId: doc.categoryId ?? "",
-  title: doc.title?.en ?? "",
-  titleHe: doc.title?.hb ?? "",
-  subtitle: doc.subtitle?.en ?? "",
-  subtitleHe: doc.subtitle?.hb ?? "",
-  videoUrl: doc.videoUrl ?? "",
-  videoWidth: doc.videoWidth || undefined,
-  videoHeight: doc.videoHeight || undefined,
-  thumbnailUrl: doc.thumbnail
-    ? urlForImage(doc.thumbnail).width(800).auto("format").url()
-    : undefined,
-  autoplayInBackground: doc.autoplayInBackground ?? false,
-  order: doc.order ?? 0,
-  allWorkOrder: doc.allWorkOrder,
-  createdAt: toTimestamp(doc._createdAt),
-  updatedAt: toTimestamp(doc._updatedAt),
-});
+const mapVideo = (doc: SanityVideo): PortfolioVideo => {
+  const titleEn = doc.title?.en?.trim() ?? "";
+  const titleHb =
+    doc.title?.hb?.trim() || doc.title?.he?.trim() || titleEn;
+
+  return {
+    id: doc._id,
+    categoryId: doc.categoryId ?? "",
+    title: titleEn,
+    titleHe: titleHb,
+    subtitle: doc.subtitle?.en ?? "",
+    subtitleHe: doc.subtitle?.hb ?? doc.subtitle?.he ?? "",
+    videoUrl: doc.videoUrl ?? "",
+    videoWidth: doc.videoWidth || undefined,
+    videoHeight: doc.videoHeight || undefined,
+    thumbnailUrl: doc.thumbnail
+      ? urlForImage(doc.thumbnail).width(800).auto("format").url()
+      : undefined,
+    autoplayInBackground: doc.autoplayInBackground ?? false,
+    order: doc.order ?? 0,
+    allWorkOrder: doc.allWorkOrder,
+    createdAt: toTimestamp(doc._createdAt),
+    updatedAt: toTimestamp(doc._updatedAt),
+  };
+};
 
 export const fetchCategoriesFromSanity = async (): Promise<PortfolioCategory[]> => {
   try {

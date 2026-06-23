@@ -83,6 +83,7 @@ export const FoundersSection = () => {
                     (founder.imageKey
                       ? founderImages[founder.imageKey as keyof typeof founderImages]
                       : undefined),
+                  backImage: founder.backImageUrl,
                   showBioLabel: bioLabels.showBio,
                   hideBioLabel: bioLabels.hideBio,
                 }}

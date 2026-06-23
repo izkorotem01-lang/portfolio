@@ -286,7 +286,10 @@ const ProcessStepCard = ({
 
   return (
     <motion.li
-      className="relative isolate flex min-w-0 flex-1 flex-col items-center text-center"
+      className={cn(
+        "relative isolate flex min-w-0 flex-1 flex-col items-center text-center",
+        isLast && "col-span-2 sm:col-span-1",
+      )}
       initial={{ opacity: 0, y: 56, scale: 0.94 }}
       animate={
         animate

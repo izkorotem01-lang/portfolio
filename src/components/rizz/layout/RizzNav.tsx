@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import rizzIcon from "@/assets/icon-nobg.png";
 import { RizzButton } from "@/components/rizz/ui/RizzButton";
+import { LanguageSwitcher } from "@/components/rizz/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localePath } from "@/i18n/locale";
 import { RIZZ_CONTACT } from "@/data/rizz-contact";
@@ -41,7 +42,7 @@ export const RizzNav = () => {
     >
       <div
         className={cn(
-          "relative mx-auto flex items-center px-16 max-w-full transition-all duration-300",
+          "relative mx-auto flex w-full items-center px-4 sm:px-6 md:px-16 max-w-full transition-all duration-300",
           scrolled ? "h-[64px]" : "h-[120px]",
         )}
       >
@@ -99,12 +100,23 @@ export const RizzNav = () => {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-full bg-[#030712] border-[#1D2B3E] flex flex-col"
+              className="w-full bg-[#030712] border-[#1D2B3E] flex flex-col [&>button]:hidden"
             >
               <div className="flex items-center justify-between mb-12">
-                <span className="text-[#F5F7FA] font-semibold text-xl uppercase tracking-widest">
-                  RIZZ<span className="text-[#FF6A00]">.</span>
-                </span>
+                <a
+                  href={localePath(urlLocale, "#home")}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick("#home");
+                  }}
+                  className="flex items-center shrink-0"
+                >
+                  <img
+                    src={rizzIcon}
+                    alt={requirePick(nav.logoAlt, "rizzPage.nav.logoAlt")}
+                    className="h-20 w-auto"
+                  />
+                </a>
                 <button
                   onClick={() => setOpen(false)}
                   className="text-[#A7B0C0]"
@@ -127,7 +139,8 @@ export const RizzNav = () => {
                   </a>
                 ))}
               </nav>
-              <div className="mt-auto pt-8">
+              <div className="mt-auto flex flex-col gap-6 pt-8">
+                <LanguageSwitcher onLocaleSwitch={() => setOpen(false)} />
                 <RizzButton
                   href={RIZZ_CONTACT.phoneTel}
                   variant="outline"

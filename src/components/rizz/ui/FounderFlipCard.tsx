@@ -7,6 +7,7 @@ export type FounderCardData = {
   keywords?: string;
   bio: string;
   image?: string;
+  backImage?: string;
   badge?: string;
   variant?: "portrait" | "team";
   showBioLabel?: string;
@@ -84,7 +85,19 @@ export const FounderFlipCard = ({ founder, className }: FounderFlipCardProps) =>
         </div>
 
         <div className="founder-flip-face founder-flip-back">
-          <div className="founder-flip-back-surface" aria-hidden />
+          {founder.backImage ? (
+            <>
+              <img
+                src={founder.backImage}
+                alt=""
+                aria-hidden
+                className="founder-flip-back-photo"
+              />
+              <div className="founder-flip-back-overlay" aria-hidden />
+            </>
+          ) : (
+            <div className="founder-flip-back-surface" aria-hidden />
+          )}
           <div className="founder-flip-back-content">
             <div className="founder-flip-back-header">
               <h3 className="founder-flip-name">{founder.name}</h3>

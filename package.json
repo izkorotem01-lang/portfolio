@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "node scripts/check-node-version.mjs && vite",
     "prebuild": "node scripts/check-node-version.mjs && node scripts/fetch-cms-content.mjs",
+    "sync:youtube-titles": "node scripts/sync-youtube-portfolio-titles.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "deploy": "wrangler deploy",

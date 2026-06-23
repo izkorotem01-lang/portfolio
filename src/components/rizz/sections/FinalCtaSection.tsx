@@ -65,7 +65,7 @@ export const FinalCtaSection = () => {
           <p className="text-[#6F7A8C] text-sm uppercase tracking-[0.25em] mb-10">
             {requirePick(cta.tagline, "rizzPage.cta.tagline")}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <RizzButton
               href={RIZZ_CONTACT.phoneTel}
               variant="primary"

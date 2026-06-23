@@ -3,7 +3,13 @@ import { cn } from "@/lib/utils";
 import type { UrlLocale } from "@/i18n/locale";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
-export const LanguageSwitcher = ({ className }: { className?: string }) => {
+export const LanguageSwitcher = ({
+  className,
+  onLocaleSwitch,
+}: {
+  className?: string;
+  onLocaleSwitch?: () => void;
+}) => {
   const { urlLocale, switchUrlLocale } = useLanguage();
   const { rizzPage, requirePick } = useSiteContent();
   if (!rizzPage?.nav) throw new Error("Missing required Sanity content: rizzPage.nav");
@@ -29,7 +35,11 @@ export const LanguageSwitcher = ({ className }: { className?: string }) => {
           <button
             key={locale}
             type="button"
-            onClick={() => switchUrlLocale(locale)}
+            onClick={() => {
+              if (urlLocale === locale) return;
+              switchUrlLocale(locale);
+              onLocaleSwitch?.();
+            }}
             className={cn(
               "rounded-full px-2.5 py-1 transition-colors",
               active
