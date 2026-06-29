@@ -133,8 +133,9 @@ export type RizzPageContent = {
       badge?: LocaleString;
       variant?: string;
       imageUrl?: string;
+      imageRef?: string;
       backImageUrl?: string;
-      imageKey?: string;
+      backImageRef?: string;
     }>;
   };
   cta?: {
@@ -228,9 +229,11 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
     "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
     "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
     cards[]{
-      name, role, keywords, bio, badge, variant, imageKey,
+      name, role, keywords, bio, badge, variant,
       "imageUrl": image.asset->url,
-      "backImageUrl": backImage.asset->url
+      "imageRef": image.asset->_id,
+      "backImageUrl": backImage.asset->url,
+      "backImageRef": backImage.asset->_id
     }
   },
   cta{eyebrow, titleLine1, titleAccent, description, tagline, bookCall, emailUs},

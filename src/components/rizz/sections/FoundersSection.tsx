@@ -1,16 +1,9 @@
-import rotemImg from "@/assets/rotem.webp";
-import shakedImg from "@/assets/shaked.webp";
 import { FounderFlipCard } from "@/components/rizz/ui/FounderFlipCard";
 import { EyebrowLabel } from "@/components/rizz/ui/EyebrowLabel";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteContent } from "@/contexts/SiteContentContext";
-
-const founderImages = {
-  rotem: rotemImg,
-  shaked: shakedImg,
-} as const;
-
+import { cmsImageUrl } from "@/lib/sanityImage";
 export const FoundersSection = () => {
   const { rizzPage, requirePick } = useSiteContent();
   const { dir } = useLanguage();
@@ -78,13 +71,8 @@ export const FoundersSection = () => {
                     ? requirePick(founder.badge, `rizzPage.founders.cards[${i}].badge`)
                     : undefined,
                   variant: (founder.variant as "portrait" | "team" | undefined) ?? "portrait",
-                  image:
-                    founder.imageUrl ??
-                    (founder.imageKey
-                      ? founderImages[founder.imageKey as keyof typeof founderImages]
-                      : undefined),
-                  backImage: founder.backImageUrl,
-                  showBioLabel: bioLabels.showBio,
+                  image: cmsImageUrl(founder.imageUrl, founder.imageRef),
+                  backImage: cmsImageUrl(founder.backImageUrl, founder.backImageRef),                  showBioLabel: bioLabels.showBio,
                   hideBioLabel: bioLabels.hideBio,
                 }}
               />

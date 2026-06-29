@@ -139,8 +139,11 @@ export const RizzNav = () => {
                   </a>
                 ))}
               </nav>
-              <div className="mt-auto flex flex-col gap-6 pt-8">
-                <LanguageSwitcher onLocaleSwitch={() => setOpen(false)} />
+              <div className="mt-auto flex flex-col items-center gap-6 pt-8">
+                <LanguageSwitcher
+                  className="w-fit shrink-0"
+                  onLocaleSwitch={() => setOpen(false)}
+                />
                 <RizzButton
                   href={RIZZ_CONTACT.phoneTel}
                   variant="outline"

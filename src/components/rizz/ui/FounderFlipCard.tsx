@@ -44,6 +44,7 @@ const CardBackground = ({ founder }: { founder: FounderCardData }) => {
   return (
     <>
       <img
+        key={founder.image}
         src={founder.image}
         alt=""
         aria-hidden
@@ -88,6 +89,7 @@ export const FounderFlipCard = ({ founder, className }: FounderFlipCardProps) =>
           {founder.backImage ? (
             <>
               <img
+                key={founder.backImage}
                 src={founder.backImage}
                 alt=""
                 aria-hidden
