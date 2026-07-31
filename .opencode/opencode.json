@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "Sanity": {
+      "type": "remote",
+      "url": "https://mcp.sanity.io",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer skKK5dxHlZhWy8YVcmttpjM1vnaW0ZDhSD0JmV8k1g9UqBQBaA754iSBNVN0m8VITw9lIzSEiuEb13lkkmahK1bgrCXQRY9pdJCwQ3litpll4opMfcgOWHc3T1QJg63pqpWqYnjNHp32ojL7Sto2JrYwMiu7D0EZUtvbb65zzClkAikoN9Ty"
+      }
+    }
+  }
+}

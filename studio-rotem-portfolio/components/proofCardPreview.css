@@ -1,0 +1,343 @@
+/* Matches ProofCard.tsx — keep in sync with the live site */
+
+.proof-card-preview-root {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: #030712;
+  padding: 24px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.proof-card-preview-note {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6f7a8c;
+}
+
+.proof-card-preview-card {
+  display: flex;
+  width: 300px;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.proof-card-preview-card--wide {
+  width: min(100%, 380px);
+}
+
+.proof-card-preview-header {
+  position: relative;
+  border-bottom: 1px solid #1d2b3e;
+}
+
+.proof-card-preview-header-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.proof-card-preview-header-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(3, 7, 18, 0.42) 100%),
+    linear-gradient(to top, rgba(3, 7, 18, 0.78) 0%, transparent 48%),
+    linear-gradient(to bottom, rgba(3, 7, 18, 0.35) 0%, transparent 28%);
+}
+
+.proof-card-preview-header-labels {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  padding-right: 72px;
+  text-align: left;
+}
+
+.proof-card-preview-client--on-media,
+.proof-card-preview-role--on-media {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.proof-card-preview-number {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  border-radius: 4px;
+  border: 1px solid #1d2b3e;
+  background: rgba(3, 7, 18, 0.82);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: #f5f7fa;
+}
+
+.proof-card-preview-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
+.proof-card-preview-client {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: #f5f7fa;
+}
+
+.proof-card-preview-role {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #187bff;
+}
+
+.proof-card-preview-headline {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #f5f7fa;
+}
+
+.proof-card-preview-title-accent-inline {
+  background: linear-gradient(to top, #da6122, #ea8423);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.proof-card-preview-checkpoints {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proof-card-preview-checkpoints li {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #a7b0c0;
+}
+
+.proof-card-preview-checkpoints li::before {
+  content: '✓';
+  color: #187bff;
+  flex-shrink: 0;
+}
+
+.proof-card-preview-media-item {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #07111f;
+}
+
+.proof-card-preview-media-item--header {
+  aspect-ratio: 16 / 10;
+}
+
+.proof-card-preview-media-item--bottom {
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  border: 1px solid #1d2b3e;
+}
+
+.proof-card-preview-media-item img,
+.proof-card-preview-media-item video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.proof-card-preview-play {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  padding-left: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.proof-card-preview-play--compact {
+  right: 8px;
+  bottom: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+}
+
+.proof-card-preview-stats {
+  display: grid;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+}
+
+.proof-card-preview-stat {
+  position: relative;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.proof-card-preview-stat + .proof-card-preview-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 52%;
+  width: 1px;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.proof-card-preview-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #f5f7fa;
+}
+
+.proof-card-preview-stat-label {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.proof-card-preview-quote {
+  position: relative;
+  margin: 0;
+  padding: 12px 14px 12px 18px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 106, 0, 0.28);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 106, 0, 0.1) 0%,
+    rgba(24, 123, 255, 0.07) 55%,
+    rgba(7, 17, 31, 0.85) 100%
+  );
+  box-shadow:
+    0 0 28px rgba(255, 106, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.proof-card-preview-quote::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14%;
+  bottom: 14%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(to bottom, #ea8423, #187bff);
+}
+
+.proof-card-preview-quote-mark {
+  display: block;
+  height: 18px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(to top, #da6122, #ea8423);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.proof-card-preview-quote p {
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #f5f7fa;
+}
+
+.proof-card-preview-bottom {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.proof-card-preview-bottom-quote-wrap {
+  width: 100%;
+}
+
+.proof-card-preview-bottom--split {
+  grid-template-columns: 1fr 1fr;
+}
+
+.proof-card-preview-bottom-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proof-card-preview-bottom-gallery-row {
+  display: flex;
+  gap: 8px;
+  min-height: 140px;
+}
+
+.proof-card-preview-bottom-gallery-stack {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proof-card-preview-media-item--main {
+  flex: 1.65;
+  min-width: 0;
+  min-height: 140px;
+  aspect-ratio: auto;
+}
+
+.proof-card-preview-media-item--secondary {
+  flex: 1;
+  min-height: 64px;
+  aspect-ratio: auto;
+}
+
+.proof-card-preview-empty {
+  color: #6f7a8c;
+  font-size: 13px;
+  line-height: 1.5;
+}

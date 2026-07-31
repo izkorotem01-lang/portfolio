@@ -1,0 +1,2794 @@
+import React, { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Lock,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  GripVertical,
+  Upload,
+  Video,
+  Folder,
+  FileVideo,
+  Download,
+} from "lucide-react";
+import { remoteConfig, storage } from "@/lib/firebase";
+import { fetchAndActivate, getValue } from "firebase/remote-config";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  getMetadata,
+} from "firebase/storage";
+import {
+  PortfolioCategory,
+  PortfolioVideo,
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getVideos,
+  createVideo,
+  updateVideo,
+  deleteVideo,
+  isYouTubeUrl,
+  getYouTubeVideoId,
+} from "@/lib/portfolioService";
+
+// Helper functions for localStorage authentication
+const ADMIN_SESSION_KEY = "admin_session";
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+const saveAdminSession = () => {
+  const sessionData = {
+    timestamp: Date.now(),
+    authenticated: true,
+  };
+  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
+};
+
+const checkAdminSession = (): boolean => {
+  try {
+    const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+    if (!sessionData) return false;
+
+    const parsed = JSON.parse(sessionData);
+    const now = Date.now();
+
+    // Check if session is still valid (within 24 hours)
+    if (now - parsed.timestamp < SESSION_DURATION) {
+      return true;
+    } else {
+      // Session expired, remove it
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking admin session:", error);
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+    return false;
+  }
+};
+
+const clearAdminSession = () => {
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+};
+
+const FREECONVERT_API_KEY_STORAGE_KEY = "freeconvert_api_key";
+const DEFAULT_COMPRESSION_TARGET_MB = "8";
+const FREECONVERT_API_BASE_URL = "https://api.freeconvert.com/v1";
+const FREECONVERT_POLL_INTERVAL_MS = 4000;
+const FREECONVERT_MAX_POLLS = 90;
+
+type FreeConvertTaskStatus =
+  | "created"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "canceled"
+  | "deleted";
+
+interface FreeConvertTask {
+  id: string;
+  name?: string;
+  operation?: string;
+  status?: FreeConvertTaskStatus;
+  expiresAt?: string;
+  result?: {
+    url?: string;
+    errorCode?: string;
+    msg?: string;
+    [key: string]: unknown;
+  };
+}
+
+interface FreeConvertJobResponse {
+  id: string;
+  status?: "created" | "processing" | "completed" | "failed";
+  tasks?: FreeConvertTask[];
+}
+
+interface CompressionPreview {
+  downloadUrl: string;
+  previewUrl: string;
+  blob: Blob;
+  sizeBytes: number;
+  expiresAt?: string;
+  jobId: string;
+}
+
+const sleep = (ms: number) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const freeConvertRequest = async <T,>(
+  apiKey: string,
+  path: string,
+  init?: RequestInit
+): Promise<T> => {
+  const response = await fetch(`${FREECONVERT_API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      ...(init?.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    let message = `FreeConvert request failed (${response.status})`;
+
+    try {
+      const errorBody = await response.json();
+      const apiMessage =
+        errorBody?.message ||
+        errorBody?.error ||
+        errorBody?.msg ||
+        errorBody?.result?.msg;
+
+      if (typeof apiMessage === "string" && apiMessage.trim()) {
+        message = apiMessage;
+      }
+    } catch {
+      // Ignore JSON parsing errors and keep the fallback message.
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<T>;
+};
+
+const getExportTaskFromJob = (job: FreeConvertJobResponse) => {
+  const tasks = Array.isArray(job.tasks) ? job.tasks : [];
+
+  return (
+    tasks.find((task) => task.operation === "export/url") ||
+    tasks.find((task) => task.name === "export") ||
+    null
+  );
+};
+
+const createCompressionJob = async (
+  apiKey: string,
+  sourceUrl: string,
+  fileName: string,
+  targetMb: number
+) => {
+  return freeConvertRequest<FreeConvertJobResponse>(apiKey, "/process/jobs", {
+    method: "POST",
+    body: JSON.stringify({
+      tasks: {
+        import: {
+          operation: "import/url",
+          url: sourceUrl,
+          filename: fileName,
+        },
+        compress: {
+          operation: "compress",
+          input: "import",
+          input_format: "mp4",
+          output_format: "mp4",
+          options: {
+            video_codec_compress: "h264",
+            compress_video: "by_size",
+            video_compress_max_filesize: targetMb,
+          },
+        },
+        export: {
+          operation: "export/url",
+          input: ["compress"],
+        },
+      },
+    }),
+  });
+};
+
+const waitForCompressionResult = async (apiKey: string, jobId: string) => {
+  for (let attempt = 0; attempt < FREECONVERT_MAX_POLLS; attempt += 1) {
+    const job = await freeConvertRequest<FreeConvertJobResponse>(
+      apiKey,
+      `/process/jobs/${jobId}`
+    );
+
+    const exportTask = getExportTaskFromJob(job);
+    const exportUrl = exportTask?.result?.url;
+
+    if (exportTask?.status === "completed" && typeof exportUrl === "string") {
+      return {
+        downloadUrl: exportUrl,
+        expiresAt: exportTask.expiresAt,
+      };
+    }
+
+    if (
+      job.status === "failed" ||
+      exportTask?.status === "failed" ||
+      exportTask?.status === "canceled"
+    ) {
+      const errorMessage =
+        exportTask?.result?.msg ||
+        exportTask?.result?.errorCode ||
+        "Compression failed in FreeConvert.";
+
+      throw new Error(errorMessage);
+    }
+
+    await sleep(FREECONVERT_POLL_INTERVAL_MS);
+  }
+
+  throw new Error("Compression timed out. Please try again.");
+};
+
+const Admin = () => {
+  const [password, setPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [remotePassword, setRemotePassword] = useState("");
+
+  // Category management state
+  const [categories, setCategories] = useState<PortfolioCategory[]>([]);
+  const [editingCategory, setEditingCategory] =
+    useState<PortfolioCategory | null>(null);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
+  // Video management state
+  const [selectedCategory, setSelectedCategory] =
+    useState<PortfolioCategory | null>(null);
+  const [videos, setVideos] = useState<PortfolioVideo[]>([]);
+  const [draggedVideo, setDraggedVideo] = useState<string | null>(null);
+  const [batchUploading, setBatchUploading] = useState(false);
+  const [sessionExpiry, setSessionExpiry] = useState<Date | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedVideoForThumbnail, setSelectedVideoForThumbnail] =
+    useState<PortfolioVideo | null>(null);
+  const [selectedVideoForCompression, setSelectedVideoForCompression] =
+    useState<PortfolioVideo | null>(null);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [isThumbnailDragActive, setIsThumbnailDragActive] = useState(false);
+  const [showVideoUrlForm, setShowVideoUrlForm] = useState(false);
+  const [freeConvertApiKey, setFreeConvertApiKey] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    return localStorage.getItem(FREECONVERT_API_KEY_STORAGE_KEY) || "";
+  });
+  const [compressionTargetMb, setCompressionTargetMb] = useState(
+    DEFAULT_COMPRESSION_TARGET_MB
+  );
+  const [compressionPreview, setCompressionPreview] =
+    useState<CompressionPreview | null>(null);
+  const [compressionOriginalSizeBytes, setCompressionOriginalSizeBytes] =
+    useState<number | null>(null);
+  const [compressionStatus, setCompressionStatus] = useState("");
+  const [compressionError, setCompressionError] = useState("");
+  const [compressionSubmitting, setCompressionSubmitting] = useState(false);
+  const [compressionKeeping, setCompressionKeeping] = useState(false);
+  const [categoryVideoDropTarget, setCategoryVideoDropTarget] = useState<
+    string | null
+  >(null);
+
+  // All Work section state
+  const [showAllWork, setShowAllWork] = useState(false);
+  const [allVideos, setAllVideos] = useState<PortfolioVideo[]>([]);
+  const [draggedAllWorkVideo, setDraggedAllWorkVideo] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    const fetchRemoteConfig = async () => {
+      try {
+        await fetchAndActivate(remoteConfig);
+        const adminPasswordValue = getValue(remoteConfig, "admin_password");
+        const passwordString = adminPasswordValue.asString();
+        setRemotePassword(passwordString);
+
+        // Debug: Log if password is empty (helps identify configuration issues)
+        if (!passwordString) {
+          console.warn(
+            "Admin password is empty in Remote Config. Please set it in Firebase Console > Remote Config"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching remote config:", error);
+        setError(
+          "Failed to load configuration. Please check Firebase Remote Config setup."
+        );
+      }
+    };
+
+    fetchRemoteConfig();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const trimmedApiKey = freeConvertApiKey.trim();
+
+    if (trimmedApiKey) {
+      localStorage.setItem(FREECONVERT_API_KEY_STORAGE_KEY, trimmedApiKey);
+    } else {
+      localStorage.removeItem(FREECONVERT_API_KEY_STORAGE_KEY);
+    }
+  }, [freeConvertApiKey]);
+
+  useEffect(() => {
+    return () => {
+      if (compressionPreview?.previewUrl) {
+        URL.revokeObjectURL(compressionPreview.previewUrl);
+      }
+    };
+  }, [compressionPreview]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (
+      !selectedVideoForCompression ||
+      !isFirebaseStorageUrl(selectedVideoForCompression.videoUrl)
+    ) {
+      setCompressionOriginalSizeBytes(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getMetadata(ref(storage, selectedVideoForCompression.videoUrl))
+      .then((metadata) => {
+        if (!isActive) {
+          return;
+        }
+
+        const size =
+          typeof metadata.size === "number"
+            ? metadata.size
+            : Number(metadata.size);
+
+        setCompressionOriginalSizeBytes(Number.isFinite(size) ? size : null);
+      })
+      .catch((metadataError) => {
+        console.error("Error loading original video metadata:", metadataError);
+        if (isActive) {
+          setCompressionOriginalSizeBytes(null);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedVideoForCompression]);
+
+  // Check for existing admin session on component mount
+  useEffect(() => {
+    const hasValidSession = checkAdminSession();
+    if (hasValidSession) {
+      setIsAuthenticated(true);
+      // Set session expiry time for display
+      const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+      if (sessionData) {
+        const parsed = JSON.parse(sessionData);
+        const expiryTime = new Date(parsed.timestamp + SESSION_DURATION);
+        setSessionExpiry(expiryTime);
+      }
+    }
+  }, []);
+
+  // Load categories when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCategories();
+    }
+  }, [isAuthenticated]);
+
+  // Periodic session check to auto-logout when expired
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const checkSession = () => {
+      const hasValidSession = checkAdminSession();
+      if (!hasValidSession) {
+        setIsAuthenticated(false);
+        setSessionExpiry(null);
+        setError("Session expired. Please log in again.");
+      }
+    };
+
+    // Check every 5 minutes
+    const interval = setInterval(checkSession, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await getCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+      setError("Failed to load categories");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Fetch latest remote config
+      console.log("Fetching remote config...");
+      const activated = await fetchAndActivate(remoteConfig);
+      console.log("Remote config activated:", activated);
+
+      const adminPasswordValue = getValue(remoteConfig, "admin_password");
+      const currentRemotePassword = adminPasswordValue.asString().trim();
+
+      // Check if remote password is configured
+      if (!currentRemotePassword) {
+        setError(
+          "Admin password not configured in Firebase Remote Config. Please set 'admin_password' in Firebase Console."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Compare passwords (trim both to avoid whitespace issues)
+      const enteredPassword = password.trim();
+
+      if (enteredPassword === currentRemotePassword) {
+        // Save session first
+        saveAdminSession();
+        const expiryTime = new Date(Date.now() + SESSION_DURATION);
+
+        // Update state
+        setSessionExpiry(expiryTime);
+        setError("");
+        setPassword(""); // Clear password field
+        setIsAuthenticated(true); // Set authenticated last to trigger re-render
+      } else {
+        setError("Invalid password. Please try again.");
+        setPassword("");
+      }
+    } catch (error) {
+      console.error("Error validating password:", error);
+      setError(
+        "Authentication failed. Please check your connection and try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Category management functions
+  const handleCreateCategory = async (categoryData: {
+    name: string;
+    nameHe: string;
+    order: number;
+  }) => {
+    try {
+      await createCategory(categoryData);
+      await loadCategories();
+      setShowCategoryForm(false);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      setError("Failed to create category");
+    }
+  };
+
+  const handleUpdateCategory = async (
+    id: string,
+    updates: Partial<PortfolioCategory>
+  ) => {
+    try {
+      await updateCategory(id, updates);
+      await loadCategories();
+      setEditingCategory(null);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      setError("Failed to update category");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this category?")) {
+      try {
+        await deleteCategory(id);
+        await loadCategories();
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        setError("Failed to delete category");
+      }
+    }
+  };
+
+  // Drag and drop functions
+  const handleDragStart = (e: React.DragEvent, categoryId: string) => {
+    setDraggedItem(categoryId);
+    setDraggedVideo(null); // Clear video drag state
+    setCategoryVideoDropTarget(null); // Clear drop target
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("dragType", "category");
+    e.dataTransfer.setData("categoryId", categoryId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  // Handle drag over category card (for video drops)
+  const handleCategoryDragOver = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check if we're dragging a video by checking the draggedVideo state
+    // or by checking dataTransfer types (for cross-element drags)
+    const dragType = e.dataTransfer.types.includes("text/plain")
+      ? e.dataTransfer.getData("dragType")
+      : draggedVideo
+      ? "video"
+      : draggedItem
+      ? "category"
+      : "";
+
+    // Only allow video drops on categories (not category reordering)
+    if (dragType === "video" && draggedVideo) {
+      e.dataTransfer.dropEffect = "move";
+      setCategoryVideoDropTarget(categoryId);
+    } else if (dragType === "category") {
+      // Allow category reordering
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  // Handle drag leave from category card
+  const handleCategoryDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the category card itself, not entering a child element
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setCategoryVideoDropTarget(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetCategoryId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check drag type - prefer checking state, then dataTransfer
+    const dragType = draggedVideo
+      ? "video"
+      : e.dataTransfer.types.includes("text/plain")
+      ? e.dataTransfer.getData("dragType")
+      : "category";
+
+    // Handle video drop on category
+    if (dragType === "video" && draggedVideo) {
+      const videoId = draggedVideo || e.dataTransfer.getData("videoId");
+      if (videoId) {
+        await handleVideoDropOnCategory(videoId, targetCategoryId);
+      }
+      setDraggedVideo(null);
+      setCategoryVideoDropTarget(null);
+      return;
+    }
+
+    // Handle category reordering
+    if (!draggedItem || draggedItem === targetCategoryId) {
+      setDraggedItem(null);
+      setCategoryVideoDropTarget(null);
+      return;
+    }
+
+    const draggedCategory = categories.find((c) => c.id === draggedItem);
+    const targetCategory = categories.find((c) => c.id === targetCategoryId);
+
+    if (!draggedCategory || !targetCategory) {
+      setDraggedItem(null);
+      setCategoryVideoDropTarget(null);
+      return;
+    }
+
+    try {
+      // Create a new array with updated orders
+      const sortedCategories = [...categories].sort(
+        (a, b) => a.order - b.order
+      );
+      const draggedIndex = sortedCategories.findIndex(
+        (c) => c.id === draggedItem
+      );
+      const targetIndex = sortedCategories.findIndex(
+        (c) => c.id === targetCategoryId
+      );
+
+      // Remove the dragged item from its current position
+      const [movedCategory] = sortedCategories.splice(draggedIndex, 1);
+
+      // Insert it at the target position
+      sortedCategories.splice(targetIndex, 0, movedCategory);
+
+      // Update all categories with new order values
+      const updatePromises = sortedCategories.map((category, index) =>
+        updateCategory(category.id, { order: index + 1 })
+      );
+
+      await Promise.all(updatePromises);
+      await loadCategories();
+    } catch (error) {
+      console.error("Error updating category order:", error);
+      setError("Failed to update category order");
+    }
+
+    setDraggedItem(null);
+    setCategoryVideoDropTarget(null);
+  };
+
+  // Video management functions
+  const loadVideos = async (categoryId: string) => {
+    try {
+      const allVideos = await getVideos();
+      const categoryVideos = allVideos.filter(
+        (video) => video.categoryId === categoryId
+      );
+      setVideos(categoryVideos);
+    } catch (error) {
+      console.error("Error loading videos:", error);
+      setError("Failed to load videos");
+    }
+  };
+
+  const loadAllVideos = async () => {
+    try {
+      const allVideosData = await getVideos();
+      // Sort by a separate "allWorkOrder" field if it exists, otherwise by order
+      const sortedVideos = allVideosData.sort((a, b) => {
+        const aOrder =
+          (a as any).allWorkOrder !== undefined
+            ? (a as any).allWorkOrder
+            : a.order;
+        const bOrder =
+          (b as any).allWorkOrder !== undefined
+            ? (b as any).allWorkOrder
+            : b.order;
+        return aOrder - bOrder;
+      });
+      setAllVideos(sortedVideos);
+    } catch (error) {
+      console.error("Error loading all videos:", error);
+      setError("Failed to load all videos");
+    }
+  };
+
+  const handleCategorySelect = async (category: PortfolioCategory) => {
+    setSelectedCategory(category);
+    setEditingCategory(null);
+    setShowCategoryForm(false);
+    await loadVideos(category.id);
+  };
+
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    return await getDownloadURL(snapshot.ref);
+  };
+
+  const uploadBlob = async (
+    blob: Blob,
+    path: string,
+    contentType: string = "video/mp4"
+  ): Promise<string> => {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, blob, {
+      contentType,
+    });
+
+    return getDownloadURL(snapshot.ref);
+  };
+
+  const isManagedStorageUrl = (fileUrl?: string) => {
+    return isFirebaseStorageUrl(fileUrl);
+  };
+
+  const deleteStorageFileIfManaged = async (fileUrl?: string) => {
+    if (!isManagedStorageUrl(fileUrl)) {
+      return;
+    }
+
+    try {
+      await deleteObject(ref(storage, fileUrl));
+    } catch (error: any) {
+      if (error?.code === "storage/object-not-found") {
+        return;
+      }
+
+      throw error;
+    }
+  };
+
+  const handleBatchVideoUpload = async (files: File[], categoryId: string) => {
+    setBatchUploading(true);
+    try {
+      const uploadPromises = files.map(async (file, index) => {
+        const fileName = `videos/${Date.now()}-${index}-${file.name}`;
+        const videoUrl = await uploadFile(file, fileName);
+
+        // Extract name from filename
+        const { title, titleHe } = extractNameFromFileName(file.name);
+
+        const videoData: Omit<
+          PortfolioVideo,
+          "id" | "createdAt" | "updatedAt"
+        > = {
+          categoryId,
+          title,
+          titleHe,
+          subtitle: "",
+          subtitleHe: "",
+          videoUrl,
+          thumbnailUrl: "",
+          autoplayInBackground: false,
+          order: videos.length + index + 1,
+        };
+
+        return createVideo(videoData);
+      });
+
+      await Promise.all(uploadPromises);
+      await loadVideos(categoryId);
+    } catch (error) {
+      console.error("Error in batch upload:", error);
+      setError("Failed to upload videos");
+    } finally {
+      setBatchUploading(false);
+    }
+  };
+
+  const handleDeleteVideo = async (video: PortfolioVideo) => {
+    if (window.confirm("Are you sure you want to delete this video?")) {
+      try {
+        await Promise.all([
+          deleteStorageFileIfManaged(video.videoUrl),
+          deleteStorageFileIfManaged(video.thumbnailUrl),
+        ]);
+
+        await deleteVideo(video.id);
+
+        if (selectedVideoForThumbnail?.id === video.id) {
+          setSelectedVideoForThumbnail(null);
+        }
+
+        setAllVideos((currentVideos) =>
+          currentVideos.filter((currentVideo) => currentVideo.id !== video.id)
+        );
+
+        if (selectedCategory) {
+          await loadVideos(selectedCategory.id);
+        }
+      } catch (error) {
+        console.error("Error deleting video:", error);
+        setError("Failed to delete video and storage files");
+      }
+    }
+  };
+
+  const clearCompressionPreview = () => {
+    setCompressionPreview((currentPreview) => {
+      if (currentPreview?.previewUrl) {
+        URL.revokeObjectURL(currentPreview.previewUrl);
+      }
+
+      return null;
+    });
+  };
+
+  const closeCompressionModal = () => {
+    clearCompressionPreview();
+    setSelectedVideoForCompression(null);
+    setCompressionError("");
+    setCompressionStatus("");
+    setCompressionSubmitting(false);
+    setCompressionKeeping(false);
+    setCompressionOriginalSizeBytes(null);
+  };
+
+  const openCompressionModal = (video: PortfolioVideo) => {
+    if (!isFirebaseStorageUrl(video.videoUrl)) {
+      setError("Compression is only available for Firebase-hosted videos.");
+      return;
+    }
+
+    clearCompressionPreview();
+    setCompressionError("");
+    setCompressionStatus("");
+    setCompressionOriginalSizeBytes(null);
+    setCompressionTargetMb(DEFAULT_COMPRESSION_TARGET_MB);
+    setSelectedVideoForCompression(video);
+  };
+
+  const handleCompressVideo = async () => {
+    if (!selectedVideoForCompression) {
+      return;
+    }
+
+    const apiKey = freeConvertApiKey.trim();
+    const targetMb = Number(compressionTargetMb);
+
+    if (!apiKey) {
+      setCompressionError("Enter your FreeConvert API key first.");
+      return;
+    }
+
+    if (!Number.isFinite(targetMb) || targetMb <= 0) {
+      setCompressionError("Enter a valid target size in MB.");
+      return;
+    }
+
+    setCompressionSubmitting(true);
+    setCompressionError("");
+    setCompressionStatus("Submitting compression job...");
+    clearCompressionPreview();
+
+    try {
+      const fileName = getVideoFileName(selectedVideoForCompression.videoUrl);
+      const createdJob = await createCompressionJob(
+        apiKey,
+        selectedVideoForCompression.videoUrl,
+        fileName,
+        targetMb
+      );
+
+      setCompressionStatus("FreeConvert is compressing the video...");
+
+      const jobId = createdJob.id;
+      if (!jobId) {
+        throw new Error("FreeConvert did not return a job id.");
+      }
+
+      const result = await waitForCompressionResult(apiKey, jobId);
+
+      setCompressionStatus("Downloading compressed preview...");
+
+      const previewResponse = await fetch(result.downloadUrl);
+      if (!previewResponse.ok) {
+        throw new Error("Failed to download compressed preview.");
+      }
+
+      const previewBlob = await previewResponse.blob();
+      const previewUrl = URL.createObjectURL(previewBlob);
+
+      setCompressionPreview({
+        downloadUrl: result.downloadUrl,
+        previewUrl,
+        blob: previewBlob,
+        sizeBytes: previewBlob.size,
+        expiresAt: result.expiresAt,
+        jobId,
+      });
+      setCompressionStatus("Compression ready. Review the result below.");
+    } catch (compressionRequestError) {
+      console.error("Error compressing video:", compressionRequestError);
+      setCompressionError(
+        compressionRequestError instanceof Error
+          ? compressionRequestError.message
+          : "Compression failed. Please try again."
+      );
+      setCompressionStatus("");
+    } finally {
+      setCompressionSubmitting(false);
+    }
+  };
+
+  const handleKeepCompressedVideo = async () => {
+    if (!selectedVideoForCompression || !compressionPreview) {
+      return;
+    }
+
+    setCompressionKeeping(true);
+    setCompressionError("");
+    setCompressionStatus("Uploading compressed video to Firebase...");
+
+    try {
+      const fileName = getVideoFileName(selectedVideoForCompression.videoUrl);
+      const uploadPath = `videos/${Date.now()}-compressed-${fileName}`;
+      const contentType = compressionPreview.blob.type || "video/mp4";
+      const newVideoUrl = await uploadBlob(
+        compressionPreview.blob,
+        uploadPath,
+        contentType
+      );
+
+      await updateVideo(selectedVideoForCompression.id, { videoUrl: newVideoUrl });
+
+      try {
+        await deleteStorageFileIfManaged(selectedVideoForCompression.videoUrl);
+      } catch (storageDeleteError) {
+        console.error("Error deleting old storage file:", storageDeleteError);
+      }
+
+      setVideos((currentVideos) =>
+        currentVideos.map((video) =>
+          video.id === selectedVideoForCompression.id
+            ? { ...video, videoUrl: newVideoUrl }
+            : video
+        )
+      );
+      setAllVideos((currentVideos) =>
+        currentVideos.map((video) =>
+          video.id === selectedVideoForCompression.id
+            ? { ...video, videoUrl: newVideoUrl }
+            : video
+        )
+      );
+
+      if (selectedVideoForThumbnail?.id === selectedVideoForCompression.id) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          videoUrl: newVideoUrl,
+        });
+      }
+
+      closeCompressionModal();
+    } catch (keepCompressedVideoError) {
+      console.error("Error keeping compressed video:", keepCompressedVideoError);
+      setCompressionError(
+        keepCompressedVideoError instanceof Error
+          ? keepCompressedVideoError.message
+          : "Failed to replace the video."
+      );
+      setCompressionStatus("");
+    } finally {
+      setCompressionKeeping(false);
+    }
+  };
+
+  const handleAddVideoByUrl = async (
+    url: string,
+    title: string,
+    titleHe: string
+  ) => {
+    if (!selectedCategory) return;
+
+    try {
+      // Validate URL
+      if (!url || !url.trim()) {
+        setError("Please enter a valid URL");
+        return;
+      }
+
+      // Check if it's a YouTube URL
+      const isYouTube = isYouTubeUrl(url);
+      if (!isYouTube) {
+        setError(
+          "Currently only YouTube URLs are supported. Please use a YouTube link."
+        );
+        return;
+      }
+
+      // Extract video ID for title if not provided
+      const videoId = getYouTubeVideoId(url);
+      const finalTitle = title.trim() || `YouTube Video ${videoId || ""}`;
+      const finalTitleHe = titleHe.trim() || finalTitle;
+
+      const videoData: Omit<PortfolioVideo, "id" | "createdAt" | "updatedAt"> =
+        {
+          categoryId: selectedCategory.id,
+          title: finalTitle,
+          titleHe: finalTitleHe,
+          subtitle: "",
+          subtitleHe: "",
+          videoUrl: url.trim(),
+          thumbnailUrl: "",
+          autoplayInBackground: false,
+          order: videos.length + 1,
+        };
+
+      await createVideo(videoData);
+      await loadVideos(selectedCategory.id);
+      setShowVideoUrlForm(false);
+      setError("");
+    } catch (error) {
+      console.error("Error adding video by URL:", error);
+      setError("Failed to add video. Please check the URL and try again.");
+    }
+  };
+
+  const handleThumbnailUpload = async (file: File, videoId: string) => {
+    setThumbnailUploading(true);
+    try {
+      const fileName = `thumbnails/${Date.now()}-${file.name}`;
+      const thumbnailUrl = await uploadFile(file, fileName);
+
+      await updateVideo(videoId, { thumbnailUrl });
+
+      // Refresh videos
+      if (selectedCategory) {
+        await loadVideos(selectedCategory.id);
+      }
+
+      // Update selected video
+      if (selectedVideoForThumbnail) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          thumbnailUrl,
+        });
+      }
+
+      setError("");
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      setError("Failed to upload thumbnail");
+    } finally {
+      setThumbnailUploading(false);
+    }
+  };
+
+  const handleRemoveThumbnail = async (videoId: string) => {
+    try {
+      // Remove thumbnail by setting thumbnailUrl to empty string
+      await updateVideo(videoId, { thumbnailUrl: "" });
+
+      // Refresh videos
+      if (selectedCategory) {
+        await loadVideos(selectedCategory.id);
+      }
+
+      // Update selected video
+      if (selectedVideoForThumbnail) {
+        setSelectedVideoForThumbnail({
+          ...selectedVideoForThumbnail,
+          thumbnailUrl: "",
+        });
+      }
+
+      setError("");
+    } catch (error) {
+      console.error("Error removing thumbnail:", error);
+      setError("Failed to remove thumbnail");
+    }
+  };
+
+  const handleAutoplayPreferenceChange = async (
+    video: PortfolioVideo,
+    autoplayInBackground: boolean
+  ) => {
+    try {
+      await updateVideo(video.id, { autoplayInBackground });
+
+      setVideos((currentVideos) =>
+        currentVideos.map((currentVideo) =>
+          currentVideo.id === video.id
+            ? { ...currentVideo, autoplayInBackground }
+            : currentVideo
+        )
+      );
+
+      setAllVideos((currentVideos) =>
+        currentVideos.map((currentVideo) =>
+          currentVideo.id === video.id
+            ? { ...currentVideo, autoplayInBackground }
+            : currentVideo
+        )
+      );
+
+      setSelectedVideoForThumbnail((currentVideo) =>
+        currentVideo?.id === video.id
+          ? { ...currentVideo, autoplayInBackground }
+          : currentVideo
+      );
+
+      setError("");
+    } catch (error) {
+      console.error("Error updating autoplay preference:", error);
+      setError("Failed to update autoplay preference");
+    }
+  };
+
+  // Video drag and drop functions
+  const handleVideoDragStart = (e: React.DragEvent, videoId: string) => {
+    setDraggedVideo(videoId);
+    setDraggedItem(null); // Clear category drag state
+    setCategoryVideoDropTarget(null); // Clear drop target
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("dragType", "video");
+    e.dataTransfer.setData("videoId", videoId);
+  };
+
+  const handleVideoDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleVideoDrop = async (e: React.DragEvent, targetVideoId: string) => {
+    e.preventDefault();
+
+    if (!draggedVideo || draggedVideo === targetVideoId || !selectedCategory) {
+      setDraggedVideo(null);
+      return;
+    }
+
+    try {
+      const sortedVideos = [...videos].sort((a, b) => a.order - b.order);
+      const draggedIndex = sortedVideos.findIndex((v) => v.id === draggedVideo);
+      const targetIndex = sortedVideos.findIndex((v) => v.id === targetVideoId);
+
+      const [movedVideo] = sortedVideos.splice(draggedIndex, 1);
+      sortedVideos.splice(targetIndex, 0, movedVideo);
+
+      const updatePromises = sortedVideos.map((video, index) =>
+        updateVideo(video.id, { order: index + 1 })
+      );
+
+      await Promise.all(updatePromises);
+      await loadVideos(selectedCategory.id);
+    } catch (error) {
+      console.error("Error updating video order:", error);
+      setError("Failed to update video order");
+    }
+
+    setDraggedVideo(null);
+  };
+
+  // Handle video drop on category card
+  const handleVideoDropOnCategory = async (
+    videoId: string,
+    targetCategoryId: string
+  ) => {
+    try {
+      // Get all videos to find the dragged video and target category videos
+      const allVideos = await getVideos();
+      const videoToMove = allVideos.find((v) => v.id === videoId);
+
+      if (!videoToMove) {
+        setError("Video not found");
+        return;
+      }
+
+      // Don't move if already in the target category
+      if (videoToMove.categoryId === targetCategoryId) {
+        return;
+      }
+
+      // Get videos in the target category to determine new order
+      const targetCategoryVideos = allVideos.filter(
+        (v) => v.categoryId === targetCategoryId
+      );
+      const newOrder =
+        targetCategoryVideos.length > 0
+          ? Math.max(...targetCategoryVideos.map((v) => v.order)) + 1
+          : 1;
+
+      // Update the video's category and order
+      await updateVideo(videoId, {
+        categoryId: targetCategoryId,
+        order: newOrder,
+      });
+
+      // Reload videos if the source or target category is currently selected
+      if (selectedCategory) {
+        if (
+          selectedCategory.id === videoToMove.categoryId ||
+          selectedCategory.id === targetCategoryId
+        ) {
+          await loadVideos(selectedCategory.id);
+        }
+      }
+
+      // Reload all videos for the "All Work" section
+      await loadAllVideos();
+
+      setError(""); // Clear any previous errors
+    } catch (error) {
+      console.error("Error moving video to category:", error);
+      setError("Failed to move video to category");
+    }
+  };
+
+  // All Work drag and drop functions
+  const handleAllWorkDragStart = (e: React.DragEvent, videoId: string) => {
+    setDraggedAllWorkVideo(videoId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleAllWorkDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleAllWorkDrop = async (
+    e: React.DragEvent,
+    targetVideoId: string
+  ) => {
+    e.preventDefault();
+
+    if (!draggedAllWorkVideo || draggedAllWorkVideo === targetVideoId) {
+      setDraggedAllWorkVideo(null);
+      return;
+    }
+
+    try {
+      // Sort all videos by current allWorkOrder (or order as fallback) before reordering
+      const sortedVideos = [...allVideos].sort((a, b) => {
+        const aOrder =
+          (a as any).allWorkOrder !== undefined
+            ? (a as any).allWorkOrder
+            : a.order;
+        const bOrder =
+          (b as any).allWorkOrder !== undefined
+            ? (b as any).allWorkOrder
+            : b.order;
+        return aOrder - bOrder;
+      });
+
+      const draggedIndex = sortedVideos.findIndex(
+        (v) => v.id === draggedAllWorkVideo
+      );
+      const targetIndex = sortedVideos.findIndex((v) => v.id === targetVideoId);
+
+      if (draggedIndex === -1 || targetIndex === -1) {
+        setError("Could not find video to reorder");
+        setDraggedAllWorkVideo(null);
+        return;
+      }
+
+      const [movedVideo] = sortedVideos.splice(draggedIndex, 1);
+      sortedVideos.splice(targetIndex, 0, movedVideo);
+
+      // Update allWorkOrder for all videos
+      const updatePromises = sortedVideos.map((video, index) => {
+        const newOrder = index + 1;
+        console.log(
+          `Updating video ${video.id} (${getDisplayTitle(
+            video
+          )}) to allWorkOrder: ${newOrder}`
+        );
+        return updateVideo(video.id, { allWorkOrder: newOrder });
+      });
+
+      const results = await Promise.all(updatePromises);
+      console.log("All videos updated successfully:", results);
+
+      // Reload all videos to see the changes
+      await loadAllVideos();
+
+      // Show success message
+      setError(""); // Clear any previous errors
+      alert(
+        `Video order updated successfully! Refresh the portfolio page to see changes.`
+      );
+    } catch (error) {
+      console.error("Error updating all work video order:", error);
+      setError("Failed to update all work video order. Please try again.");
+    }
+
+    setDraggedAllWorkVideo(null);
+  };
+
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Category Management
+              </h1>
+              <p className="text-gray-300">Manage your portfolio categories</p>
+              {sessionExpiry && (
+                <p className="text-sm text-gray-400 mt-1">
+                  Session expires: {sessionExpiry.toLocaleString()}
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={() => {
+                setIsAuthenticated(false);
+                clearAdminSession(); // Clear session from localStorage
+                setSessionExpiry(null);
+              }}
+              variant="outline"
+              className="text-white border-gray-600 hover:bg-gray-700"
+            >
+              Logout
+            </Button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
+              {error}
+            </div>
+          )}
+
+          {/* All Work Section */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">All Work</h2>
+                <p className="text-gray-300">
+                  Manage global video alignment across all categories
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setShowAllWork(!showAllWork);
+                  if (!showAllWork) {
+                    loadAllVideos();
+                  }
+                }}
+                className={
+                  showAllWork
+                    ? "bg-orange-600 hover:bg-orange-700"
+                    : "bg-orange-600 hover:bg-orange-700"
+                }
+              >
+                {showAllWork ? "Hide All Work" : "Show All Work"}
+              </Button>
+            </div>
+
+            {/* All Work Videos Grid */}
+            {showAllWork && (
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => e.preventDefault()}
+              >
+                {allVideos.map((video) => {
+                  const category = categories.find(
+                    (c) => c.id === video.categoryId
+                  );
+                  return (
+                    <AllWorkVideoCard
+                      key={video.id}
+                      video={video}
+                      category={category}
+                      onDragStart={(e) => handleAllWorkDragStart(e, video.id)}
+                      onDragOver={handleAllWorkDragOver}
+                      onDrop={(e) => handleAllWorkDrop(e, video.id)}
+                      isDragging={draggedAllWorkVideo === video.id}
+                      isDropTarget={
+                        draggedAllWorkVideo && draggedAllWorkVideo !== video.id
+                      }
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* All Work Drag Instructions */}
+            {draggedAllWorkVideo && showAllWork && (
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                Drag to reorder all work videos
+              </div>
+            )}
+          </div>
+
+          {/* Add Category Button */}
+          <div className="mb-6">
+            <Button
+              onClick={() => setShowCategoryForm(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Category
+            </Button>
+          </div>
+
+          {/* Video Management Section - Above Categories */}
+          {selectedCategory && !editingCategory && !showCategoryForm && (
+            <div className="mb-12">
+              <div className="mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Videos in "{selectedCategory.name}"
+                  </h2>
+                  <p className="text-gray-300">
+                    Manage videos for this category
+                  </p>
+                </div>
+              </div>
+
+              {/* Hidden file input for immediate folder selection */}
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length > 0) {
+                    await handleBatchVideoUpload(files, selectedCategory.id);
+                  }
+                }}
+                className="hidden"
+                id="video-upload-input"
+              />
+
+              {/* Upload Progress - Always visible when uploading */}
+              {batchUploading && (
+                <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400"></div>
+                      <span className="text-blue-200 font-medium">
+                        Uploading videos...
+                      </span>
+                    </div>
+                    <div className="text-blue-300 text-sm">
+                      Please wait while videos are being processed
+                    </div>
+                  </div>
+                  <div className="mt-3 bg-blue-800/30 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-blue-400 h-full animate-pulse rounded-full"
+                      style={{ width: "100%" }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Add Video by URL Button */}
+              <div className="mb-4 flex gap-2">
+                <Button
+                  onClick={() => setShowVideoUrlForm(!showVideoUrlForm)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={batchUploading}
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  {showVideoUrlForm
+                    ? "Cancel URL Input"
+                    : "Add Video by URL (YouTube)"}
+                </Button>
+              </div>
+
+              {/* Video URL Form */}
+              {showVideoUrlForm && (
+                <VideoUrlForm
+                  onSubmit={handleAddVideoByUrl}
+                  onCancel={() => setShowVideoUrlForm(false)}
+                />
+              )}
+
+              {/* Upload Area - Always visible for adding more videos */}
+              <div
+                className={`text-center py-8 rounded-lg border-2 border-dashed transition-colors group mb-6 ${
+                  batchUploading
+                    ? "cursor-not-allowed opacity-50 border-gray-600 bg-gray-800"
+                    : "cursor-pointer border-purple-400 bg-purple-900/10 hover:border-purple-500 hover:bg-purple-900/20"
+                }`}
+                onClick={() => {
+                  if (!batchUploading) {
+                    const fileInput = document.getElementById(
+                      "video-upload-input"
+                    ) as HTMLInputElement;
+                    fileInput?.click();
+                  }
+                }}
+                onDragEnter={(e) => {
+                  if (!batchUploading) {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }
+                }}
+                onDragLeave={(e) => {
+                  if (!batchUploading) {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                  }
+                }}
+                onDragOver={(e) => {
+                  if (!batchUploading) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "copy";
+                  }
+                }}
+                onDrop={async (e) => {
+                  if (!batchUploading) {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    const files = Array.from(e.dataTransfer.files).filter(
+                      (file) => file.type.startsWith("video/")
+                    );
+                    if (files.length > 0) {
+                      await handleBatchVideoUpload(files, selectedCategory.id);
+                    }
+                  }
+                }}
+              >
+                <Upload
+                  className={`w-8 h-8 mx-auto mb-3 transition-colors ${
+                    batchUploading
+                      ? "text-gray-500"
+                      : isDragOver
+                      ? "text-purple-400"
+                      : "text-purple-400 group-hover:text-purple-300"
+                  }`}
+                />
+                <div
+                  className={`text-lg font-medium mb-2 transition-colors ${
+                    batchUploading
+                      ? "text-gray-500"
+                      : isDragOver
+                      ? "text-white"
+                      : "text-purple-300 group-hover:text-white"
+                  }`}
+                >
+                  {batchUploading
+                    ? "Uploading..."
+                    : isDragOver
+                    ? "Drop videos here"
+                    : "Add More Videos"}
+                </div>
+                <p
+                  className={`text-sm transition-colors ${
+                    batchUploading
+                      ? "text-gray-600"
+                      : isDragOver
+                      ? "text-purple-200"
+                      : "text-gray-400 group-hover:text-purple-200"
+                  }`}
+                >
+                  {batchUploading
+                    ? "Please wait for current upload to complete"
+                    : isDragOver
+                    ? "Release to upload videos"
+                    : "Click here or drag and drop video files"}
+                </p>
+              </div>
+
+              {/* Videos Grid - Show when videos exist OR when uploading */}
+              {(videos.length > 0 || batchUploading) && (
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => e.preventDefault()}
+                >
+                  {videos.map((video) => (
+                    <VideoCard
+                      key={video.id}
+                      video={video}
+                      onDelete={() => handleDeleteVideo(video)}
+                      onCompress={() => openCompressionModal(video)}
+                      onSelect={() => setSelectedVideoForThumbnail(video)}
+                      onAutoplayChange={(checked) =>
+                        handleAutoplayPreferenceChange(video, checked)
+                      }
+                      onDragStart={(e) => handleVideoDragStart(e, video.id)}
+                      onDragOver={handleVideoDragOver}
+                      onDrop={(e) => handleVideoDrop(e, video.id)}
+                      isDragging={draggedVideo === video.id}
+                      isDropTarget={draggedVideo && draggedVideo !== video.id}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Video Drag Instructions */}
+              {draggedVideo && !categoryVideoDropTarget && (
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                  Drag to reorder videos or drop on a category to move
+                </div>
+              )}
+              {draggedVideo && categoryVideoDropTarget && (
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+                  Drop to move video to this category
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Category Form */}
+          {(showCategoryForm || editingCategory) && (
+            <CategoryForm
+              onSubmit={
+                editingCategory
+                  ? (data) => handleUpdateCategory(editingCategory.id, data)
+                  : handleCreateCategory
+              }
+              onCancel={() => {
+                setShowCategoryForm(false);
+                setEditingCategory(null);
+              }}
+              initialData={editingCategory}
+            />
+          )}
+
+          {/* Categories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                onEdit={() => setEditingCategory(category)}
+                onDelete={() => handleDeleteCategory(category.id)}
+                onSelect={() => handleCategorySelect(category)}
+                onDragStart={(e) => handleDragStart(e, category.id)}
+                onDragOver={(e) => handleCategoryDragOver(e, category.id)}
+                onDragLeave={handleCategoryDragLeave}
+                onDrop={(e) => handleDrop(e, category.id)}
+                isDragging={draggedItem === category.id}
+                isDropTarget={
+                  (draggedItem && draggedItem !== category.id) ||
+                  (draggedVideo && categoryVideoDropTarget === category.id)
+                }
+                isVideoDropTarget={
+                  draggedVideo && categoryVideoDropTarget === category.id
+                }
+                isSelected={selectedCategory?.id === category.id}
+              />
+            ))}
+          </div>
+
+          {/* Drag and Drop Instructions */}
+          {draggedItem && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+              Drag to reorder categories
+            </div>
+          )}
+
+          {categories.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-lg mb-4">
+                No categories yet
+              </div>
+              <p className="text-gray-500">
+                Click "Add Category" to create your first category
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Upload Panel */}
+        {selectedVideoForThumbnail && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Upload Thumbnail
+                  </h2>
+                  <p className="text-gray-300">
+                    {getDisplayTitle(selectedVideoForThumbnail)}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setSelectedVideoForThumbnail(null)}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+
+              {/* Current Thumbnail Preview */}
+              {selectedVideoForThumbnail.thumbnailUrl && (
+                <div
+                  className={`mb-6 rounded-lg ${
+                    isThumbnailDragActive ? "ring-2 ring-blue-400" : ""
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!thumbnailUploading) setIsThumbnailDragActive(true);
+                  }}
+                  onDragLeave={() => setIsThumbnailDragActive(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setIsThumbnailDragActive(false);
+                    if (thumbnailUploading) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file && file.type.startsWith("image/")) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
+                    }
+                  }}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Current Thumbnail
+                    </label>
+                    <Button
+                      onClick={() =>
+                        handleRemoveThumbnail(selectedVideoForThumbnail.id)
+                      }
+                      variant="destructive"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
+                  <img
+                    src={selectedVideoForThumbnail.thumbnailUrl}
+                    alt="Current thumbnail"
+                    className="w-full rounded-lg max-h-64 object-cover cursor-pointer"
+                    onClick={() => {
+                      if (!thumbnailUploading) {
+                        document.getElementById("thumbnail-upload")?.click();
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Video Preview */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Video Preview
+                </label>
+                <video
+                  src={selectedVideoForThumbnail.videoUrl}
+                  className="w-full rounded-lg"
+                  controls
+                />
+              </div>
+
+              {/* Thumbnail Upload */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Upload New Thumbnail
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
+                    }
+                  }}
+                  className="hidden"
+                  id="thumbnail-upload"
+                  disabled={thumbnailUploading}
+                />
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    thumbnailUploading
+                      ? "border-gray-600 bg-gray-700/50 cursor-not-allowed"
+                      : isThumbnailDragActive
+                      ? "border-blue-400 bg-blue-900/10"
+                      : "border-blue-500 hover:border-blue-400 hover:bg-blue-900/10"
+                  }`}
+                  onClick={() => {
+                    if (!thumbnailUploading) {
+                      document.getElementById("thumbnail-upload")?.click();
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!thumbnailUploading) setIsThumbnailDragActive(true);
+                  }}
+                  onDragLeave={() => setIsThumbnailDragActive(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setIsThumbnailDragActive(false);
+                    if (thumbnailUploading) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file && file.type.startsWith("image/")) {
+                      await handleThumbnailUpload(
+                        file,
+                        selectedVideoForThumbnail.id
+                      );
+                    }
+                  }}
+                >
+                  {thumbnailUploading ? (
+                    <div className="flex items-center justify-center space-x-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                      <span className="text-blue-200">Uploading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 mx-auto mb-3 text-blue-400" />
+                      <p className="text-blue-300 font-medium mb-1">
+                        Click to upload thumbnail
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        PNG, JPG, WebP (recommended: 16:9 ratio)
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <Button
+                  onClick={() => setSelectedVideoForThumbnail(null)}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedVideoForCompression && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6 gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Compress Video
+                  </h2>
+                  <p className="text-gray-300">
+                    {getDisplayTitle(selectedVideoForCompression)}
+                  </p>
+                </div>
+                <Button
+                  onClick={closeCompressionModal}
+                  variant="ghost"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        FreeConvert API Key
+                      </label>
+                      <Input
+                        type="password"
+                        value={freeConvertApiKey}
+                        onChange={(e) => setFreeConvertApiKey(e.target.value)}
+                        placeholder="Paste your FreeConvert API key"
+                        className="bg-gray-700 border-gray-500 text-white"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Stored only in this browser. Frontend-only testing exposes
+                        the key in the admin session.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Target Size (MB)
+                      </label>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="0.5"
+                        value={compressionTargetMb}
+                        onChange={(e) => setCompressionTargetMb(e.target.value)}
+                        className="bg-gray-700 border-gray-500 text-white"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Start around 5-8 MB for most portfolio clips.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-400">Original Size</div>
+                        <div className="text-white font-medium">
+                          {formatFileSize(compressionOriginalSizeBytes)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Target</div>
+                        <div className="text-white font-medium">
+                          {compressionTargetMb || "-"} MB
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Compressed Size</div>
+                        <div className="text-white font-medium">
+                          {compressionPreview
+                            ? formatFileSize(compressionPreview.sizeBytes)
+                            : "Not ready"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {compressionStatus && (
+                    <div className="rounded-lg border border-blue-500/40 bg-blue-900/20 px-4 py-3 text-sm text-blue-200">
+                      {compressionStatus}
+                    </div>
+                  )}
+
+                  {compressionError && (
+                    <div className="rounded-lg border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-200">
+                      {compressionError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-4 text-sm text-gray-300">
+                  <div className="font-medium text-white mb-2">How it works</div>
+                  <p className="mb-2">
+                    Compress sends the current Firebase video URL to FreeConvert,
+                    downloads the compressed result back into the admin page, and
+                    lets you review it.
+                  </p>
+                  <p>
+                    Keep uploads that compressed file back to Firebase and swaps
+                    the video URL automatically. No manual reupload step.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                <Button
+                  onClick={handleCompressVideo}
+                  disabled={compressionSubmitting || compressionKeeping}
+                  className="bg-violet-600 hover:bg-violet-700"
+                >
+                  {compressionSubmitting
+                    ? "Compressing..."
+                    : compressionPreview
+                    ? "Compress Again"
+                    : "Compress"}
+                </Button>
+                {compressionPreview && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-emerald-500 text-emerald-300 hover:bg-emerald-900/40"
+                  >
+                    <a
+                      href={compressionPreview.previewUrl}
+                      download={`compressed-${getVideoFileName(
+                        selectedVideoForCompression.videoUrl
+                      )}`}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Preview
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Original Video
+                  </label>
+                  <video
+                    src={selectedVideoForCompression.videoUrl}
+                    className="w-full rounded-lg bg-black"
+                    controls
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Compressed Preview
+                  </label>
+                  {compressionPreview ? (
+                    <>
+                      <video
+                        src={compressionPreview.previewUrl}
+                        className="w-full rounded-lg bg-black mb-2"
+                        controls
+                      />
+                      <p className="text-xs text-gray-400">
+                        {compressionPreview.expiresAt
+                          ? `Temporary FreeConvert result available until ${new Date(
+                              compressionPreview.expiresAt
+                            ).toLocaleString()}`
+                          : "Temporary FreeConvert preview loaded into the admin panel."}
+                      </p>
+                    </>
+                  ) : (
+                    <div className="h-full min-h-64 rounded-lg border border-dashed border-gray-600 bg-gray-900/40 flex items-center justify-center text-sm text-gray-500 px-6 text-center">
+                      Run compression to review the output here.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={closeCompressionModal}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  disabled={compressionKeeping}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleKeepCompressedVideo}
+                  disabled={!compressionPreview || compressionSubmitting || compressionKeeping}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {compressionKeeping ? "Replacing..." : "Keep and Replace"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="w-full max-w-md">
+        <div className="bg-gray-800 rounded-lg p-8 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Admin Access</h1>
+            <p className="text-gray-400 mt-2">Enter password to continue</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Input
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500"
+                required
+              />
+              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            >
+              {isLoading ? "Authenticating..." : "Access Admin Panel"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Category Card Component
+const CategoryCard = ({
+  category,
+  onEdit,
+  onDelete,
+  onSelect,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
+  isDropTarget,
+  isVideoDropTarget,
+  isSelected,
+}: {
+  category: PortfolioCategory;
+  onEdit: () => void;
+  onDelete: () => void;
+  onSelect: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  isDragging: boolean;
+  isDropTarget?: boolean;
+  isVideoDropTarget?: boolean;
+  isSelected?: boolean;
+}) => {
+  return (
+    <div
+      className={`bg-gray-800 rounded-lg p-6 border-2 transition-all duration-200 cursor-pointer hover:bg-gray-700 ${
+        isDragging
+          ? "border-blue-500 opacity-50"
+          : isVideoDropTarget
+          ? "border-green-500 bg-green-900/30 ring-2 ring-green-400"
+          : isDropTarget
+          ? "border-green-500 bg-green-900/20"
+          : isSelected
+          ? "border-purple-500 bg-purple-900/20"
+          : "border-transparent hover:border-gray-600"
+      }`}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={onSelect}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-white mb-2">{category.name}</h3>
+          <p className="text-gray-300 text-sm mb-2">{category.nameHe}</p>
+          <div className="flex items-center text-gray-400 text-xs">
+            <span className="bg-gray-700 px-2 py-1 rounded">
+              Order: {category.order}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col space-y-2">
+          <div className="cursor-grab active:cursor-grabbing">
+            <GripVertical className="w-5 h-5 text-gray-400 hover:text-gray-300" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          size="sm"
+          variant="outline"
+          className="text-blue-400 border-blue-400 hover:bg-blue-900"
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          size="sm"
+          variant="outline"
+          className="text-red-400 border-red-400 hover:bg-red-900"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Video URL Form Component
+const VideoUrlForm = ({
+  onSubmit,
+  onCancel,
+}: {
+  onSubmit: (url: string, title: string, titleHe: string) => void;
+  onCancel: () => void;
+}) => {
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [titleHe, setTitleHe] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(url, title, titleHe);
+    // Reset form
+    setUrl("");
+    setTitle("");
+    setTitleHe("");
+  };
+
+  return (
+    <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-600">
+      <h3 className="text-xl font-bold text-white mb-4">Add Video by URL</h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            YouTube URL *
+          </label>
+          <Input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="bg-gray-700 border-gray-500 text-white"
+            required
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Paste your YouTube video URL here (supports youtube.com and youtu.be
+            links)
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Title (English)
+            </label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Video title in English (optional)"
+              className="bg-gray-700 border-gray-500 text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Title (Hebrew)
+            </label>
+            <Input
+              value={titleHe}
+              onChange={(e) => setTitleHe(e.target.value)}
+              placeholder="Video title in Hebrew (optional)"
+              className="bg-gray-700 border-gray-500 text-white"
+            />
+          </div>
+        </div>
+        <div className="flex space-x-4">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Save className="w-4 h-4 mr-2" />
+            Add Video
+          </Button>
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="outline"
+            className="border-gray-500 text-gray-300"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// Category Form Component
+const CategoryForm = ({
+  onSubmit,
+  onCancel,
+  initialData,
+}: {
+  onSubmit: (data: { name: string; nameHe: string; order: number }) => void;
+  onCancel: () => void;
+  initialData?: PortfolioCategory;
+}) => {
+  const [formData, setFormData] = useState({
+    name: initialData?.name || "",
+    nameHe: initialData?.nameHe || "",
+    order: initialData?.order || 0,
+  });
+
+  // Update form data when initialData changes (for editing)
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        nameHe: initialData.nameHe || "",
+        order: initialData.order || 0,
+      });
+    } else {
+      setFormData({
+        name: "",
+        nameHe: "",
+        order: 0,
+      });
+    }
+  }, [initialData]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-600">
+      <h3 className="text-xl font-bold text-white mb-4">
+        {initialData ? "Edit Category" : "Add New Category"}
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              English Name
+            </label>
+            <Input
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="Category name in English"
+              className="bg-gray-700 border-gray-500 text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Hebrew Name
+            </label>
+            <Input
+              value={formData.nameHe}
+              onChange={(e) =>
+                setFormData({ ...formData, nameHe: e.target.value })
+              }
+              placeholder="Category name in Hebrew"
+              className="bg-gray-700 border-gray-500 text-white"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Order
+          </label>
+          <Input
+            type="number"
+            value={formData.order}
+            onChange={(e) =>
+              setFormData({ ...formData, order: parseInt(e.target.value) || 0 })
+            }
+            placeholder="Display order"
+            className="bg-gray-700 border-gray-500 text-white"
+            required
+          />
+        </div>
+        <div className="flex space-x-4">
+          <Button type="submit" className="bg-green-600 hover:bg-green-700">
+            <Save className="w-4 h-4 mr-2" />
+            {initialData ? "Update" : "Create"}
+          </Button>
+          <Button
+            type="button"
+            onClick={onCancel}
+            variant="outline"
+            className="border-gray-500 text-gray-300"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// Helper functions for video display
+const isFirebaseStorageUrl = (fileUrl?: string) => {
+  if (!fileUrl?.trim()) return false;
+
+  return (
+    fileUrl.startsWith("gs://") ||
+    fileUrl.includes("firebasestorage.googleapis.com") ||
+    fileUrl.includes(".firebasestorage.app")
+  );
+};
+
+const getVideoFileName = (url: string) => {
+  try {
+    const parsedUrl = new URL(url);
+    const storageObjectMatch = parsedUrl.pathname.match(/\/o\/(.+)$/);
+
+    if (storageObjectMatch?.[1]) {
+      const storageObjectPath = decodeURIComponent(storageObjectMatch[1]);
+      return storageObjectPath.split("/").pop() || "video.mp4";
+    }
+
+    return decodeURIComponent(
+      parsedUrl.pathname.split("/").pop() || "video.mp4"
+    );
+  } catch {
+    try {
+      const fallbackParts = decodeURIComponent(url).split("/");
+      return fallbackParts[fallbackParts.length - 1].split("?")[0] || "video.mp4";
+    } catch {
+      return "video.mp4";
+    }
+  }
+};
+
+const formatFileSize = (bytes: number | null) => {
+  if (bytes === null || !Number.isFinite(bytes) || bytes <= 0) {
+    return "Size unavailable";
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const extractNameFromFileName = (
+  fileName: string
+): { title: string; titleHe: string } => {
+  try {
+    // Remove file extension
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+
+    // Decode URL encoding if present
+    const decodedName = decodeURIComponent(nameWithoutExt);
+
+    // Remove timestamp prefix if present (format: timestamp-index-filename)
+    const nameWithoutTimestamp = decodedName.replace(/^\d+-\d+-/, "");
+
+    // Split by common separators and clean up
+    const cleanName = nameWithoutTimestamp
+      .replace(/[-_]/g, " ") // Replace dashes and underscores with spaces
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
+      .trim();
+
+    // Capitalize first letter of each word
+    const title = cleanName
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
+    // For Hebrew title, we'll use the same for now (can be enhanced later)
+    const titleHe = title;
+
+    return { title, titleHe };
+  } catch (error) {
+    console.error("Error extracting name from filename:", error);
+    // Fallback to original filename
+    const fallback = fileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+    return { title: fallback, titleHe: fallback };
+  }
+};
+
+const getDisplayTitle = (video: PortfolioVideo) => {
+  // If title exists and is not empty, use it
+  if (video.title && video.title.trim()) {
+    return video.title;
+  }
+
+  // Otherwise, try to extract from filename
+  try {
+    const fileName = getVideoFileName(video.videoUrl);
+    const { title } = extractNameFromFileName(fileName);
+    return title;
+  } catch {
+    return "Untitled Video";
+  }
+};
+
+const getDisplayTitleHe = (video: PortfolioVideo) => {
+  // If Hebrew title exists and is not empty, use it
+  if (video.titleHe && video.titleHe.trim()) {
+    return video.titleHe;
+  }
+
+  // Otherwise, try to extract from filename
+  try {
+    const fileName = getVideoFileName(video.videoUrl);
+    const { titleHe } = extractNameFromFileName(fileName);
+    return titleHe;
+  } catch {
+    return "";
+  }
+};
+
+// Video Card Component
+const VideoCard = ({
+  video,
+  onDelete,
+  onCompress,
+  onSelect,
+  onAutoplayChange,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragging,
+  isDropTarget,
+}: {
+  video: PortfolioVideo;
+  onDelete: () => void;
+  onCompress: () => void;
+  onSelect: () => void;
+  onAutoplayChange: (checked: boolean) => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  isDragging: boolean;
+  isDropTarget?: boolean;
+}) => {
+  const hasThumbnail = video.thumbnailUrl && video.thumbnailUrl.trim() !== "";
+  const autoplayInBackground = !!video.autoplayInBackground;
+  const isStorageHostedVideo = isFirebaseStorageUrl(video.videoUrl);
+  const [fileSizeBytes, setFileSizeBytes] = React.useState<number | null>(null);
+  const [isFileSizeLoading, setIsFileSizeLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    let isActive = true;
+
+    if (!isStorageHostedVideo) {
+      setFileSizeBytes(null);
+      setIsFileSizeLoading(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsFileSizeLoading(true);
+
+    getMetadata(ref(storage, video.videoUrl))
+      .then((metadata) => {
+        if (!isActive) return;
+
+        const size =
+          typeof metadata.size === "number"
+            ? metadata.size
+            : Number(metadata.size);
+
+        setFileSizeBytes(Number.isFinite(size) ? size : null);
+      })
+      .catch((error) => {
+        console.error("Error loading video metadata:", error);
+        if (isActive) {
+          setFileSizeBytes(null);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsFileSizeLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isStorageHostedVideo, video.videoUrl]);
+
+  const fileSizeLabel = isStorageHostedVideo
+    ? isFileSizeLoading
+      ? "Checking size..."
+      : formatFileSize(fileSizeBytes)
+    : "External video";
+  const downloadLabel = isStorageHostedVideo ? "Download" : "Open";
+
+  return (
+    <div
+      className={`bg-gray-700 rounded-lg p-4 border-2 transition-all duration-200 cursor-move hover:bg-gray-600 ${
+        isDragging
+          ? "border-purple-500 opacity-50"
+          : isDropTarget
+          ? "border-green-500 bg-green-900/20"
+          : "border-transparent hover:border-gray-500"
+      }`}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      {/* Thumbnail Preview */}
+      {hasThumbnail && (
+        <div className="mb-3 -mx-4 -mt-4">
+          <img
+            src={video.thumbnailUrl}
+            alt="Thumbnail"
+            className="w-full h-24 object-cover rounded-t-lg"
+          />
+        </div>
+      )}
+
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <FileVideo className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-medium text-white truncate">
+              {getDisplayTitle(video)}
+            </h4>
+            {getDisplayTitleHe(video) && (
+              <p className="text-xs text-gray-300 truncate">
+                {getDisplayTitleHe(video)}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="cursor-grab active:cursor-grabbing flex-shrink-0">
+          <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-300" />
+        </div>
+      </div>
+
+      <div className="space-y-1 mb-3">
+        <p className="text-xs text-gray-400 truncate">Size: {fileSizeLabel}</p>
+        {video.subtitle && (
+          <p className="text-xs text-gray-400 truncate">{video.subtitle}</p>
+        )}
+        {video.subtitleHe && (
+          <p className="text-xs text-gray-400 truncate">{video.subtitleHe}</p>
+        )}
+      </div>
+
+      {/* Thumbnail Status Badge */}
+      <div className="mb-3">
+        <span
+          className={`text-xs px-2 py-1 rounded ${
+            hasThumbnail
+              ? "bg-green-900/30 text-green-400 border border-green-500/30"
+              : "bg-yellow-900/30 text-yellow-400 border border-yellow-500/30"
+          }`}
+        >
+          {hasThumbnail ? "✓ Has Thumbnail" : "⚠ No Thumbnail"}
+        </span>
+      </div>
+
+      <label
+        className="mb-3 flex items-start gap-2 rounded border border-gray-600 bg-gray-800/70 p-2"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox
+          checked={autoplayInBackground}
+          onCheckedChange={(checked) => onAutoplayChange(checked === true)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="mt-0.5 border-gray-400 data-[state=checked]:bg-blue-500"
+        />
+        <div className="min-w-0">
+          <div className="text-xs font-medium text-white">
+            Autoplay in background
+          </div>
+          <div className="text-[11px] text-gray-400">
+            When off, the thumbnail is shown first if one exists.
+          </div>
+        </div>
+      </label>
+
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-xs text-gray-500 bg-gray-600 px-2 py-1 rounded">
+          #{video.order}
+        </span>
+        <div className="flex gap-2">
+          {isStorageHostedVideo && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCompress();
+              }}
+              size="sm"
+              variant="outline"
+              className="text-violet-400 border-violet-400 hover:bg-violet-900 h-6 px-2"
+            >
+              <span className="text-xs">Compress</span>
+            </Button>
+          )}
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="text-emerald-400 border-emerald-400 hover:bg-emerald-900 h-6 px-2"
+          >
+            <a
+              href={video.videoUrl}
+              download={isStorageHostedVideo ? getVideoFileName(video.videoUrl) : undefined}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Download className="w-3 h-3 mr-1" />
+              <span className="text-xs">{downloadLabel}</span>
+            </a>
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            size="sm"
+            variant="outline"
+            className="text-blue-400 border-blue-400 hover:bg-blue-900 h-6 px-2"
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            <span className="text-xs">Thumbnail</span>
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            size="sm"
+            variant="outline"
+            className="text-red-400 border-red-400 hover:bg-red-900 h-6 w-6 p-0"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// All Work Video Card Component
+const AllWorkVideoCard = ({
+  video,
+  category,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragging,
+  isDropTarget,
+}: {
+  video: PortfolioVideo;
+  category?: PortfolioCategory;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  isDragging: boolean;
+  isDropTarget?: boolean;
+}) => {
+  return (
+    <div
+      className={`bg-orange-900/20 border-2 rounded-lg p-4 transition-all duration-200 cursor-move hover:bg-orange-900/30 ${
+        isDragging
+          ? "border-orange-400 opacity-50"
+          : isDropTarget
+          ? "border-green-500 bg-green-900/20"
+          : "border-orange-500 hover:border-orange-400"
+      }`}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <FileVideo className="w-4 h-4 text-orange-400" />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-medium text-white truncate">
+              {getDisplayTitle(video)}
+            </h4>
+            {getDisplayTitleHe(video) && (
+              <p className="text-xs text-orange-200 truncate">
+                {getDisplayTitleHe(video)}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="w-4 h-4 text-orange-400 hover:text-orange-300" />
+        </div>
+      </div>
+
+      <div className="space-y-1 mb-3">
+        {category && (
+          <p className="text-xs text-orange-300 truncate">
+            Category: {category.name}
+          </p>
+        )}
+        {video.subtitle && (
+          <p className="text-xs text-orange-200 truncate">{video.subtitle}</p>
+        )}
+        {video.subtitleHe && (
+          <p className="text-xs text-orange-200 truncate">{video.subtitleHe}</p>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-orange-400 bg-orange-800/30 px-2 py-1 rounded">
+          All Work #{video.allWorkOrder || video.order}
+        </span>
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-orange-300">
+            Category #{video.order}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
