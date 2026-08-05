@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import rotemAndShaked from "@/assets/rotem_and_shaked.png";
 import rotemAndShakedHb from "@/assets/rotem_and_shaked_hb.png";
 import { RizzButton } from "@/components/rizz/ui/RizzButton";
+import { GradientOrb } from "@/components/rizz/ui/GradientOrb";
 import { LanguageSwitcher } from "@/components/rizz/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -10,6 +12,10 @@ import { useSiteContent } from "@/contexts/SiteContentContext";
 
 export const HeroSection = () => {
   const { dir } = useLanguage();
+  // The glow is positioned in percentages of the wrapper, which has no width
+  // until the image decodes. Tracking the loaded src (rather than a boolean)
+  // keeps it hidden again if the language switch swaps in an uncached image.
+  const [loadedImageSrc, setLoadedImageSrc] = useState<string | null>(null);
   const { rizzPage, requirePick, pick } = useSiteContent();
   if (!rizzPage) throw new Error("Missing required Sanity document: rizzPage");
   const hero = rizzPage.hero;
@@ -27,10 +33,19 @@ export const HeroSection = () => {
       ? (hero.heroImageRtlUrl ?? rotemAndShakedHb)
       : (hero.heroImageLtrUrl ?? rotemAndShaked);
 
-  const heroImageClassName = cn(
-    "absolute top-0 h-full w-auto max-w-none",
-    dir === "rtl" ? "left-0 hero-section-image--rtl" : "right-0",
+  const heroImageWrapperClassName = cn(
+    "absolute top-0 h-full w-max hero-kenburns",
+    dir === "rtl" ? "left-0 hero-kenburns--rtl" : "right-0",
   );
+
+  // Centred on the glowing play button. Percentages resolve against the wrapper,
+  // which hugs the rendered image, so the glow tracks it at any viewport size.
+  // Both locales currently point at the same asset; a mirrored RTL upload would
+  // need its own coordinates here. Screen blending makes the orange radiate over
+  // the dark artwork instead of muddying it; the section's isolation:isolate
+  // keeps the blend from leaking into other layers.
+  const heroGlowClassName =
+    "absolute hero-glow-pulse mix-blend-screen left-[51%] top-[46%] -translate-x-1/2 -translate-y-1/2";
 
   return (
     <section
@@ -46,20 +61,34 @@ export const HeroSection = () => {
           src={heroImageSrc}
           alt=""
           aria-hidden="true"
-          className="absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2"
+          className="hero-kenburns-mobile absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#030712] from-10% to-transparent" />
       </div>
 
-      {/* Desktop: image behind content (unchanged) */}
+      {/* Desktop: image behind content */}
       <div className="absolute inset-0 z-0 hidden overflow-hidden bg-[#030712] md:block">
-        <img
-          key={heroImageSrc}
-          src={heroImageSrc}
-          alt=""
-          aria-hidden="true"
-          className={cn("hero-section-image", heroImageClassName)}
-        />
+        <div className={heroImageWrapperClassName}>
+          <img
+            key={heroImageSrc}
+            src={heroImageSrc}
+            alt=""
+            aria-hidden="true"
+            onLoad={() => setLoadedImageSrc(heroImageSrc)}
+            className={cn(
+              "hero-section-image block h-full w-auto max-w-none",
+              dir === "rtl" && "hero-section-image--rtl",
+            )}
+          />
+          {loadedImageSrc === heroImageSrc && (
+            <GradientOrb
+              color="orange"
+              size="600px"
+              opacity={0.35}
+              className={heroGlowClassName}
+            />
+          )}
+        </div>
         <div
           className={cn(
             "pointer-events-none absolute inset-y-0 w-[min(48%,40rem)] from-[#030712] from-70% to-transparent",

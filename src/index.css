@@ -488,6 +488,66 @@
   height: min(48vh, 26rem);
 }
 
+/* Hero ambient motion — compositor-only (transform / opacity) */
+.hero-kenburns {
+  transform-origin: right center;
+  will-change: transform;
+  animation: hero-kenburns-drift 25s ease-in-out infinite alternate;
+}
+
+.hero-kenburns--rtl {
+  transform-origin: left center;
+}
+
+@keyframes hero-kenburns-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
+}
+
+/* The mobile keyframe carries the -translate-x-1/2 centering, which an animated
+   transform would otherwise override. */
+.hero-kenburns-mobile {
+  transform-origin: bottom center;
+  will-change: transform;
+  animation: hero-kenburns-drift-mobile 25s ease-in-out infinite alternate;
+}
+
+@keyframes hero-kenburns-drift-mobile {
+  from {
+    transform: translateX(-50%) scale(1);
+  }
+  to {
+    transform: translateX(-50%) scale(1.02);
+  }
+}
+
+.hero-glow-pulse {
+  will-change: opacity;
+  animation: hero-glow-pulse 6s ease-in-out infinite;
+}
+
+@keyframes hero-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns,
+  .hero-kenburns-mobile,
+  .hero-glow-pulse {
+    animation: none;
+  }
+}
+
 /* Final CTA — founder portraits at section edges, feet on footer line */
 .cta-founder-image {
   height: auto;
