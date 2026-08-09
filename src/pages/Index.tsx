@@ -1,6 +1,7 @@
 import { RizzNav } from "@/components/rizz/layout/RizzNav";
 import { RizzFooter } from "@/components/rizz/layout/RizzFooter";
 import { CornerShine } from "@/components/rizz/ui/CornerShine";
+import { LightStreaksOverlay } from "@/components/rizz/ui/LightStreaksOverlay";
 import { RizzSeo } from "@/components/rizz/RizzSeo";
 import { HeroSection } from "@/components/rizz/sections/HeroSection";
 import { ProofSection } from "@/components/rizz/sections/ProofSection";
@@ -18,8 +19,9 @@ const Index = () => {
     <>
       <RizzSeo />
       <CornerShine />
+      <LightStreaksOverlay />
       <RizzNav />
-      <main className="relative z-10">
+      <main className="relative z-10 bg-transparent">
         <HeroSection />
         <ProofSection />
         <HowWeGetYouThereSection />

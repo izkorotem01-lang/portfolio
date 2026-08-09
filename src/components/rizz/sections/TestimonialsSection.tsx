@@ -54,7 +54,7 @@ export const TestimonialsSection = () => {
     `${count} ${requirePick(copy.starsAriaSuffix, "rizzPage.testimonials.starsAriaSuffix")}`;
 
   return (
-    <section id="testimonials" className="overflow-x-hidden bg-[#030712] py-28">
+    <section id="testimonials" className="overflow-x-hidden bg-transparent py-28">
       <div className="mx-auto mb-12 max-w-[1440px] px-6 text-center md:mb-14">
         <SectionWrapper>
           <EyebrowLabel className="w-full text-center">

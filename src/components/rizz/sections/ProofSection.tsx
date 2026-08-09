@@ -26,7 +26,7 @@ export const ProofSection = () => {
   }, [proofCards]);
 
   return (
-    <section id="proof" className="pt-32 pb-20 bg-[#030712] overflow-x-hidden">
+    <section id="proof" className="pt-32 pb-20 bg-transparent overflow-x-hidden">
       <SectionWrapper className="text-center px-8 mb-10">
         <EyebrowLabel className="justify-center text-center w-full tracking-[0.4em]">
           {requirePick(copy.eyebrow, "rizzPage.proof.eyebrow")}

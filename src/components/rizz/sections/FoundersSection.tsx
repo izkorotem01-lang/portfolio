@@ -17,7 +17,7 @@ export const FoundersSection = () => {
   if (cards.length === 0) throw new Error("Missing required rizzPage.founders.cards");
 
   return (
-    <section id="about" className="py-28 px-6 bg-[#030712]" dir={dir}>
+    <section id="about" className="py-28 px-6 bg-transparent" dir={dir}>
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-14 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-16">
           <SectionWrapper>
