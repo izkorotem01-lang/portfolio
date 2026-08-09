@@ -24,7 +24,7 @@ export const FinalCtaSection = () => {
   return (
     <section
       id="contact"
-      className="relative bg-[#030712] overflow-x-hidden lg:min-h-[clamp(42rem,90vh,72rem)]"
+      className="relative bg-transparent overflow-x-hidden lg:min-h-[clamp(42rem,90vh,72rem)]"
     >
       <div className="pointer-events-none hidden lg:block">
         <img

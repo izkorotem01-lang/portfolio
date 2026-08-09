@@ -867,6 +867,188 @@
   );
 }
 
+/* ── Ambient light streaks ─────────────────────────────
+   Rendered behind <main> (z-index 10): main is an explicitly positioned,
+   positive-z-index box, so its entire painted subtree — including every
+   section's inner cards, text and badges — is atomically ordered above this
+   layer regardless of whether those inner elements set their own background.
+   The six section wrappers had their opaque bg-[#030712] changed to
+   bg-transparent so this layer shows through their padding and gaps instead
+   of being fully hidden behind them. mix-blend-mode: screen keeps the streaks
+   additive against the #030712 page backdrop. Falloff comes from stacked
+   gradients rather than filter: blur() so each layer rasterises once and only
+   ever composites.
+   Note: RizzFooter is intentionally excluded from the transparent-background
+   pass — it sits outside <main> with no explicit position/z-index, so per
+   CSS stacking rules it paints BELOW a z-index:0 fixed layer regardless of
+   DOM order. Making it transparent would put the streaks visually on top of
+   the footer's text, the opposite of the intended effect, unless the footer
+   is also promoted with its own relative + z-index. */
+.light-streaks {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.light-streak {
+  --streak-w: 50vw;
+  --streak-h: 48px;
+  --streak-peak: 1;
+  position: absolute;
+  left: 0;
+  width: var(--streak-w);
+  height: var(--streak-h);
+  background-repeat: no-repeat;
+  background-position:
+    50% 50%,
+    50% 50%;
+  /* First layer is the 2px hot core, second is the surrounding bloom. */
+  background-size:
+    100% 2px,
+    100% 100%;
+  will-change: transform, opacity;
+}
+
+/* Core alpha stays at or below 0.40: at 0.38 the composite over #030712 holds
+   roughly 8.6:1 against #f5f7fa body text, where 0.75 would drop it to 2.5:1. */
+.light-streak--blue {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(190, 220, 255, 0.38) 50%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 52% 50% at 50% 50%,
+      rgba(24, 123, 255, 0.16) 0%,
+      rgba(24, 123, 255, 0.05) 45%,
+      transparent 72%
+    );
+}
+
+.light-streak--orange {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 200, 150, 0.34) 50%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 52% 50% at 50% 50%,
+      rgba(255, 106, 0, 0.15) 0%,
+      rgba(255, 106, 0, 0.05) 45%,
+      transparent 72%
+    );
+}
+
+/* Position and flash run as two independent animations on each element
+   (comma-separated, one per property, no shared keyframe). Their durations
+   are deliberately non-commensurate (11 vs 14, 13 vs 12, 15 vs 16, 9 vs 11),
+   so the phase at which the flash happens to peak keeps drifting relative to
+   the drift position — a single streak's burst point migrates across
+   left/center/right over successive cycles (full resync only every 99–240s)
+   instead of always flashing at one fixed x-coordinate. The flash envelope
+   (in streak-flash below) puts the full-brightness plateau at 25% of each
+   flash duration, landing every streak's plateau in the 2.5s–4s range. */
+.light-streak--1 {
+  --streak-w: 30vw;
+  --streak-h: 48px;
+  --streak-peak: 1;
+  top: 14%;
+  animation:
+    streak-drift-ltr 11s linear -3s infinite,
+    streak-flash 14s ease-in-out -2s infinite;
+}
+
+.light-streak--2 {
+  --streak-w: 32vw;
+  --streak-h: 64px;
+  --streak-peak: 0.7;
+  top: 34%;
+  animation:
+    streak-drift-rtl 13s linear -6s infinite,
+    streak-flash 12s ease-in-out -5s infinite;
+}
+
+.light-streak--3 {
+  --streak-w: 26vw;
+  --streak-h: 56px;
+  --streak-peak: 0.85;
+  top: 58%;
+  animation:
+    streak-drift-ltr 15s linear -9s infinite,
+    streak-flash 16s ease-in-out -3s infinite;
+}
+
+.light-streak--4 {
+  --streak-w: 22vw;
+  --streak-h: 40px;
+  --streak-peak: 0.55;
+  top: 80%;
+  animation:
+    streak-drift-rtl 9s linear -2s infinite,
+    streak-flash 11s ease-in-out -1s infinite;
+}
+
+/* Transform-only: travels the full exact-fit path (-width to 100vw), clearing
+   the viewport at both ends, so overflow safety is unchanged from earlier. */
+@keyframes streak-drift-ltr {
+  0% {
+    transform: translate3d(calc(-1 * var(--streak-w, 50vw)), 0, 0);
+  }
+  100% {
+    transform: translate3d(100vw, 0, 0);
+  }
+}
+
+@keyframes streak-drift-rtl {
+  0% {
+    transform: translate3d(100vw, 0, 0);
+  }
+  100% {
+    transform: translate3d(calc(-1 * var(--streak-w, 50vw)), 0, 0);
+  }
+}
+
+/* Opacity-only, shared by every streak: 15% fade-in ramp, 25%-50% plateau at
+   full peak, 65% fade-out ramp, invisible the rest of the cycle. Runs on a
+   duration independent of the drift animation above (see comment on the
+   .light-streak--N rules) so the flash migrates across the drift path
+   instead of always landing at the same screen position. */
+@keyframes streak-flash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0;
+  }
+  25% {
+    opacity: var(--streak-peak, 0.8);
+  }
+  50% {
+    opacity: var(--streak-peak, 0.8);
+  }
+  65% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Mobile keeps streaks 1 and 3 — one of each colour, vertically separated. */
+@media (max-width: 767px) {
+  .light-streak--2,
+  .light-streak--4 {
+    display: none;
+  }
+}
+
 /* Founder flip cards */
 .founder-flip-card {
   display: block;
@@ -1271,5 +1453,13 @@
   * {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* The blanket 0.01ms above does not stop an infinite animation, it samples a
+     near-random point of the cycle every frame. For a full-viewport layer that
+     strobes, so the streaks are removed outright instead. */
+  .light-streak {
+    animation: none !important;
+    display: none;
   }
 }

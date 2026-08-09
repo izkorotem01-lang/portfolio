@@ -378,7 +378,7 @@ export const HowWeGetYouThereSection = () => {
   return (
     <section
       id="how-we-get-you-there"
-      className="relative overflow-hidden bg-[#030712] pb-20 md:pb-28"
+      className="relative overflow-hidden bg-transparent pb-20 md:pb-28"
       dir={dir}
     >
       <GradientOrb color="blue" className="-left-32 top-10" size="420px" opacity={0.1} />

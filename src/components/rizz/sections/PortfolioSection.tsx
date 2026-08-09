@@ -168,7 +168,7 @@ export const PortfolioSection = () => {
   };
 
   return (
-    <section id="work" className="overflow-x-hidden bg-[#030712] px-6 py-28">
+    <section id="work" className="overflow-x-hidden bg-transparent px-6 py-28">
       <div className="mx-auto max-w-[1440px]">
         <SectionWrapper className="text-center">
           <EyebrowLabel className="w-full text-center">
