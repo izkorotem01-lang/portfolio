@@ -1,3 +1,5 @@
+@import "./styles/mobile-video-optimizations.css";
+
 /* Local Assistant Font */
 @font-face {
   font-family: "Assistant";
@@ -39,8 +41,6 @@
   font-style: normal;
   font-display: swap;
 }
-
-@import "./mobile-video-optimizations.css";
 
 @tailwind base;
 @tailwind components;
