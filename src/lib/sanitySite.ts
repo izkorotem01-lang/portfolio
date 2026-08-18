@@ -51,6 +51,18 @@ export type ProofCard = {
   order: number;
 };
 
+/** Position in the "How we work" branching tree. Both branches run in parallel. */
+export type ProcessTier = "root" | "creative" | "tech" | "canopy";
+
+export type ProcessStep = {
+  step?: string;
+  tier?: ProcessTier;
+  title?: LocaleString;
+  icon?: string;
+  description?: LocaleText;
+  laneLabel?: LocaleString;
+};
+
 export type RizzNavLink = { label?: LocaleString; href?: string };
 
 export type RizzSocialLink = {
@@ -90,12 +102,7 @@ export type RizzPageContent = {
   };
   howWeGetYouThere?: {
     howWeWork?: LocaleString;
-    process?: Array<{
-      step?: string;
-      title?: LocaleString;
-      icon?: string;
-      description?: LocaleText;
-    }>;
+    process?: ProcessStep[];
   };
   portfolio?: {
     eyebrow?: LocaleString;
@@ -219,7 +226,7 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
   proof{eyebrow, titlePrimary, titleAccent, subtitle},
   howWeGetYouThere{
     howWeWork,
-    process[]{step, title, icon, description}
+    process[]{step, title, icon, description, tier, laneLabel}
   },
   portfolio{eyebrow, titlePrimary, titleAccent, allVideos, categoriesAria, emptyState, untitled},
   testimonials{eyebrow, titleLine1, titleAccent, starsAriaSuffix},

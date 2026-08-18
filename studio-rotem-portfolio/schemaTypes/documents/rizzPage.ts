@@ -138,9 +138,33 @@ export const rizzPage = defineType({
               type: 'object',
               fields: [
                 defineField({name: 'step', title: 'Step number', type: 'string'}),
+                defineField({
+                  name: 'tier',
+                  title: 'Tier',
+                  type: 'string',
+                  description:
+                    'Position in the branching tree. Exactly one of each value must exist or the section will not render.',
+                  options: {
+                    list: [
+                      {title: 'Root — Diagnose & Strategize', value: 'root'},
+                      {title: 'Branch — Creative Engine', value: 'creative'},
+                      {title: 'Branch — Tech Engine', value: 'tech'},
+                      {title: 'Canopy — Optimize & Scale', value: 'canopy'},
+                    ],
+                    layout: 'radio',
+                  },
+                  validation: (Rule) => Rule.required(),
+                }),
                 defineField({name: 'title', title: 'Title', type: 'localeString'}),
                 defineField({name: 'icon', title: 'Icon key', type: 'string'}),
                 defineField({name: 'description', title: 'Description', type: 'localeText'}),
+                defineField({
+                  name: 'laneLabel',
+                  title: 'Lane label (mobile only)',
+                  type: 'localeString',
+                  description:
+                    'Shown above branch cards on mobile only, where the connecting lines are hidden.',
+                }),
               ],
             }),
           ],

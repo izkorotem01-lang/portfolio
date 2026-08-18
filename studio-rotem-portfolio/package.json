@@ -22,6 +22,7 @@
     "start": "sanity start",
     "schema:deploy": "sanity schema deploy",
     "migrate:sections": "node scripts/migrate-sections.mjs",
+    "migrate:process": "node scripts/migrate-process-tiers.mjs",
     "seed": "node scripts/seed-content.mjs",
     "seed:proof": "node scripts/seed-proof-cards.mjs",
     "seed:reviews": "node scripts/seed-reviews.mjs",

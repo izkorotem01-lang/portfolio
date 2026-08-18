@@ -79,7 +79,7 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
   proof{eyebrow, titlePrimary, titleAccent, subtitle},
   howWeGetYouThere{
     howWeWork,
-    process[]{step, title, icon, description}
+    process[]{step, title, icon, description, tier, laneLabel}
   },
   portfolio{eyebrow, titlePrimary, titleAccent, allVideos, categoriesAria, emptyState, untitled},
   testimonials{eyebrow, titleLine1, titleAccent, starsAriaSuffix},

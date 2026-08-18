@@ -18,6 +18,7 @@
     "studio:dev": "npm run dev --prefix studio-rotem-portfolio",
     "studio:seed:proof": "npm run seed:proof --prefix studio-rotem-portfolio",
     "studio:seed:reviews": "npm run seed:reviews --prefix studio-rotem-portfolio",
+    "studio:migrate:process": "npm run migrate:process --prefix studio-rotem-portfolio",
     "studio:schema:deploy": "npm run schema:deploy --prefix studio-rotem-portfolio"
   },
   "dependencies": {

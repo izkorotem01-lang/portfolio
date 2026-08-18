@@ -209,11 +209,10 @@ const rizzPageDoc = {
   howWeGetYouThere: {
     howWeWork: {en: 'How we work', hb: 'איך אנחנו עובדים'},
     process: [
-      {step: '01', title: {en: 'Diagnose', hb: 'אבחון'}, icon: 'search', description: {en: 'Clarity on your goals, audience, and content gaps.', hb: 'בהירות על המטרות, הקהל ופערי התוכן שלכם.'}},
-      {step: '02', title: {en: 'Build', hb: 'בנייה'}, icon: 'box', description: {en: 'Production plan built for impact.', hb: 'תוכנית הפקה שנבנית להשפעה.'}},
-      {step: '03', title: {en: 'Produce', hb: 'הפקה'}, icon: 'clapperboard', description: {en: 'Premium content designed to connect and convert.', hb: 'תוכן פרימיום שמתוכנן להתחבר ולהמיר.'}},
-      {step: '04', title: {en: 'Optimize', hb: 'אופטימיזציה'}, icon: 'chart', description: {en: 'Refine for reach, engagement, and results.', hb: 'שיפור לטובת reach, engagement ותוצאות.'}},
-      {step: '05', title: {en: 'Scale', hb: 'סקייל'}, icon: 'trending', description: {en: 'More output, same quality, compounding growth.', hb: 'יותר output, אותה איכות, צמיחה מצטברת.'}},
+      {_key: 'root', tier: 'root', step: '01', icon: 'search', title: {en: 'DIAGNOSE & STRATEGIZE', hb: 'אבחון ואסטרטגיה'}, description: {en: 'Clarity on your goals, audience, content gaps, and technological bottlenecks.', hb: 'מיפוי העסק, הקהל, פערי התוכן וצווארי הבקבוק הטכנולוגיים.'}},
+      {_key: 'creative', tier: 'creative', step: '02', icon: 'clapperboard', title: {en: 'THE CREATIVE ENGINE', hb: 'מנוע הקריאייטיב'}, description: {en: 'Video production, storytelling, and premium content designed to connect and convert.', hb: 'הפקות וידאו, סטוריטלינג ותוכן פרימיום שנועד לחבר ולהמיר.'}, laneLabel: {en: 'Creative Arm', hb: 'הזרוע הקריאייטיבית'}},
+      {_key: 'tech', tier: 'tech', step: '02', icon: 'cpu', title: {en: 'THE TECH ENGINE', hb: 'המנוע הטכנולוגי'}, description: {en: 'Landing pages, websites, AI agents, and automations to streamline your business.', hb: 'דפי נחיתה, בניית אתרים, סוכני AI ואוטומציות ייעודיות.'}, laneLabel: {en: 'Tech Arm', hb: 'הזרוע הטכנולוגית'}},
+      {_key: 'canopy', tier: 'canopy', step: '03', icon: 'trending', title: {en: 'OPTIMIZE & SCALE', hb: 'אופטימיזציה וסקייל'}, description: {en: 'Combining systems and content for exponential, compounding growth.', hb: 'שילוב המערכות והתוכן לכדי צמיחה אקספוננציאלית מהירה ורווחית יותר.'}},
     ],
   },
   portfolio: {
