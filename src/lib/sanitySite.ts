@@ -130,8 +130,6 @@ export type RizzPageContent = {
     values?: LocaleString;
     showBio?: LocaleString;
     hideBio?: LocaleString;
-    ctaPortraitLeftUrl?: string;
-    ctaPortraitRightUrl?: string;
     cards?: Array<{
       name?: LocaleString;
       role?: LocaleString;
@@ -233,8 +231,6 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
   founders{
     eyebrow, titleBefore, titleFilmed, titleEdited, titleLived, titleAfter,
     intro, values, showBio, hideBio,
-    "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
-    "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
     cards[]{
       name, role, keywords, bio, badge, variant,
       "imageUrl": image.asset->url,

@@ -1,47 +1,21 @@
-import rotemCtaImg from "@/assets/rotem-cta.png";
-import shakedCtaImg from "@/assets/shaked-cta.png";
 import { EyebrowLabel } from "@/components/rizz/ui/EyebrowLabel";
 import { RizzButton } from "@/components/rizz/ui/RizzButton";
 import { SectionWrapper } from "@/components/rizz/ui/SectionWrapper";
 import { RIZZ_CONTACT } from "@/data/rizz-contact";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
-const ctaFounderImageBaseClass = "cta-founder-image pointer-events-none h-auto w-auto select-none";
-
-const ctaFounderImageDesktopClass = `${ctaFounderImageBaseClass} absolute bottom-0 block max-h-[clamp(42rem,90vh,72rem)] max-w-[min(52vw,38rem)]`;
-
-const ctaFounderImageMobileClass = `${ctaFounderImageBaseClass} block max-h-[min(40vh,17rem)] max-w-[48%]`;
-
 export const FinalCtaSection = () => {
   const { rizzPage, requirePick } = useSiteContent();
   if (!rizzPage?.cta)
     throw new Error("Missing required Sanity content: rizzPage.cta");
   const cta = rizzPage.cta;
-  const founders = rizzPage.founders;
-  const leftPortraitSrc = founders?.ctaPortraitLeftUrl ?? rotemCtaImg;
-  const rightPortraitSrc = founders?.ctaPortraitRightUrl ?? shakedCtaImg;
 
   return (
     <section
       id="contact"
-      className="relative bg-transparent overflow-x-hidden lg:min-h-[clamp(42rem,90vh,72rem)]"
+      className="relative overflow-x-hidden bg-transparent py-28 lg:py-36"
     >
-      <div className="pointer-events-none hidden lg:block">
-        <img
-          src={leftPortraitSrc}
-          alt=""
-          aria-hidden="true"
-          className={`${ctaFounderImageDesktopClass} cta-founder-image--left left-8 lg:left-12`}
-        />
-        <img
-          src={rightPortraitSrc}
-          alt=""
-          aria-hidden="true"
-          className={`${ctaFounderImageDesktopClass} cta-founder-image--right right-8 lg:right-12`}
-        />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-3xl px-6 pt-32 pb-10 text-center lg:py-32">
+      <div className="relative mx-auto max-w-3xl px-6 text-center">
         <SectionWrapper>
           <EyebrowLabel className="text-center w-full">
             {requirePick(cta.eyebrow, "rizzPage.cta.eyebrow")}
@@ -82,21 +56,6 @@ export const FinalCtaSection = () => {
             </RizzButton>
           </div>
         </SectionWrapper>
-      </div>
-
-      <div className="cta-founder-portraits-mobile relative z-10 flex items-end justify-center px-2 lg:hidden">
-        <img
-          src={leftPortraitSrc}
-          alt=""
-          aria-hidden="true"
-          className={`${ctaFounderImageMobileClass} cta-founder-image--left`}
-        />
-        <img
-          src={rightPortraitSrc}
-          alt=""
-          aria-hidden="true"
-          className={`${ctaFounderImageMobileClass} cta-founder-image--right`}
-        />
       </div>
     </section>
   );

@@ -244,20 +244,6 @@ export const rizzPage = defineType({
         defineField({name: 'showBio', title: 'Show bio label', type: 'localeString'}),
         defineField({name: 'hideBio', title: 'Hide bio label', type: 'localeString'}),
         defineField({
-          name: 'ctaPortraitLeft',
-          title: 'CTA portrait — left',
-          type: 'image',
-          description: 'Full-body portrait on the left of the final CTA section (above the footer).',
-          options: {hotspot: true},
-        }),
-        defineField({
-          name: 'ctaPortraitRight',
-          title: 'CTA portrait — right',
-          type: 'image',
-          description: 'Full-body portrait on the right of the final CTA section (above the footer).',
-          options: {hotspot: true},
-        }),
-        defineField({
           name: 'cards',
           title: 'Team cards',
           type: 'array',

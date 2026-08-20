@@ -86,8 +86,6 @@ const RIZZ_PAGE_QUERY = `*[_type == "rizzPage"][0]{
   founders{
     eyebrow, titleBefore, titleFilmed, titleEdited, titleLived, titleAfter,
     intro, values, showBio, hideBio,
-    "ctaPortraitLeftUrl": ctaPortraitLeft.asset->url,
-    "ctaPortraitRightUrl": ctaPortraitRight.asset->url,
     cards[]{
       name, role, keywords, bio, badge, variant,
       "imageUrl": image.asset->url,
