@@ -9,6 +9,8 @@ import { HowWeGetYouThereSection } from "@/components/rizz/sections/HowWeGetYouT
 import { PortfolioSection } from "@/components/rizz/sections/PortfolioSection";
 import { TestimonialsSection } from "@/components/rizz/sections/TestimonialsSection";
 import { FoundersSection } from "@/components/rizz/sections/FoundersSection";
+import { ServicesSection } from "@/components/rizz/sections/ServicesSection";
+import { FaqSection } from "@/components/rizz/sections/FaqSection";
 import { FinalCtaSection } from "@/components/rizz/sections/FinalCtaSection";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
@@ -23,11 +25,13 @@ const Index = () => {
       <RizzNav />
       <main className="relative z-10 bg-transparent">
         <HeroSection />
+        <ServicesSection />
         <ProofSection />
         <HowWeGetYouThereSection />
         <PortfolioSection />
         <TestimonialsSection />
         <FoundersSection />
+        <FaqSection />
         <FinalCtaSection />
       </main>
       <RizzFooter />
