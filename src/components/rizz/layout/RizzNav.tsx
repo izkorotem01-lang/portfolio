@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/rizz/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localePath } from "@/i18n/locale";
 import { RIZZ_CONTACT } from "@/data/rizz-contact";
+import { SERVICES_NAV_LINK_EN } from "@/data/rizz-copy-overhaul";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
 export const RizzNav = () => {
@@ -15,6 +16,13 @@ export const RizzNav = () => {
   const { rizzPage, requirePick } = useSiteContent();
   if (!rizzPage?.nav) throw new Error("Missing required Sanity content: rizzPage.nav");
   const nav = rizzPage.nav;
+  // "Services" link added in code for EN until the Sanity nav is updated.
+  const sanityLinks = nav.links ?? [];
+  const hasServices = sanityLinks.some((l) => l.href === SERVICES_NAV_LINK_EN.href);
+  const navLinks =
+    urlLocale === "en" && !hasServices
+      ? [{ label: { en: SERVICES_NAV_LINK_EN.label }, href: SERVICES_NAV_LINK_EN.href }, ...sanityLinks]
+      : sanityLinks;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -65,7 +73,7 @@ export const RizzNav = () => {
         </a>
 
         <nav className="pointer-events-none absolute inset-x-0 hidden items-center justify-center gap-8 md:flex">
-          {(nav.links ?? []).map((link, index) => (
+          {navLinks.map((link, index) => (
             <a
               key={`${link.href ?? "link"}-${index}`}
               href={link.href}
@@ -125,7 +133,7 @@ export const RizzNav = () => {
                 </button>
               </div>
               <nav className="flex flex-col gap-6">
-                {(nav.links ?? []).map((link, index) => (
+                {navLinks.map((link, index) => (
                   <a
                     key={`${link.href ?? "link"}-${index}`}
                     href={link.href}

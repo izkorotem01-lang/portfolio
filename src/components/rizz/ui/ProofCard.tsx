@@ -49,6 +49,25 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
           </div>
         )}
 
+        {/* Stat leads the card (Copy Overhaul Plan): bigger and above the quote. */}
+        {hasStats && (
+          <div
+            className="proof-card-stats-bar proof-card-stats-bar--lead"
+            style={{
+              gridTemplateColumns: `repeat(${Math.min(card.statistics.length, 4)}, minmax(0, 1fr))`,
+            }}
+          >
+            {card.statistics.map((stat) => (
+              <div key={stat.id} className="proof-card-stat-item">
+                <div className="proof-card-stat-value">{stat.value}</div>
+                <div className="proof-card-stat-label">
+                  {requirePick(stat.label, `proofCards[${card.id}].statistics[${stat.id}].label`)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {hasTitle && (
           <h3 className="text-xl font-bold leading-snug text-[#F5F7FA] md:text-[1.35rem]">
             {card.titleSegments.map((segment, index) => (
@@ -80,23 +99,6 @@ export const ProofCardItem = ({ card }: { card: ProofCard }) => {
           </ul>
         )}
 
-        {hasStats && (
-          <div
-            className="proof-card-stats-bar"
-            style={{
-              gridTemplateColumns: `repeat(${Math.min(card.statistics.length, 4)}, minmax(0, 1fr))`,
-            }}
-          >
-            {card.statistics.map((stat) => (
-              <div key={stat.id} className="proof-card-stat-item">
-                <div className="proof-card-stat-value">{stat.value}</div>
-                <div className="proof-card-stat-label">
-                  {requirePick(stat.label, `proofCards[${card.id}].statistics[${stat.id}].label`)}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
         {hasBottomMedia && <ProofCardBottomMedia items={card.bottomMedia} />}
       </div>
