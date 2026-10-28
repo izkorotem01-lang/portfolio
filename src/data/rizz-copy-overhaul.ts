@@ -72,3 +72,18 @@ export const FAQ_COPY_EN = {
 } as const;
 
 export const SERVICES_NAV_LINK_EN = { label: "Services", href: "#services" } as const;
+
+/** EN SEO title matching the new hero headline (code fallback until Sanity seo.title is updated). */
+export const SEO_TITLE_EN = "RIZZ Productions | We turn your videos into clients";
+
+/** Linear How It Works steps (EN). Used until Sanity holds the 5-step process. */
+export const HOW_IT_WORKS_EN = {
+  title: "How It Works",
+  steps: [
+    { title: "Discovery Call", description: "We learn the business, the goals, and who you're trying to reach." },
+    { title: "Custom Package", description: "Built around what you actually need, not a template." },
+    { title: "Production", description: "Scripts, creative, strategy, filming, and editing, all handled." },
+    { title: "Your Approval", description: "Everything comes to you for review before anything goes out." },
+    { title: "Launch", description: "Once approved, we publish." },
+  ],
+} as const;

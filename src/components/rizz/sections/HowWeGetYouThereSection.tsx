@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { HOW_IT_WORKS_EN } from "@/data/rizz-copy-overhaul";
 import type { ProcessStep, ProcessTier } from "@/lib/sanitySite";
 
 const PROCESS_ICONS: Record<string, LucideIcon> = {
@@ -392,7 +393,7 @@ const ProcessNode = ({
   );
 };
 
-export const HowWeGetYouThereSection = () => {
+const BranchingHowWeWork = () => {
   // Every hook must run before the guard below returns. In production the
   // provider renders once with baked JSON and again with live Sanity data, so
   // this component really can render with tiers missing and then present; an
@@ -534,4 +535,45 @@ export const HowWeGetYouThereSection = () => {
       </div>
     </section>
   );
+};
+
+/** Linear 5-step How It Works (Copy Overhaul Plan), EN only. */
+const LinearHowItWorks = () => {
+  const copy = HOW_IT_WORKS_EN;
+  return (
+    <section id="how-we-get-you-there" className="relative overflow-hidden bg-transparent pb-20 md:pb-28">
+      <GradientOrb color="blue" className="-left-32 top-10" size="420px" opacity={0.1} />
+      <div className="relative mx-auto max-w-[900px] px-8">
+        <SectionWrapper>
+          <h3
+            className="mb-10 w-full text-center font-semibold uppercase leading-[0.95] text-[#F5F7FA]"
+            style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.25rem)", letterSpacing: "-0.03em" }}
+          >
+            {copy.title}
+          </h3>
+        </SectionWrapper>
+        <ol className="relative flex flex-col gap-4 border-s border-[#1D2B3E] ps-8">
+          {copy.steps.map((step, i) => (
+            <li key={step.title}>
+              <SectionWrapper delay={i * 0.08}>
+                <div className="relative rizz-card p-5 md:p-6">
+                  <span className="absolute -start-[3.15rem] top-5 flex h-9 w-9 items-center justify-center rounded-full border border-[#187BFF] bg-[#050A14] text-sm font-bold text-[#187BFF]">
+                    {i + 1}
+                  </span>
+                  <h4 className="text-lg font-bold uppercase tracking-tight text-[#F5F7FA]">{step.title}</h4>
+                  <p className="mt-1 text-sm leading-relaxed text-[#A7B0C0]">{step.description}</p>
+                </div>
+              </SectionWrapper>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+};
+
+export const HowWeGetYouThereSection = () => {
+  const { urlLocale } = useLanguage();
+  // EN uses the new 5-step linear process; Hebrew keeps the existing Sanity-driven branching layout.
+  return urlLocale === "en" ? <LinearHowItWorks /> : <BranchingHowWeWork />;
 };

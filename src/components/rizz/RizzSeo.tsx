@@ -1,11 +1,18 @@
 import { useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { SEO_TITLE_EN } from "@/data/rizz-copy-overhaul";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
 export const RizzSeo = () => {
   const { rizzPage, requirePick } = useSiteContent();
+  const { urlLocale } = useLanguage();
   useEffect(() => {
     if (!rizzPage?.seo) return;
-    const title = requirePick(rizzPage.seo.title, "rizzPage.seo.title");
+    // EN title follows the new hero headline until Sanity seo.title is updated.
+    const title =
+      urlLocale === "en"
+        ? SEO_TITLE_EN
+        : requirePick(rizzPage.seo.title, "rizzPage.seo.title");
     const description = requirePick(
       rizzPage.seo.description,
       "rizzPage.seo.description",
@@ -24,7 +31,7 @@ export const RizzSeo = () => {
     };
 
     ensureMeta("description").setAttribute("content", description);
-  }, [rizzPage, requirePick]);
+  }, [rizzPage, requirePick, urlLocale]);
 
   return null;
 };
